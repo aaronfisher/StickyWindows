@@ -1,0 +1,41 @@
+name: Ledge
+options:
+  bundleIdPrefix: vc.start
+  deploymentTarget:
+    macOS: "15.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "15.0"
+    DEVELOPMENT_TEAM: MK738JV28L
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "Developer ID Application"
+    ENABLE_HARDENED_RUNTIME: YES
+    SWIFT_STRICT_CONCURRENCY: complete
+targets:
+  Ledge:
+    type: application
+    platform: macOS
+    sources:
+      - path: Ledge
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: vc.start.Ledge
+        PRODUCT_NAME: Ledge
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_LSUIElement: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Ledge
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.productivity
+        INFOPLIST_KEY_NSHumanReadableCopyright: "© 2026 Start Holdings LLC"
+        CODE_SIGN_ENTITLEMENTS: Ledge/Resources/Ledge.entitlements
+        ENABLE_APP_SANDBOX: NO
+schemes:
+  Ledge:
+    build:
+      targets:
+        Ledge: all
+    run:
+      config: Debug

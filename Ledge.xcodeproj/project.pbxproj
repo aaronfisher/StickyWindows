@@ -1,0 +1,380 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1AE0893624A9A227F067B102 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F626013BD733D1DF42902E27 /* OnboardingView.swift */; };
+		3CFE83467ED8D3A88B8DD82B /* AccessibilityPermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07F61EBFA97D796AD4C129F1 /* AccessibilityPermission.swift */; };
+		443223966D5F2906E8B69A16 /* OnboardingWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4009302CAE8221BDCED6C9A1 /* OnboardingWindowController.swift */; };
+		465FC558A427D50682A53DA2 /* WindowInventory.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA98A71E115262A288C31019 /* WindowInventory.swift */; };
+		5D012373E5C9B0690E1E5459 /* WindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 606D37A5171536A9B1C7587B /* WindowController.swift */; };
+		76A847F79DA04224EB67FCC6 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFB92EA164CE608EBAF71D07 /* StatusItemController.swift */; };
+		E412724FCB75AA9F9817FDAD /* LedgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 424A4DC598E9B15A131C3BFE /* LedgeApp.swift */; };
+		F5817A4ECB1F4E6C03058A72 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0F3F41375BA0F9516BE57A4 /* AppDelegate.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		07F61EBFA97D796AD4C129F1 /* AccessibilityPermission.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityPermission.swift; sourceTree = "<group>"; };
+		4009302CAE8221BDCED6C9A1 /* OnboardingWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingWindowController.swift; sourceTree = "<group>"; };
+		424A4DC598E9B15A131C3BFE /* LedgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LedgeApp.swift; sourceTree = "<group>"; };
+		42F469884A01834A711BC31F /* Ledge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ledge.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		606D37A5171536A9B1C7587B /* WindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowController.swift; sourceTree = "<group>"; };
+		7849F5A739F529038365292B /* Ledge.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Ledge.entitlements; sourceTree = "<group>"; };
+		C0F3F41375BA0F9516BE57A4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		CFB92EA164CE608EBAF71D07 /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
+		F626013BD733D1DF42902E27 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		FA98A71E115262A288C31019 /* WindowInventory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowInventory.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		0A66575B25C365102DEF062E /* Ledge */ = {
+			isa = PBXGroup;
+			children = (
+				D785D0379FEBEB55FEF04EAD /* Accessibility */,
+				28CDD531CFA3785E5D3702A5 /* App */,
+				13D60042BFF13490D11862BA /* Debug */,
+				A62C947AD3CE837DF4DEA253 /* Onboarding */,
+				79B1C9D3BCC72844A46B1919 /* Resources */,
+			);
+			path = Ledge;
+			sourceTree = "<group>";
+		};
+		13D60042BFF13490D11862BA /* Debug */ = {
+			isa = PBXGroup;
+			children = (
+				CFB92EA164CE608EBAF71D07 /* StatusItemController.swift */,
+			);
+			path = Debug;
+			sourceTree = "<group>";
+		};
+		28CDD531CFA3785E5D3702A5 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				C0F3F41375BA0F9516BE57A4 /* AppDelegate.swift */,
+				424A4DC598E9B15A131C3BFE /* LedgeApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		79B1C9D3BCC72844A46B1919 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				7849F5A739F529038365292B /* Ledge.entitlements */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		9C4F1CE52B8C29B20CC9C5B0 = {
+			isa = PBXGroup;
+			children = (
+				0A66575B25C365102DEF062E /* Ledge */,
+				A7A332F1CB7D9847F8A958DC /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A62C947AD3CE837DF4DEA253 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				F626013BD733D1DF42902E27 /* OnboardingView.swift */,
+				4009302CAE8221BDCED6C9A1 /* OnboardingWindowController.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		A7A332F1CB7D9847F8A958DC /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				42F469884A01834A711BC31F /* Ledge.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D785D0379FEBEB55FEF04EAD /* Accessibility */ = {
+			isa = PBXGroup;
+			children = (
+				07F61EBFA97D796AD4C129F1 /* AccessibilityPermission.swift */,
+				606D37A5171536A9B1C7587B /* WindowController.swift */,
+				FA98A71E115262A288C31019 /* WindowInventory.swift */,
+			);
+			path = Accessibility;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		DF0E90A6E67540D5C303F996 /* Ledge */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 39A182047E84172EF7D4CA05 /* Build configuration list for PBXNativeTarget "Ledge" */;
+			buildPhases = (
+				3395479396869F9D3A89FFC2 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Ledge;
+			packageProductDependencies = (
+			);
+			productName = Ledge;
+			productReference = 42F469884A01834A711BC31F /* Ledge.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A10F5F374B0FE80991E316B4 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					DF0E90A6E67540D5C303F996 = {
+						DevelopmentTeam = MK738JV28L;
+						ProvisioningStyle = Manual;
+					};
+				};
+			};
+			buildConfigurationList = 98D5E62D9732989CF7B9F976 /* Build configuration list for PBXProject "Ledge" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 9C4F1CE52B8C29B20CC9C5B0;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = A7A332F1CB7D9847F8A958DC /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				DF0E90A6E67540D5C303F996 /* Ledge */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		3395479396869F9D3A89FFC2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3CFE83467ED8D3A88B8DD82B /* AccessibilityPermission.swift in Sources */,
+				F5817A4ECB1F4E6C03058A72 /* AppDelegate.swift in Sources */,
+				E412724FCB75AA9F9817FDAD /* LedgeApp.swift in Sources */,
+				1AE0893624A9A227F067B102 /* OnboardingView.swift in Sources */,
+				443223966D5F2906E8B69A16 /* OnboardingWindowController.swift in Sources */,
+				76A847F79DA04224EB67FCC6 /* StatusItemController.swift in Sources */,
+				5D012373E5C9B0690E1E5459 /* WindowController.swift in Sources */,
+				465FC558A427D50682A53DA2 /* WindowInventory.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		017FC7235D11F1683A4BABAE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_STYLE = Manual;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = MK738JV28L;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		32651B99E84B7D4566B98DA3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Ledge/Resources/Ledge.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Ledge;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Start Holdings LLC";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = vc.start.Ledge;
+				PRODUCT_NAME = Ledge;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		35F41DC33B1218AD7ABA1F22 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_STYLE = Manual;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = MK738JV28L;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		4CA99E63E5F4BFA041F962A8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Ledge/Resources/Ledge.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Ledge;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Start Holdings LLC";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = vc.start.Ledge;
+				PRODUCT_NAME = Ledge;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		39A182047E84172EF7D4CA05 /* Build configuration list for PBXNativeTarget "Ledge" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				32651B99E84B7D4566B98DA3 /* Debug */,
+				4CA99E63E5F4BFA041F962A8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		98D5E62D9732989CF7B9F976 /* Build configuration list for PBXProject "Ledge" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				35F41DC33B1218AD7ABA1F22 /* Debug */,
+				017FC7235D11F1683A4BABAE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A10F5F374B0FE80991E316B4 /* Project object */;
+}
