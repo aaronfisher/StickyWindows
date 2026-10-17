@@ -4,7 +4,7 @@ Edge tabs for macOS — a modern take on Mac OS 9's pop-up windows. Drag any win
 
 Ledge is a menu-bar app (no Dock icon) for macOS 15 Sequoia and later, written in Swift 6 with SwiftUI and AppKit, and it controls other apps' windows through the Accessibility API.
 
-**Status:** Milestones 1–5 are done (see [SPEC.md](SPEC.md)). Next up: M6 (thumbnails, badges, tab groups, per-app rules) and M7 (signing, notarization, Sparkle, .dmg).
+**Status:** Milestones 1–6 are done (see [SPEC.md](SPEC.md)). Next up: M7 (signing, notarization, Sparkle, .dmg via GitHub Actions).
 
 ## Using Ledge
 
@@ -19,12 +19,18 @@ Ledge is a menu-bar app (no Dock icon) for macOS 15 Sequoia and later, written i
 | Action | Result |
 |---|---|
 | Click | Reveal the window (it slides out), or tuck it away again |
-| Hover (if enabled) | Peek at the window; it tucks back when the cursor leaves |
+| Hover | A preview of the window (live with Screen Recording access); or, with Hover to Peek on, the window itself |
 | Drag along the edge | Reorder tabs |
 | Drag ~80 pt away from the edge | Release: the window returns to where it was and the tab goes away |
 | Right-click / Control-click | Show/Hide, Mode, Move to Edge, Release, Close Window |
 
 Dragging a revealed window more than ~60 pt away also releases it, where you drop it.
+
+Tabs show the app's **Dock badge** (unread counts and the like) when it has one.
+
+### Tab groups
+
+Drag a window onto an existing tab — it highlights with a **+** — to stack them into one group tab showing the apps' icons and a count. Click the group tab for a mini list: click a row to show or hide that window, or its ↩︎ button to release it. Right-click the group for Move to Edge, Ungroup, and Release All. Dragging the group tab reorders or releases the whole group.
 
 ### Reveal modes
 
@@ -38,9 +44,10 @@ Set the default in Settings or the menu; override per tab from its context menu.
 Open with *Settings…* (⌘,) in the menu-bar menu.
 
 - **General:** launch at login, which edges accept drops, dwell time, default reveal mode, hover-to-peek and its delay, slide animations (off automatically with Reduce Motion), letting Ledge handle left/right edge drags, tabs on all Spaces vs. the current one, hiding tabs when a full-screen app is in front.
-- **Appearance:** tab size, window titles on/off, material, opacity, accent color.
+- **Appearance:** tab size, window titles on/off, material, opacity, accent color, Dock badges, hover previews.
 - **Shortcuts:** park shortcuts for each edge.
-- **Permissions:** Accessibility (required) and Screen Recording (optional, for upcoming thumbnails).
+- **Rules:** per app, *Never park* (drags and shortcuts ignore it) or *Park on left/right/bottom edge at launch*.
+- **Permissions:** Accessibility (required) and Screen Recording (optional, for live previews).
 
 ### macOS edge tiling
 
@@ -97,7 +104,9 @@ On first launch Ledge walks you through granting Accessibility access in System 
 | `Ledge/App` | App entry, `AppDelegate`, shortcut names |
 | `Ledge/Accessibility` | AX window wrapper, window list, screen geometry, AX notifications, background window mover, permission |
 | `Ledge/Parking` | `ParkingManager` (source of truth), drag observer, edge zones, peek monitor, hiding strategies, persistence, macOS tiling override, slide animator |
-| `Ledge/Tabs` | Tab panels, tab view, layout/drag/context menu, drop indicator |
+| `Ledge/Tabs` | Tab panels, tab and group tab views, layout/drag/context menus, group list, drop indicator |
 | `Ledge/Settings` | `SettingsStore`, settings window, launch at login |
+| `Ledge/Rules` | Per-app rules model and Rules settings tab |
+| `Ledge/Extras` | Dock badge reader, ScreenCaptureKit thumbnails, preview panel |
 | `Ledge/Onboarding` | First-run Accessibility onboarding |
 | `Ledge/Debug` | Menu-bar status item and debug menu |

@@ -73,6 +73,9 @@ final class ParkedWindow: Identifiable {
     var hiddenBy: HidingMethod?
     var isRevealed: Bool { hiddenBy == nil }
 
+    /// Windows sharing a tab share a group ID (and edge, display, and tab position).
+    var groupID: UUID?
+
     /// Per-tab override; nil follows the global default.
     var mode: RevealMode?
     var session: RevealSession?

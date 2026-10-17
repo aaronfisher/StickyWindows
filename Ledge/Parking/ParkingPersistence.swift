@@ -10,6 +10,7 @@ struct ParkedRecord: Codable, Equatable {
     var desiredOffset: Double
     var mode: RevealMode?
     var storedFrame: CGRect
+    var groupID: UUID?
 
     @MainActor
     init?(_ parkedWindow: ParkedWindow) {
@@ -21,6 +22,7 @@ struct ParkedRecord: Codable, Equatable {
         desiredOffset = parkedWindow.desiredOffset
         mode = parkedWindow.mode
         storedFrame = parkedWindow.storedFrame
+        groupID = parkedWindow.groupID
     }
 }
 

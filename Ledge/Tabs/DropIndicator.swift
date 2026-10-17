@@ -8,6 +8,8 @@ final class DropIndicatorModel {
     var edge: Edge = .right
     /// Ghost tab start along the strip, in points from the strip's top (or left, for the bottom edge).
     var ghostStart: CGFloat = 0
+    /// Over an existing tab: the ghost sits on it and shows a "+" (drop to group).
+    var isJoining = false
 }
 
 /// Translucent strip along an edge with a ghost tab where the drop will land.
@@ -28,7 +30,8 @@ final class DropIndicator {
         self.settings = settings
     }
 
-    func show(for zone: EdgeZone) {
+    /// `joining` is the AX frame of an existing tab the drop would join, if the cursor is over one.
+    func show(for zone: EdgeZone, joining targetFrame: CGRect? = nil) {
         let full = ScreenGeometry.axFrame(of: zone.screen)
         let visible = ScreenGeometry.axVisibleFrame(of: zone.screen)
         let thickness = settings.tabMetrics.thickness
@@ -40,7 +43,11 @@ final class DropIndicator {
         case .bottom: CGRect(x: visible.minX, y: visible.maxY - thickness, width: visible.width, height: thickness)
         }
         let (stripStart, stripLength) = zone.edge.isVertical ? (strip.minY, strip.height) : (strip.minX, strip.width)
-        let start = min(max(zone.offset - length / 2 - stripStart, 0), max(stripLength - length, 0))
+        var start = min(max(zone.offset - length / 2 - stripStart, 0), max(stripLength - length, 0))
+        if let targetFrame {
+            start = (zone.edge.isVertical ? targetFrame.minY : targetFrame.minX) - stripStart
+        }
+        model.isJoining = targetFrame != nil
 
         let edgeChanged = model.edge != zone.edge || !isVisible
         model.edge = zone.edge
@@ -95,8 +102,15 @@ private struct DropIndicatorView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: alignment)
 
             ghost
-                .fill(accent.opacity(0.32))
-                .overlay { ghost.strokeBorder(accent.opacity(0.9), lineWidth: 1.5) }
+                .fill(accent.opacity(model.isJoining ? 0.5 : 0.32))
+                .overlay { ghost.strokeBorder(accent.opacity(0.9), lineWidth: model.isJoining ? 2.5 : 1.5) }
+                .overlay {
+                    if model.isJoining {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundStyle(.white, accent)
+                    }
+                }
                 .frame(
                     width: vertical ? metrics.thickness : metrics.length,
                     height: vertical ? metrics.length : metrics.thickness)

@@ -36,10 +36,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             Task {
                 await parking.park(
                     drop.window, edge: drop.zone.edge, screen: drop.zone.screen,
-                    offset: drop.zone.offset, restoreFrame: drop.startFrame,
+                    offset: drop.zone.offset, restoreFrame: drop.startFrame, joining: drop.joining,
                     settleDelay: MacOSTiling.isEdgeDragTilingEnabled ? .milliseconds(350) : .milliseconds(50))
             }
         }
+        windowObserver.tabTarget = { [weak self] zone in self?.parking.tabTarget(at: zone) }
         windowObserver.onWindowMoved = { [weak self] window, start in
             self?.parking.windowWasDragged(window, from: start)
         }

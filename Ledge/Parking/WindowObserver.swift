@@ -8,11 +8,15 @@ final class WindowObserver {
         let zone: EdgeZone
         /// The window's frame when the drag began; restored when it's revealed.
         let startFrame: CGRect
+        /// Set when dropped onto an existing tab: the window joins that tab's group.
+        let joining: ParkedWindow?
     }
 
     var onDrop: (Drop) -> Void = { _ in }
     /// A window drag that ended outside any edge zone: (window, frame when the drag began).
     var onWindowMoved: (WindowController, CGRect) -> Void = { _, _ in }
+    /// The existing tab under a zone's cursor position, if any (dropping there forms a group).
+    var tabTarget: (EdgeZone) -> (lead: ParkedWindow, frame: CGRect)? = { _ in nil }
     private let settings: SettingsStore
     private var detector: EdgeZoneDetector {
         EdgeZoneDetector(enabledEdges: settings.enabledEdges)
@@ -99,7 +103,8 @@ final class WindowObserver {
         defer { reset() }
         guard let state = drag, state.isMovingWindow else { return }
         if state.isArmed, let zone = detector.zone(at: NSEvent.mouseLocation), zone.isSameZone(as: state.zone) {
-            onDrop(Drop(window: state.window, zone: zone, startFrame: state.startFrame))
+            let target = tabTarget(zone).map(\.lead).flatMap { $0.window.isSameWindow(as: state.window) ? nil : $0 }
+            onDrop(Drop(window: state.window, zone: zone, startFrame: state.startFrame, joining: target))
         } else {
             onWindowMoved(state.window, state.startFrame)
         }
@@ -114,7 +119,7 @@ final class WindowObserver {
         if let zone, zone.isSameZone(as: state.zone) {
             state.zone = zone
             drag = state
-            if state.isArmed { indicator.show(for: zone) }
+            if state.isArmed { showIndicator(for: zone, window: state.window) }
             return
         }
 
@@ -138,7 +143,12 @@ final class WindowObserver {
         state.isArmed = true
         state.zone = zone
         drag = state
-        indicator.show(for: zone)
+        showIndicator(for: zone, window: state.window)
+    }
+
+    private func showIndicator(for zone: EdgeZone, window: WindowController) {
+        let target = tabTarget(zone).flatMap { $0.lead.window.isSameWindow(as: window) ? nil : $0 }
+        indicator.show(for: zone, joining: target?.frame)
     }
 
     private func reset() {

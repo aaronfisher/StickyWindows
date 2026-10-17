@@ -34,9 +34,11 @@
 		8D6595EA62E754DEDDB9671F /* ParkingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39BFBA2C6B541AB173E871B /* ParkingManager.swift */; };
 		90994061E241BE5E36C3C7F3 /* AppRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1E77D9A7A9092C45AE23AAA /* AppRule.swift */; };
 		9EB22F606568E9A1AEC49E4E /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC6B117880FA7A1891B7F904 /* SettingsWindowController.swift */; };
+		A638C5FA2BA39F4FCC7BB407 /* GroupTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04B8840B601840C89226E7D3 /* GroupTabView.swift */; };
 		ACC345FEB61CE09E9D2D9C36 /* AXWindowMover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4380CA2989AABEAC1250538C /* AXWindowMover.swift */; };
 		C0DF80CCAF6E0EBE6486D859 /* HidingStrategyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A06085802043A14AE02187F /* HidingStrategyStore.swift */; };
 		CD073FEA5676F5933CA3EDAF /* TabPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E7C2B1DD8628E295FA3B008 /* TabPanel.swift */; };
+		DD9C432FC04A187B40B0F872 /* GroupListPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBBB5BE10B3473FAEAF843BB /* GroupListPanel.swift */; };
 		E0B9964136E3556C9296A430 /* PreviewPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82938CCE94CAB82CC3D22EC3 /* PreviewPanel.swift */; };
 		E412724FCB75AA9F9817FDAD /* LedgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 424A4DC598E9B15A131C3BFE /* LedgeApp.swift */; };
 		F4E0A417594DA8D04169BF22 /* TabPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA63EBBD4A36ABD9CF3890B9 /* TabPresenter.swift */; };
@@ -45,6 +47,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		04B8840B601840C89226E7D3 /* GroupTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupTabView.swift; sourceTree = "<group>"; };
 		07F61EBFA97D796AD4C129F1 /* AccessibilityPermission.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityPermission.swift; sourceTree = "<group>"; };
 		1035B6D9106A25A340DB8817 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		1E0E2F1AE34582D616EB984C /* ScreenGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenGeometry.swift; sourceTree = "<group>"; };
@@ -73,6 +76,7 @@
 		C0F3F41375BA0F9516BE57A4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C88252E96103AA068F5F6080 /* LaunchAtLogin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLogin.swift; sourceTree = "<group>"; };
 		CA63EBBD4A36ABD9CF3890B9 /* TabPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabPresenter.swift; sourceTree = "<group>"; };
+		CBBB5BE10B3473FAEAF843BB /* GroupListPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupListPanel.swift; sourceTree = "<group>"; };
 		CD779A70B72D1F21E9AC88DE /* AXWindowEvents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AXWindowEvents.swift; sourceTree = "<group>"; };
 		CFB92EA164CE608EBAF71D07 /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
 		D39BFBA2C6B541AB173E871B /* ParkingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParkingManager.swift; sourceTree = "<group>"; };
@@ -135,6 +139,8 @@
 			children = (
 				230E937C5FCD151D6ED82D54 /* DropIndicator.swift */,
 				BED0FE65D9705E1E456F7A53 /* EdgeTabView.swift */,
+				CBBB5BE10B3473FAEAF843BB /* GroupListPanel.swift */,
+				04B8840B601840C89226E7D3 /* GroupTabView.swift */,
 				6E7C2B1DD8628E295FA3B008 /* TabPanel.swift */,
 				CA63EBBD4A36ABD9CF3890B9 /* TabPresenter.swift */,
 			);
@@ -306,6 +312,8 @@
 				346EEE236695800E915B93C2 /* DropIndicator.swift in Sources */,
 				3382D8B592892556B01356E4 /* EdgeTabView.swift in Sources */,
 				0267843DB8124A8B82473945 /* EdgeZoneDetector.swift in Sources */,
+				DD9C432FC04A187B40B0F872 /* GroupListPanel.swift in Sources */,
+				A638C5FA2BA39F4FCC7BB407 /* GroupTabView.swift in Sources */,
 				C0DF80CCAF6E0EBE6486D859 /* HidingStrategyStore.swift in Sources */,
 				7DE011110AAE6FAE46BCBFDD /* LaunchAtLogin.swift in Sources */,
 				E412724FCB75AA9F9817FDAD /* LedgeApp.swift in Sources */,

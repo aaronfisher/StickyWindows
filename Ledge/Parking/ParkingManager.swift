@@ -116,7 +116,7 @@ final class ParkingManager {
     func park(
         _ window: WindowController, edge: Edge, screen: NSScreen?,
         offset: CGFloat? = nil, restoreFrame: CGRect? = nil, mode: RevealMode? = nil,
-        settleDelay: Duration = .zero
+        joining target: ParkedWindow? = nil, groupID: UUID? = nil, settleDelay: Duration = .zero
     ) async {
         guard let current = window.frame else { return NSSound.beep() }
         let app = NSRunningApplication(processIdentifier: window.pid)
@@ -134,13 +134,25 @@ final class ParkingManager {
         if let previous { forget(previous) }
 
         let parkedWindow = ParkedWindow(
-            window: window, app: app, frame: restoreFrame ?? current, edge: edge, screen: screen, offset: offset)
+            window: window, app: app, frame: restoreFrame ?? current, edge: target?.edge ?? edge, screen: screen,
+            offset: target?.desiredOffset ?? offset)
         parkedWindow.mode = mode ?? previous?.mode
+        if let target, parked.contains(where: { $0 === target }) {
+            // Dropped onto an existing tab: share it.
+            let id = target.groupID ?? UUID()
+            target.groupID = id
+            parkedWindow.groupID = id
+            parkedWindow.displayID = target.displayID
+        } else {
+            parkedWindow.groupID = groupID
+        }
         parkedWindow.windowID = previous?.windowID ?? WindowInventory.windowID(for: window)
         captureThumbnail(of: parkedWindow)
         parkedWindow.hiddenBy = .offscreen  // Tab shows as tucked right away; hide() sets the real method.
         parked.append(parkedWindow)
         axEvents.watch(window)
+        // Re-parking a group member elsewhere may leave its old group with one window.
+        dissolveSingletonGroups()
         tabs.sync()
         if settleDelay > .zero {
             try? await Task.sleep(for: settleDelay)
@@ -348,6 +360,37 @@ final class ParkingManager {
         parkedWindow.desiredOffset = offset
     }
 
+    // MARK: Groups
+
+    func moveGroup(_ windows: [ParkedWindow], to edge: Edge) async {
+        guard let lead = windows.first else { return }
+        let frame = lead.storedFrame
+        for window in windows {
+            await move(window, to: edge)
+        }
+        // Members share one tab position.
+        let offset = edge.isVertical ? frame.midY : frame.midX
+        windows.forEach { $0.desiredOffset = offset }
+        tabs.layout()
+    }
+
+    /// Splits a group back into one tab per window (the layout spreads them out).
+    func ungroup(_ windows: [ParkedWindow]) {
+        for (index, window) in windows.enumerated() {
+            window.groupID = nil
+            window.desiredOffset += CGFloat(index)  // Keeps their order stable when stacked.
+        }
+        tabs.sync()
+    }
+
+    /// A group left with one member becomes a plain tab.
+    private func dissolveSingletonGroups() {
+        let counts = Dictionary(grouping: parked.compactMap(\.groupID)) { $0 }.mapValues(\.count)
+        for window in parked where window.groupID.map({ counts[$0] == 1 }) == true {
+            window.groupID = nil
+        }
+    }
+
     /// Closes the underlying window. It's revealed first so a "Save changes?" sheet isn't left offscreen.
     func closeWindow(_ parkedWindow: ParkedWindow) {
         reveal(parkedWindow)
@@ -380,6 +423,11 @@ final class ParkingManager {
 
     func tabFrame(of parkedWindow: ParkedWindow) -> CGRect? {
         tabs.frame(of: parkedWindow)
+    }
+
+    /// The tab a window dragged into `zone` would be dropped onto, if any.
+    func tabTarget(at zone: EdgeZone) -> (lead: ParkedWindow, frame: CGRect)? {
+        tabs.tabTarget(at: zone)
     }
 
     // MARK: Lifecycle
@@ -422,11 +470,13 @@ final class ParkingManager {
         for parkedWindow in gone { cancelHover(parkedWindow) }
         parked.removeAll { $0.window.pid == pid }
         axEvents.forget(pid: pid)
+        dissolveSingletonGroups()
         tabs.sync()
     }
 
     private func remove(_ parkedWindow: ParkedWindow) {
         forget(parkedWindow)
+        dissolveSingletonGroups()
         tabs.sync()
     }
 
@@ -753,7 +803,8 @@ final class ParkingManager {
                 Task {
                     await park(
                         match, edge: record.edge, screen: ScreenGeometry.screen(withDisplayID: record.displayID),
-                        offset: record.desiredOffset, restoreFrame: record.storedFrame, mode: record.mode)
+                        offset: record.desiredOffset, restoreFrame: record.storedFrame, mode: record.mode,
+                        groupID: record.groupID)
                 }
             } else if stillWaiting {
                 remaining.append(record)
