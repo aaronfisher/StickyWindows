@@ -48,6 +48,8 @@ final class PeekMonitor {
     }
 
     private func poll() {
+        // AX reads here would compete with a sliding window for the main thread.
+        guard !manager.isAnimating else { return }
         ticks += 1
         if ticks % 10 == 0 {
             manager.housekeeping()

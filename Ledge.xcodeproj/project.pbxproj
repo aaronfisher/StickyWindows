@@ -27,6 +27,7 @@
 		5F34ACED038DD94441B10027 /* ParkedWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = E858C37B8003DD182DD131E3 /* ParkedWindow.swift */; };
 		76A847F79DA04224EB67FCC6 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFB92EA164CE608EBAF71D07 /* StatusItemController.swift */; };
 		7DE011110AAE6FAE46BCBFDD /* LaunchAtLogin.swift in Sources */ = {isa = PBXBuildFile; fileRef = C88252E96103AA068F5F6080 /* LaunchAtLogin.swift */; };
+		878D78543B89E24A68DBD25D /* WindowSlideAnimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A212EF7A29DF2EA17B0FA0A1 /* WindowSlideAnimator.swift */; };
 		8D6595EA62E754DEDDB9671F /* ParkingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39BFBA2C6B541AB173E871B /* ParkingManager.swift */; };
 		9EB22F606568E9A1AEC49E4E /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC6B117880FA7A1891B7F904 /* SettingsWindowController.swift */; };
 		C0DF80CCAF6E0EBE6486D859 /* HidingStrategyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A06085802043A14AE02187F /* HidingStrategyStore.swift */; };
@@ -53,6 +54,7 @@
 		8A06085802043A14AE02187F /* HidingStrategyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HidingStrategyStore.swift; sourceTree = "<group>"; };
 		90CD92EB09BC0A881684A0E7 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
 		A1C60E37D8B99C4501B041CD /* MacOSTiling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacOSTiling.swift; sourceTree = "<group>"; };
+		A212EF7A29DF2EA17B0FA0A1 /* WindowSlideAnimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowSlideAnimator.swift; sourceTree = "<group>"; };
 		B2D5EFEF17033DB3E8E89FB7 /* EdgeZoneDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdgeZoneDetector.swift; sourceTree = "<group>"; };
 		BED0FE65D9705E1E456F7A53 /* EdgeTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdgeTabView.swift; sourceTree = "<group>"; };
 		BF80F450A37341B623C97858 /* PeekMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeekMonitor.swift; sourceTree = "<group>"; };
@@ -181,6 +183,7 @@
 				D68603E8BC4C8BE57B38658C /* ParkingPersistence.swift */,
 				BF80F450A37341B623C97858 /* PeekMonitor.swift */,
 				4CB6BFB98E0EA72323024506 /* WindowObserver.swift */,
+				A212EF7A29DF2EA17B0FA0A1 /* WindowSlideAnimator.swift */,
 			);
 			path = Parking;
 			sourceTree = "<group>";
@@ -287,6 +290,7 @@
 				5D012373E5C9B0690E1E5459 /* WindowController.swift in Sources */,
 				465FC558A427D50682A53DA2 /* WindowInventory.swift in Sources */,
 				11595D839ABE6754D2CF5E9A /* WindowObserver.swift in Sources */,
+				878D78543B89E24A68DBD25D /* WindowSlideAnimator.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
