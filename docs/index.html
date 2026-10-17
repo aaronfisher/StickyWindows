@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232F5FD8'/%3E%3Crect x='11' y='20' width='27' height='23' rx='4' fill='%23fff'/%3E%3Cpath d='M53 19H49.5A3.5 3.5 0 0 0 46 22.5V41.5A3.5 3.5 0 0 0 49.5 45H53Z' fill='%23FFB43A'/%3E%3C/svg%3E">
+<style>html{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Ledge</title>
+<meta name="description" content="Ledge parks any macOS window as a tab on the edge of your screen. Drag to park, click to reveal.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:ital,wght@0,400..700;1,400&display=swap">
+<style>
+  /* Layout: a desk. One wide "display" demo at the top, then a 12-column editorial grid where
+     copy sits left and small live diagrams sit right, with a vertical "ledge" rule running down the margin. */
+  :root {
+    --bg: #F5F6FA;
+    --surface: #FFFFFF;
+    --fg: #141829;
+    --muted: #5D6480;
+    --line: #DCE0EC;
+    --accent: #2A62F0;
+    --accent-ink: #FFFFFF;
+    --amber: #F5A623;
+    --amber-deep: #C9801A;
+    --wall-a: #3F8BFF;
+    --wall-b: #2A2A9E;
+    --shadow: 0 1px 2px rgba(20, 24, 41, .06), 0 12px 32px -12px rgba(20, 24, 41, .25);
+    --display: "Bricolage Grotesque", "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+    --body: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0D1020; --surface: #161A2E; --fg: #ECEEF7; --muted: #9AA3C0; --line: #272D45;
+      --accent: #6B93FF; --accent-ink: #0B1020; --amber: #FFB94A; --amber-deep: #E39A2A;
+      --wall-a: #2F6FDF; --wall-b: #1C1C70;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 16px 40px -14px rgba(0,0,0,.7);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0D1020; --surface: #161A2E; --fg: #ECEEF7; --muted: #9AA3C0; --line: #272D45;
+    --accent: #6B93FF; --accent-ink: #0B1020; --amber: #FFB94A; --amber-deep: #E39A2A;
+    --wall-a: #2F6FDF; --wall-b: #1C1C70;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 16px 40px -14px rgba(0,0,0,.7);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--fg);
+    font-family: var(--body); font-size: 17px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+  img, svg { max-width: 100%; }
+  h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.05; letter-spacing: -0.01em; }
+  h1 { font-size: clamp(2.6rem, 7vw, 5.4rem); font-weight: 700; font-variation-settings: "opsz" 96; }
+  h2 { font-size: clamp(1.9rem, 4vw, 3rem); font-weight: 650; font-variation-settings: "opsz" 72; }
+  h3 { font-size: 1.2rem; font-weight: 650; line-height: 1.25; }
+  p { margin: 0; }
+  .wrap {
+    max-width: 1120px; margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .eyebrow {
+    font-family: var(--mono); font-size: .78rem; text-transform: uppercase; letter-spacing: .12em;
+    color: var(--muted);
+  }
+  .lede { font-size: clamp(1.1rem, 1.6vw, 1.3rem); color: var(--muted); max-width: 36em; }
+  kbd {
+    font-family: var(--mono); font-size: .85em; padding: .1em .45em; border-radius: 5px;
+    border: 1px solid var(--line); background: var(--surface); box-shadow: inset 0 -1px 0 var(--line);
+    white-space: nowrap;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: .5em; padding: .8em 1.3em; border-radius: 999px;
+    font-weight: 600; text-decoration: none; font-size: 1rem; border: 1px solid transparent;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); box-shadow: 0 8px 24px -10px var(--accent); }
+  .btn-ghost { border-color: var(--line); background: var(--surface); }
+  .btn svg { width: 1.1em; height: 1.1em; }
+
+  /* Header */
+  header.top { padding-block: 20px; }
+  header.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-family: var(--display); font-weight: 700; font-size: 1.25rem; }
+  .brand .mark { width: 34px; height: 34px; border-radius: 9px; flex: none; }
+  nav.links { display: flex; gap: 22px; font-size: .95rem; }
+  nav.links a { text-decoration: none; color: var(--muted); }
+  nav.links a:hover { color: var(--fg); }
+  @media (max-width: 560px) { nav.links a.hide-sm { display: none; } }
+
+  /* Hero */
+  .hero { padding-block: 40px 24px; display: grid; gap: 24px; }
+  .hero .cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .hero .req { font-size: .9rem; color: var(--muted); }
+
+  /* The demo "display" */
+  .display-wrap { padding-block: 8px 24px; }
+  .display {
+    position: relative; aspect-ratio: 16 / 10; max-width: 100%;
+    border-radius: 18px; overflow: hidden; user-select: none;
+    background: linear-gradient(160deg, var(--wall-a), var(--wall-b));
+    box-shadow: var(--shadow), 0 0 0 1px rgba(20, 24, 41, .08);
+    touch-action: none;
+  }
+  .display .menubar {
+    position: absolute; inset: 0 0 auto 0; height: 7%; min-height: 22px;
+    background: rgba(255,255,255,.18); backdrop-filter: blur(12px);
+    display: flex; align-items: center; gap: 4%; padding-inline: 3%;
+    color: rgba(255,255,255,.92); font-size: clamp(9px, 1.2vw, 13px); font-weight: 600;
+  }
+  .display .menubar .apple { width: 1.1em; height: 1.1em; }
+  .display .menubar .clock { margin-left: auto; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .display .dock {
+    position: absolute; left: 50%; bottom: 2.5%; transform: translateX(-50%);
+    height: 9%; min-height: 28px; padding-inline: 1.2%; border-radius: 14px;
+    background: rgba(255,255,255,.22); backdrop-filter: blur(16px);
+    display: flex; align-items: center; gap: 1.2%;
+  }
+  .display .dock i { display: block; height: 68%; aspect-ratio: 1; border-radius: 22%; background: var(--dc, #fff); opacity: .95; }
+  .hint {
+    position: absolute; left: 4%; bottom: 15%; max-width: 19em;
+    color: rgba(255,255,255,.92); font-size: clamp(.78rem, 1.5vw, 1rem); line-height: 1.35;
+    padding: .6em .9em; border-radius: 10px; background: rgba(0,0,0,.28); backdrop-filter: blur(8px);
+    pointer-events: none; transition: opacity .3s;
+  }
+  .hint strong { color: #fff; }
+  .hint.faded { opacity: 0; }
+
+  /* Mock windows */
+  .win {
+    position: absolute; width: 44%; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden;
+    background: #F7F7FA; color: #1C1C1E; box-shadow: 0 2px 6px rgba(0,0,0,.18), 0 24px 48px -16px rgba(0,0,0,.45);
+    cursor: grab; will-change: transform; font-size: clamp(7px, 1.1vw, 12px);
+  }
+  .win.dragging { cursor: grabbing; }
+  .win .tb { height: 2.4em; background: #EAEAEF; display: flex; align-items: center; gap: .6em; padding-inline: .9em; border-bottom: 1px solid #D9D9E0; }
+  .win .tb i { width: .9em; height: .9em; border-radius: 50%; display: block; }
+  .win .tb .t { margin-left: .4em; font-weight: 600; color: #3A3A3C; letter-spacing: .01em; }
+  .win .body { padding: 1em; display: grid; gap: .6em; }
+  .win .row { height: .9em; border-radius: .45em; background: #D5D6DE; }
+  .win .row.short { width: 60%; }
+  .win .row.mid { width: 80%; }
+  .win .cover { height: 7em; border-radius: .6em; background: linear-gradient(135deg, #FF6B6B, #FFB43A); }
+  .win.sliding { transition: transform .26s cubic-bezier(.2,.9,.2,1); }
+  @media (prefers-reduced-motion: reduce) { .win.sliding, .tab, .indicator, .hint { transition: none !important; } }
+
+  /* Edge indicator + tabs inside the demo */
+  .indicator { position: absolute; background: rgba(255,255,255,.18); opacity: 0; transition: opacity .12s; pointer-events: none; }
+  .indicator.show { opacity: 1; }
+  .indicator .ghost { position: absolute; background: rgba(255,255,255,.35); border: 2px solid #fff; }
+  .indicator.right { right: 0; top: 7%; bottom: 0; width: 6%; }
+  .indicator.left { left: 0; top: 7%; bottom: 0; width: 6%; }
+  .indicator.bottom { left: 0; right: 0; bottom: 0; height: 9%; }
+  .indicator.right .ghost, .indicator.left .ghost { width: 100%; height: 22%; }
+  .indicator.right .ghost { border-radius: 10px 0 0 10px; border-right: 0; }
+  .indicator.left .ghost { border-radius: 0 10px 10px 0; border-left: 0; }
+  .indicator.bottom .ghost { height: 100%; width: 18%; border-radius: 10px 10px 0 0; border-bottom: 0; }
+
+  .tab {
+    position: absolute; display: flex; align-items: center; justify-content: center; gap: .5em;
+    background: rgba(255,255,255,.55); backdrop-filter: blur(14px); color: #1C1C1E;
+    box-shadow: 0 1px 2px rgba(0,0,0,.15), 0 8px 20px -8px rgba(0,0,0,.4);
+    cursor: pointer; font-size: clamp(7px, 1.05vw, 12px); font-weight: 600; letter-spacing: .01em;
+    transition: background .15s, transform .15s;
+  }
+  .tab:hover { background: rgba(255,255,255,.75); }
+  .tab.revealed { background: rgba(255,255,255,.95); box-shadow: inset 0 0 0 2px var(--accent), 0 8px 20px -8px rgba(0,0,0,.4); }
+  .tab .ic { width: 1.6em; height: 1.6em; border-radius: 28%; flex: none; }
+  .tab.right, .tab.left { width: 6%; height: 22%; flex-direction: column; }
+  .tab.right { right: 0; border-radius: 10px 0 0 10px; }
+  .tab.left { left: 0; border-radius: 0 10px 10px 0; }
+  .tab.right .lbl { writing-mode: vertical-rl; }
+  .tab.left .lbl { writing-mode: vertical-rl; transform: rotate(180deg); }
+  .tab.bottom { bottom: 0; height: 9%; width: 18%; border-radius: 10px 10px 0 0; }
+  .tab .lbl { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .demo-foot { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; margin-top: 12px; color: var(--muted); font-size: .9rem; }
+  .demo-foot button { font: inherit; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: .45em 1em; cursor: pointer; }
+  .demo-foot button:hover { border-color: var(--muted); }
+
+  /* Sections */
+  section { padding-block: 72px; border-top: 1px solid var(--line); }
+  .sec-head { display: grid; gap: 12px; max-width: 40em; margin-bottom: 40px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 28px 32px; }
+  .gesture { display: grid; gap: 12px; }
+  .gesture .diagram { aspect-ratio: 3 / 2; border-radius: 12px; background: linear-gradient(160deg, var(--wall-a), var(--wall-b)); position: relative; overflow: hidden; }
+  .gesture p { color: var(--muted); }
+  .g-win { position: absolute; width: 42%; height: 48%; border-radius: 6px; background: #F7F7FA; box-shadow: 0 10px 24px -10px rgba(0,0,0,.5); }
+  .g-win::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 18%; background: #E3E3E9; border-radius: 6px 6px 0 0; }
+  .g-tab { position: absolute; right: 0; top: 36%; width: 7%; height: 28%; background: rgba(255,255,255,.7); border-radius: 8px 0 0 8px; }
+  .g-arrow { position: absolute; top: 50%; height: 0; border-top: 2px dashed rgba(255,255,255,.85); }
+  .g-arrow::after { content: ""; position: absolute; right: -2px; top: -5px; border: 5px solid transparent; border-left: 7px solid #fff; border-right: 0; }
+  .g-pointer { position: absolute; width: 10px; height: 10px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 4px rgba(255,255,255,.3); }
+
+  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 2px; background: var(--line); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .feature { background: var(--surface); padding: 26px 24px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+  .feature .glyph { width: 30px; height: 30px; color: var(--accent); }
+  .feature p { color: var(--muted); font-size: .98rem; }
+  .feature .tag { font-family: var(--mono); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--amber-deep); }
+
+  .two { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 48px; align-items: center; }
+  @media (max-width: 800px) { .two { grid-template-columns: 1fr; } }
+  .two p + p { margin-top: 1em; }
+
+  /* 1997 platinum nod */
+  .platinum {
+    font-family: "Charcoal", "Chicago", var(--body); background: #DDDDDD; color: #000; border: 1px solid #000; border-radius: 0;
+    box-shadow: 2px 2px 0 #000; padding: 0; width: min(100%, 420px); margin-inline: auto;
+  }
+  .platinum .bar { height: 22px; background: repeating-linear-gradient(#DDD 0 1px, #999 1px 2px); border-bottom: 1px solid #000; display: flex; align-items: center; justify-content: center; position: relative; }
+  .platinum .bar span { background: #DDD; padding-inline: 8px; font-size: 13px; font-weight: 700; }
+  .platinum .bar i { position: absolute; left: 6px; top: 4px; width: 12px; height: 12px; border: 1px solid #000; background: #DDD; box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #888; }
+  .platinum .list { background: #fff; padding: 10px 12px; font-size: 13px; display: grid; gap: 6px; }
+  .platinum .list div { display: flex; gap: 10px; align-items: center; }
+  .platinum .list i { width: 14px; height: 12px; background: #8FB4FF; border: 1px solid #000; }
+  .platinum .tabrow { display: flex; gap: 6px; padding: 6px 10px 0; background: #CCC; border-top: 1px solid #000; }
+  .platinum .tabrow span { background: #DDD; border: 1px solid #000; border-bottom: 0; padding: 2px 10px; font-size: 12px; border-radius: 6px 6px 0 0; }
+  .platinum .tabrow span.on { background: #fff; }
+
+  .honest { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 28px 32px; }
+  .honest h3 { display: flex; align-items: center; gap: 10px; }
+  .honest .ok { width: 10px; height: 10px; border-radius: 50%; background: #27C840; flex: none; }
+  .honest .opt { width: 10px; height: 10px; border-radius: 50%; background: var(--amber); flex: none; }
+  .honest p { color: var(--muted); }
+
+  .download { text-align: left; display: grid; gap: 20px; }
+  .reqs { display: flex; flex-wrap: wrap; gap: 10px 28px; color: var(--muted); font-size: .95rem; }
+  footer { padding-block: 32px 48px; color: var(--muted); font-size: .9rem; border-top: 1px solid var(--line); }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Ledge home">
+      <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+        <defs><linearGradient id="mg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3F8BFF"/><stop offset="1" stop-color="#2A2A9E"/></linearGradient></defs>
+        <rect width="64" height="64" rx="14" fill="url(#mg)"/>
+        <rect x="11" y="20" width="27" height="23" rx="4" fill="#fff"/>
+        <circle cx="15" cy="24" r="1.3" fill="#FF5F57"/><circle cx="18.5" cy="24" r="1.3" fill="#FEBC2E"/><circle cx="22" cy="24" r="1.3" fill="#28C840"/>
+        <path d="M41 28 L44.5 32 L41 36" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M53 19 H49.5 A3.5 3.5 0 0 0 46 22.5 V41.5 A3.5 3.5 0 0 0 49.5 45 H53 Z" fill="#FFB43A"/>
+        <rect x="53" y="12" width="1.6" height="40" rx=".8" fill="#fff"/>
+      </svg>
+      Ledge
+    </a>
+    <nav class="links" aria-label="Page">
+      <a href="#features">Features</a>
+      <a href="#how" class="hide-sm">How it works</a>
+      <a href="#lineage" class="hide-sm">Lineage</a>
+      <a href="#download">Download</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap hero">
+    <p class="eyebrow">Window management for macOS 15 and later</p>
+    <h1>Park any window on the edge of your screen.</h1>
+    <p class="lede">Drag a window to the left, right, or bottom edge and it folds into a small tab. Click the tab and the window slides back. Mac OS 9 had this. Your Mac can have it again.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="#download">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        Download for macOS
+      </a>
+      <a class="btn btn-ghost" href="#how">See how it works</a>
+      <span class="req">Free while in beta · Apple silicon and Intel</span>
+    </div>
+  </div>
+
+  <div class="wrap display-wrap">
+    <div class="display" id="display" aria-label="Interactive demo: drag the windows to an edge of this screen to park them">
+      <div class="menubar">
+        <svg class="apple" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.4 12.7c0-2.5 2-3.6 2.1-3.7-1.2-1.7-3-1.9-3.6-2-1.5-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.8-1.7 0-3.2 1-4.1 2.5-1.8 3-.5 7.6 1.3 10.1.8 1.2 1.8 2.6 3.1 2.5 1.3 0 1.7-.8 3.3-.8 1.5 0 2 .8 3.3.8 1.4 0 2.2-1.2 3.1-2.5.9-1.4 1.3-2.7 1.4-2.8-.1 0-2.8-1.1-2.8-4.2zM13.9 5.4c.7-.8 1.2-2 1-3.2-1 0-2.3.7-3 1.6-.7.7-1.2 1.9-1.1 3.1 1.2.1 2.3-.6 3.1-1.5z"/></svg>
+        <span>Finder</span><span>File</span><span>Edit</span><span>View</span>
+        <span class="clock" id="clock">Fri 9:41 AM</span>
+      </div>
+      <div class="hint" id="hint">Drag a window to the <strong>right, left, or bottom edge</strong> and let go.</div>
+
+      <div class="win" data-id="notes" data-title="Notes" data-color="#FFD60A" style="left:12%; top:14%;">
+        <div class="tb"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i><span class="t">Notes</span></div>
+        <div class="body"><div class="row mid"></div><div class="row"></div><div class="row short"></div><div class="row"></div><div class="row mid"></div></div>
+      </div>
+      <div class="win" data-id="music" data-title="Music" data-color="#FC3C44" style="left:52%; top:28%;">
+        <div class="tb"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i><span class="t">Music</span></div>
+        <div class="body"><div class="cover"></div><div class="row short"></div><div class="row mid"></div></div>
+      </div>
+
+      <div class="indicator" id="indicator"><div class="ghost"></div></div>
+
+      <div class="dock" aria-hidden="true">
+        <i style="--dc:#3A8DFF"></i><i style="--dc:#FFD60A"></i><i style="--dc:#FC3C44"></i><i style="--dc:#34C759"></i><i style="--dc:#AF52DE"></i><i style="--dc:#8E8E93"></i>
+      </div>
+    </div>
+    <div class="demo-foot">
+      <span id="status">This is a working model of the real gesture. Try it with your mouse or finger.</span>
+      <button type="button" id="reset">Reset demo</button>
+    </div>
+  </div>
+
+  <section id="how">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow">How it works</p>
+        <h2>Three gestures. No new habits.</h2>
+        <p class="lede">Ledge rides on the drag you already make. There is nothing to learn and nothing to remember.</p>
+      </div>
+      <div class="grid-3">
+        <div class="gesture">
+          <div class="diagram" aria-hidden="true">
+            <div class="g-win" style="left:14%; top:26%;"></div>
+            <div class="g-arrow" style="left:58%; width:30%;"></div>
+            <div class="g-pointer" style="right:4%; top:47%;"></div>
+          </div>
+          <h3>Park</h3>
+          <p>Drag a window until the cursor rests against a screen edge. After a quarter second, a glowing strip shows where the tab will land. Let go.</p>
+        </div>
+        <div class="gesture">
+          <div class="diagram" aria-hidden="true">
+            <div class="g-tab" style="background:#fff; box-shadow: inset 0 0 0 2px #2A62F0;"></div>
+            <div class="g-win" style="left:30%; top:26%;"></div>
+            <div class="g-arrow" style="left:74%; width:14%; transform: rotate(180deg);"></div>
+          </div>
+          <h3>Reveal</h3>
+          <p>Click the tab. The window slides out to exactly where it was and takes focus. Click again, or just look away in Peek mode, and it slides back.</p>
+        </div>
+        <div class="gesture">
+          <div class="diagram" aria-hidden="true">
+            <div class="g-tab" style="opacity:.45"></div>
+            <div class="g-win" style="left:22%; top:26%; transform: rotate(-3deg);"></div>
+            <div class="g-pointer" style="left:52%; top:38%;"></div>
+          </div>
+          <h3>Release</h3>
+          <p>Pull a tab away from the edge, or drag the revealed window off, and it becomes an ordinary window again. Nothing is ever lost.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow">Features</p>
+        <h2>Small tabs. A lot of room.</h2>
+        <p class="lede">Everything Ledge does serves one idea: your windows should be one click away, and out of the way until then.</p>
+      </div>
+      <div class="features">
+        <div class="feature">
+          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/><path d="M8 10l2 2-2 2"/></svg>
+          <h3>Pop-out or Peek</h3>
+          <p>Pop-out windows stay until you tuck them. Peek windows duck back when you switch apps or move the cursor away. Choose per tab, or set a default.</p>
+        </div>
+        <div class="feature">
+          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          <h3>Hover previews</h3>
+          <p>Rest on a tab to see the window behind it. With Screen Recording access the preview is live, so you can watch a download or a playing track without revealing anything.</p>
+        </div>
+        <div class="feature">
+          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="13" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/></svg>
+          <h3>Tab groups</h3>
+          <p>Drop a window onto an existing tab to stack them. The group tab shows the apps inside and a count; click it for a list and pick the one you want.</p>
+        </div>
+        <div class="feature">
+          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="18" cy="6" r="3.2" fill="currentColor" stroke="none"/></svg>
+          <h3>Badges on tabs</h3>
+          <p>Unread counts from the Dock show on the tab, so a parked Mail or Messages window still tells you when something arrived.</p>
+        </div>
+        <div class="feature">
+          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7"/><path d="m16 15 2 2 4-4"/></svg>
+          <h3>Rules per app</h3>
+          <p>Keep some apps from parking at all, park others the moment they open, and teach apps like Mail to show their main window when you click them in the Dock.</p>
+        </div>
+        <div class="feature">
+          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/></svg>
+          <h3>Keyboard first, if you like</h3>
+          <p>Park the frontmost window with <kbd>⌃⌥⌘→</kbd>, <kbd>⌃⌥⌘←</kbd>, or <kbd>⌃⌥⌘↓</kbd>. Every shortcut can be changed.</p>
+        </div>
+        <div class="feature">
+          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="12" height="9" rx="1.5"/><rect x="10" y="10" width="12" height="9" rx="1.5"/></svg>
+          <h3>Every display, every Space</h3>
+          <p>Tabs live on the edges of any display and follow you across Spaces. They step aside while a full-screen app is in front.</p>
+        </div>
+        <div class="feature">
+          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+          <h3>Remembers your layout</h3>
+          <p>Quit, restart, or log back in: the windows you parked come back as tabs, on the same edges, in the same order.</p>
+        </div>
+        <div class="feature">
+          <span class="tag">macOS 15 detail</span>
+          <h3>Plays well with edge tiling</h3>
+          <p>Sequoia also tiles windows dragged to the sides. Ledge can take over the left and right edges while it runs and hands the setting back when it quits.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="lineage">
+    <div class="wrap two">
+      <div>
+        <p class="eyebrow">Lineage</p>
+        <h2 style="margin:12px 0 20px">Pop-up windows, 1997.</h2>
+        <p>Mac OS 8 let you drag a Finder window to the bottom of the screen, where it became a tab. Click the tab and the window popped up; click anywhere else and it dropped back down. People who used it never stopped missing it.</p>
+        <p>Ledge brings the idea to the Mac of today: any app, any edge, glass instead of platinum, and animations that respect Reduce Motion.</p>
+      </div>
+      <div class="platinum" aria-label="A Mac OS 8 style pop-up window, drawn in CSS">
+        <div class="bar"><i></i><span>Macintosh HD</span></div>
+        <div class="list">
+          <div><i></i>Applications</div>
+          <div><i></i>Documents</div>
+          <div><i></i>System Folder</div>
+        </div>
+        <div class="tabrow"><span class="on">Macintosh HD</span><span>Projects</span><span>Trash</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="honest">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow">Permissions</p>
+        <h2>It asks for exactly what it needs.</h2>
+      </div>
+      <div class="honest">
+        <div>
+          <h3><span class="ok"></span>Accessibility</h3>
+          <p>Required. This is how Ledge moves, hides, and restores windows that belong to other apps. First launch walks you through granting it.</p>
+        </div>
+        <div>
+          <h3><span class="opt"></span>Screen Recording</h3>
+          <p>Optional. Only used for live hover previews. Without it, Ledge still works fully; previews show the app icon and window title instead.</p>
+        </div>
+        <div>
+          <h3>Nothing phones home</h3>
+          <p>Ledge has no account, no analytics, and no network use apart from checking for updates. Your window layout is saved in a plain file in Application Support.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="download">
+    <div class="wrap download">
+      <p class="eyebrow">Download</p>
+      <h2>Give your windows a ledge.</h2>
+      <div class="cta" style="display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
+        <a class="btn btn-primary" href="https://github.com/aaronfisher/Ledge/releases/latest">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+          Download for macOS
+        </a>
+        <a class="btn btn-ghost" href="https://github.com/aaronfisher/Ledge">Source on GitHub</a>
+      </div>
+      <div class="reqs">
+        <span>macOS 15 Sequoia or later</span>
+        <span>Apple silicon and Intel</span>
+        <span>Notarized by Apple</span>
+        <span>Menu-bar app, no Dock icon</span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 The Shirley Company LLC</span>
+    <span>Ledge is not affiliated with Apple. Mac and macOS are trademarks of Apple Inc.</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  const display = document.getElementById('display');
+  const indicator = document.getElementById('indicator');
+  const ghost = indicator.querySelector('.ghost');
+  const hint = document.getElementById('hint');
+  const status = document.getElementById('status');
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const BAND = 14;        // px from the edge that counts as the zone
+  const DWELL = 250;      // ms the cursor must rest there
+  const MENUBAR = 0.07;   // fraction of height taken by the menu bar
+
+  // Live clock, in the menu bar's own format.
+  const clock = document.getElementById('clock');
+  function tick() {
+    const d = new Date();
+    clock.textContent = d.toLocaleDateString(undefined, { weekday: 'short' }) + ' ' +
+      d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  }
+  tick(); setInterval(tick, 30000);
+
+  const windows = new Map(); // id -> state
+  display.querySelectorAll('.win').forEach(el => {
+    const st = { el, id: el.dataset.id, title: el.dataset.title, color: el.dataset.color,
+      home: null, parked: null, tab: null, revealed: false };
+    windows.set(st.id, st);
+    el.addEventListener('pointerdown', e => beginDrag(e, st));
+  });
+
+  let drag = null, dwellTimer = null;
+
+  function rect() { return display.getBoundingClientRect(); }
+
+  function beginDrag(e, st) {
+    if (e.button !== undefined && e.button !== 0) return;
+    e.preventDefault();
+    const r = rect(), w = st.el.getBoundingClientRect();
+    drag = { st, dx: e.clientX - w.left, dy: e.clientY - w.top, zone: null, armed: false, moved: false,
+             start: { left: w.left - r.left, top: w.top - r.top } };
+    st.el.classList.add('dragging');
+    st.el.classList.remove('sliding');
+    st.el.setPointerCapture(e.pointerId);
+    st.el.addEventListener('pointermove', onMove);
+    st.el.addEventListener('pointerup', onUp);
+    st.el.addEventListener('pointercancel', onUp);
+    display.appendChild(st.el); // bring to front
+  }
+
+  function zoneAt(x, y, r) {
+    const lx = x - r.left, ly = y - r.top;
+    if (lx < 0 || ly < 0 || lx > r.width || ly > r.height) return null;
+    if (ly < r.height * MENUBAR + 8) return null;
+    const cands = [];
+    if (lx <= BAND) cands.push({ edge: 'left', d: lx, off: ly });
+    if (r.width - lx <= BAND) cands.push({ edge: 'right', d: r.width - lx, off: ly });
+    if (r.height - ly <= BAND) cands.push({ edge: 'bottom', d: r.height - ly, off: lx });
+    cands.sort((a, b) => a.d - b.d);
+    return cands[0] || null;
+  }
+
+  function onMove(e) {
+    if (!drag) return;
+    const r = rect(), st = drag.st;
+    drag.moved = true;
+    hint.classList.add('faded');
+    let left = e.clientX - r.left - drag.dx, top = e.clientY - r.top - drag.dy;
+    st.el.style.left = (left / r.width * 100) + '%';
+    st.el.style.top = (top / r.height * 100) + '%';
+
+    const z = zoneAt(e.clientX, e.clientY, r);
+    if (z && drag.zone && z.edge === drag.zone.edge) {
+      drag.zone = z;
+      if (drag.armed) showIndicator(z, r);
+      return;
+    }
+    clearTimeout(dwellTimer); hideIndicator();
+    drag.zone = z; drag.armed = false;
+    if (z) dwellTimer = setTimeout(() => { if (drag && drag.zone && drag.zone.edge === z.edge) { drag.armed = true; showIndicator(drag.zone, rect()); } }, DWELL);
+  }
+
+  function onUp(e) {
+    if (!drag) return;
+    const { st } = drag;
+    const z = drag.armed ? zoneAt(e.clientX, e.clientY, rect()) : null;
+    clearTimeout(dwellTimer); hideIndicator();
+    st.el.classList.remove('dragging');
+    st.el.removeEventListener('pointermove', onMove);
+    st.el.removeEventListener('pointerup', onUp);
+    st.el.removeEventListener('pointercancel', onUp);
+    const wasParked = st.parked;
+    const d = drag; drag = null;
+
+    if (z && (!wasParked || z.edge !== wasParked.edge || Math.abs(z.off - wasParked.off) > 10)) {
+      // Park where the drag began, not where it was dropped (same as the real app).
+      park(st, z, d.start);
+      return;
+    }
+    if (wasParked && st.revealed && d.moved) {
+      // A revealed parked window dragged well away: released where it lands.
+      const r = rect(), w = st.el.getBoundingClientRect();
+      const dist = Math.hypot(w.left - r.left - d.start.left, w.top - r.top - d.start.top);
+      if (dist > 40) release(st, true);
+    }
+  }
+
+  function showIndicator(z, r) {
+    indicator.className = 'indicator show ' + z.edge;
+    const g = ghost;
+    if (z.edge === 'bottom') {
+      const w = r.width * 0.18;
+      g.style.left = Math.min(Math.max(z.off - w / 2, 0), r.width - w) + 'px'; g.style.top = '0';
+    } else {
+      const h = r.height * 0.22, top0 = r.height * MENUBAR;
+      g.style.top = Math.min(Math.max(z.off - top0 - h / 2, 0), r.height - top0 - h) + 'px'; g.style.left = '0';
+    }
+  }
+  function hideIndicator() { indicator.classList.remove('show'); }
+
+  function edgeTransform(st, edge, r) {
+    const w = st.el.getBoundingClientRect();
+    if (edge === 'right') return 'translateX(' + (r.right - w.left + 8) + 'px)';
+    if (edge === 'left') return 'translateX(' + (-(w.right - r.left) - 8) + 'px)';
+    return 'translateY(' + (r.bottom - w.top + 8) + 'px)';
+  }
+
+  function park(st, z, home) {
+    const r = rect();
+    st.home = home;
+    st.el.style.left = (home.left / r.width * 100) + '%';
+    st.el.style.top = (home.top / r.height * 100) + '%';
+    st.parked = { edge: z.edge, off: z.off };
+    st.revealed = false;
+    slideOut(st, z.edge, () => { st.el.hidden = true; });
+    if (!st.tab) {
+      const t = document.createElement('button');
+      t.type = 'button';
+      t.innerHTML = '<span class="ic" style="background:' + st.color + '"></span><span class="lbl">' + st.title + '</span>';
+      t.addEventListener('click', () => toggle(st));
+      t.addEventListener('pointerdown', e => beginTabDrag(e, st));
+      display.appendChild(t);
+      st.tab = t;
+    }
+    placeTab(st);
+    layoutTabs();
+    status.textContent = st.title + ' is parked. Click its tab to bring it back, or drag the tab away to release it.';
+  }
+
+  function placeTab(st) {
+    const t = st.tab, r = rect(), p = st.parked;
+    t.className = 'tab ' + p.edge + (st.revealed ? ' revealed' : '');
+    t.setAttribute('aria-label', (st.revealed ? 'Tuck away ' : 'Reveal ') + st.title);
+    if (p.edge === 'bottom') {
+      const w = r.width * 0.18;
+      t.style.left = Math.min(Math.max(p.off - w / 2, 0), r.width - w) / r.width * 100 + '%';
+      t.style.top = '';
+    } else {
+      const h = r.height * 0.22, top0 = r.height * MENUBAR;
+      t.style.top = Math.min(Math.max(p.off - h / 2, top0), r.height - h) / r.height * 100 + '%';
+      t.style.left = '';
+    }
+  }
+
+  // Tabs on one edge never overlap: push each one past the previous.
+  function layoutTabs() {
+    const r = rect();
+    ['left', 'right', 'bottom'].forEach(edge => {
+      const list = [...windows.values()].filter(s => s.parked && s.parked.edge === edge).sort((a, b) => a.parked.off - b.parked.off);
+      let prevEnd = -Infinity;
+      const len = edge === 'bottom' ? r.width * 0.18 : r.height * 0.22, gap = 6;
+      list.forEach(s => {
+        const want = s.parked.off - len / 2;
+        const start = Math.max(want, prevEnd + gap);
+        s.parked.off = start + len / 2;
+        prevEnd = start + len;
+        placeTab(s);
+      });
+    });
+  }
+
+  function slideOut(st, edge, done) {
+    const r = rect();
+    if (reduceMotion) { st.el.style.transform = ''; done && done(); return; }
+    // A forced reflow (not an animation frame) starts the transition, so the hide can't be skipped
+    // when frames are throttled, e.g. in a background tab.
+    st.el.classList.add('sliding');
+    void st.el.offsetWidth;
+    st.el.style.transform = edgeTransform(st, edge, r);
+    setTimeout(() => { st.el.classList.remove('sliding'); st.el.style.transform = ''; done && done(); }, 280);
+  }
+
+  function reveal(st) {
+    const r = rect();
+    st.el.hidden = false;
+    display.appendChild(st.el);
+    st.el.style.left = (st.home.left / r.width * 100) + '%';
+    st.el.style.top = (st.home.top / r.height * 100) + '%';
+    if (!reduceMotion) {
+      st.el.classList.remove('sliding');
+      st.el.style.transform = edgeTransform(st, st.parked.edge, r);
+      void st.el.offsetWidth;
+      st.el.classList.add('sliding');
+      st.el.style.transform = 'translate(0,0)';
+      setTimeout(() => { st.el.classList.remove('sliding'); st.el.style.transform = ''; }, 300);
+    }
+    st.revealed = true;
+    placeTab(st);
+    status.textContent = st.title + ' is out. Click the tab again to tuck it away, or drag the window off to release it.';
+  }
+
+  function tuck(st) {
+    // Keep wherever the user moved it while it was out.
+    const r = rect(), w = st.el.getBoundingClientRect();
+    st.home = { left: w.left - r.left, top: w.top - r.top };
+    st.revealed = false;
+    placeTab(st);
+    slideOut(st, st.parked.edge, () => { st.el.hidden = true; });
+  }
+
+  function toggle(st) { if (st.revealed) tuck(st); else reveal(st); }
+
+  function release(st, fromWindow) {
+    const r = rect();
+    if (!fromWindow) {
+      st.el.hidden = false;
+      st.el.style.left = (st.home.left / r.width * 100) + '%';
+      st.el.style.top = (st.home.top / r.height * 100) + '%';
+      st.el.style.transform = '';
+    }
+    st.parked = null; st.revealed = false;
+    if (st.tab) { st.tab.remove(); st.tab = null; }
+    layoutTabs();
+    status.textContent = st.title + ' is a normal window again.';
+  }
+
+  // Dragging a tab: along the edge to reorder, away from it to release.
+  let tabDrag = null;
+  function beginTabDrag(e, st) {
+    e.preventDefault();
+    const r = rect();
+    tabDrag = { st, startX: e.clientX, startY: e.clientY, startOff: st.parked.off, moved: false, r };
+    st.tab.setPointerCapture(e.pointerId);
+    const move = ev => {
+      const dx = ev.clientX - tabDrag.startX, dy = ev.clientY - tabDrag.startY;
+      if (Math.hypot(dx, dy) > 4) tabDrag.moved = true;
+      const away = st.parked.edge === 'bottom' ? -dy : (st.parked.edge === 'right' ? -dx : dx);
+      st.tab.style.opacity = away > 40 ? '.55' : '';
+      st.tab.style.transform = away > 40 ? 'translate(' + dx + 'px,' + dy + 'px) scale(.92)' : '';
+      if (away <= 40) { st.parked.off = tabDrag.startOff + (st.parked.edge === 'bottom' ? dx : dy); layoutTabs(); }
+    };
+    const up = ev => {
+      st.tab.removeEventListener('pointermove', move);
+      st.tab.removeEventListener('pointerup', up);
+      const dx = ev.clientX - tabDrag.startX, dy = ev.clientY - tabDrag.startY;
+      const away = st.parked.edge === 'bottom' ? -dy : (st.parked.edge === 'right' ? -dx : dx);
+      st.tab.style.opacity = ''; st.tab.style.transform = '';
+      const moved = tabDrag.moved; tabDrag = null;
+      if (away > 40) { release(st, false); return; }
+      if (moved) { layoutTabs(); ev.stopPropagation(); st.tab.addEventListener('click', swallow, { once: true, capture: true }); }
+    };
+    st.tab.addEventListener('pointermove', move);
+    st.tab.addEventListener('pointerup', up);
+  }
+  function swallow(e) { e.stopPropagation(); e.preventDefault(); }
+
+  document.getElementById('reset').addEventListener('click', () => {
+    const r = rect();
+    const homes = { notes: { left: .12, top: .14 }, music: { left: .52, top: .28 } };
+    windows.forEach(st => {
+      if (st.tab) { st.tab.remove(); st.tab = null; }
+      st.parked = null; st.revealed = false; st.el.hidden = false; st.el.style.transform = '';
+      st.el.style.left = homes[st.id].left * 100 + '%'; st.el.style.top = homes[st.id].top * 100 + '%';
+    });
+    hint.classList.remove('faded');
+    status.textContent = 'This is a working model of the real gesture. Try it with your mouse or finger.';
+  });
+
+  addEventListener('resize', () => { windows.forEach(st => st.parked && placeTab(st)); });
+})();
+</script>
+
+</body>
+</html>

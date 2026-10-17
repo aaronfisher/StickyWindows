@@ -67,6 +67,14 @@ macOS never lets a window go fully off screen — it keeps at least a 1 pt colum
 
 [QUIRKS.md](QUIRKS.md) logs the measurements and app-specific behavior behind this.
 
+## Website
+
+The marketing site is a single static page in [docs/index.html](docs/index.html), with a working model of the parking gesture built in HTML. Serve it with GitHub Pages (Settings → Pages → Deploy from branch → `main`, folder `/docs`) or preview it locally:
+
+```bash
+python3 -m http.server 8765 --directory docs
+```
+
 ## Building
 
 Requirements: macOS 15+, Xcode with the macOS 15 SDK or later, and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`).
