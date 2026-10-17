@@ -10,6 +10,10 @@ enum ScreenGeometry {
         CGRect(x: rect.minX, y: primaryHeight - rect.maxY, width: rect.width, height: rect.height)
     }
 
+    static func axPoint(fromAppKit point: CGPoint) -> CGPoint {
+        CGPoint(x: point.x, y: primaryHeight - point.y)
+    }
+
     static func axFrame(of screen: NSScreen) -> CGRect { flip(screen.frame) }
     static func axVisibleFrame(of screen: NSScreen) -> CGRect { flip(screen.visibleFrame) }
 

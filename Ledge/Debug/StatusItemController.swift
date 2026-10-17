@@ -46,6 +46,14 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         park.isEnabled = permission.isTrusted
         menu.addItem(park)
 
+        menu.addItem(disabled("Or drag any window to the left, right, or bottom edge"))
+        if MacOSTiling.isEdgeDragTilingEnabled {
+            let hint = item("macOS edge tiling is on and may fight left/right drops…", action: #selector(openTilingSettings))
+            hint.image = NSImage(systemSymbolName: "exclamationmark.triangle", accessibilityDescription: nil)
+            hint.toolTip = "System Settings → Desktop & Dock → \"Drag windows to left or right edge of screen to tile\"."
+            menu.addItem(hint)
+        }
+
         if !parking.parked.isEmpty {
             menu.addItem(disabled("Parked (\(parking.parked.count))"))
             for parkedWindow in parking.parked {
@@ -127,6 +135,10 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     @objc private func parkFrontmost() {
         // Ledge never activates for its menu, so the frontmost app is still the user's.
         Task { await parking.parkFrontmostWindow(to: .right) }
+    }
+
+    @objc private func openTilingSettings() {
+        MacOSTiling.openSettings()
     }
 
     @objc private func releaseParked(_ sender: NSMenuItem) {

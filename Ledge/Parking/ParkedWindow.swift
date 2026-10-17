@@ -33,7 +33,7 @@ final class ParkedWindow: Identifiable {
     var hiddenBy: HidingMethod?
     var isRevealed: Bool { hiddenBy == nil }
 
-    init(window: WindowController, app: NSRunningApplication?, frame: CGRect, edge: Edge, screen: NSScreen?) {
+    init(window: WindowController, app: NSRunningApplication?, frame: CGRect, edge: Edge, screen: NSScreen?, offset: CGFloat? = nil) {
         self.window = window
         bundleID = app?.bundleIdentifier
         appName = app?.localizedName ?? "Window"
@@ -42,6 +42,6 @@ final class ParkedWindow: Identifiable {
         self.edge = edge
         displayID = screen.flatMap(ScreenGeometry.displayID(of:))
         storedFrame = frame
-        desiredOffset = edge.isVertical ? frame.midY : frame.midX
+        desiredOffset = offset ?? (edge.isVertical ? frame.midY : frame.midX)
     }
 }

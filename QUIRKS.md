@@ -11,3 +11,9 @@ Log of app-specific window behavior discovered while building Ledge.
 - Offscreen-parked windows still belong to their app, so ⌘-Tab / Mission Control can focus them while they're invisible. Clicking the tab fixes it.
 - If Ledge is killed (Xcode ■ Stop, crash) instead of quit, `applicationWillTerminate` doesn't run and offscreen windows stay stranded. Use Debug → Recover Off-Screen Windows. Proper persistence lands in M5.
 - Full-screen windows are refused (beep).
+
+## Drag to park (M3)
+- Drags are detected with global mouse monitors: on mouse-down Ledge hit-tests the AX window under the cursor, then treats it as a window drag only once its origin moves and its size doesn't (text selection, sliders, and resizes are ignored).
+- macOS 15 edge tiling ("Drag windows to left or right edge of screen to tile", `com.apple.WindowManager EnableTilingByEdgeDrag`, on by default) also reacts to left/right edge drags. On drop Ledge waits 350 ms for tiling to finish, then resizes the window back before hiding it, so you may see a brief tile flash. The status menu warns when it's on; turning it off gives clean drops.
+- The restore frame for a dragged-in window is where it was when the drag began, not where it was dropped.
+- Edges shared with another display aren't zones (the cursor passes through). Side zones stop below the menu bar.

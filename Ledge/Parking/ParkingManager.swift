@@ -38,15 +38,36 @@ final class ParkingManager {
             if existing.isRevealed { await tuck(existing) }
             return
         }
+        await park(window, edge: edge, screen: ScreenGeometry.screen(containing: frame))
+    }
+
+    /// Parks `window` on `edge` of `screen`.
+    /// - Parameters:
+    ///   - offset: Where along the edge the tab should sit (AX coordinates); defaults to the window's center.
+    ///   - restoreFrame: Frame to reveal the window at; defaults to its current frame.
+    ///   - settleDelay: Time to let macOS finish any edge-tiling it starts on mouse-up before hiding.
+    func park(
+        _ window: WindowController, edge: Edge, screen: NSScreen?,
+        offset: CGFloat? = nil, restoreFrame: CGRect? = nil, settleDelay: Duration = .zero
+    ) async {
+        guard let current = window.frame else { return NSSound.beep() }
+        let app = NSRunningApplication(processIdentifier: window.pid)
         guard !window.isFullScreen else {
-            log.info("Park: \(app.bundleIdentifier ?? "?", privacy: .public) window is full screen")
+            log.info("Park: \(app?.bundleIdentifier ?? "?", privacy: .public) window is full screen")
             return NSSound.beep()
         }
 
+        // Re-parking a revealed window (dragged to an edge again) replaces its old tab.
+        parked.removeAll { $0.window.isSameWindow(as: window) }
+
         let parkedWindow = ParkedWindow(
-            window: window, app: app, frame: frame, edge: edge, screen: ScreenGeometry.screen(containing: frame))
+            window: window, app: app, frame: restoreFrame ?? current, edge: edge, screen: screen, offset: offset)
+        parkedWindow.hiddenBy = .offscreen  // Tab shows as tucked right away; hide() sets the real method.
         parked.append(parkedWindow)
         tabs.sync()
+        if settleDelay > .zero {
+            try? await Task.sleep(for: settleDelay)
+        }
         await hide(parkedWindow)
     }
 
@@ -114,6 +135,8 @@ final class ParkingManager {
 
         if strategies.method(for: parkedWindow.bundleID) == .offscreen,
            let target = offscreenOrigin(for: parkedWindow) {
+            // Undo any resize from macOS edge tiling so the offscreen frame matches the stored one.
+            window.setSize(parkedWindow.storedFrame.size)
             window.setPosition(target)
             // Some apps re-clamp asynchronously, so check after they've had a moment.
             try? await Task.sleep(for: .milliseconds(150))

@@ -69,7 +69,7 @@ struct EdgeTabView: View {
     }
 
     /// Rounded on the inward side only, flush against the screen edge.
-    private static func shape(for edge: Edge) -> UnevenRoundedRectangle {
+    static func shape(for edge: Edge) -> UnevenRoundedRectangle {
         let r: CGFloat = 9
         return switch edge {
         case .right: UnevenRoundedRectangle(topLeadingRadius: r, bottomLeadingRadius: r)

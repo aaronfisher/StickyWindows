@@ -76,6 +76,29 @@ struct WindowController {
         return nil
     }
 
+    /// The window under a point in AX coordinates, if any.
+    static func window(at point: CGPoint) -> WindowController? {
+        let systemWide = AXUIElementCreateSystemWide()
+        // A hung app shouldn't stall Ledge's main thread on every click.
+        AXUIElementSetMessagingTimeout(systemWide, 0.25)
+        var hit: AXUIElement?
+        guard AXUIElementCopyElementAtPosition(systemWide, Float(point.x), Float(point.y), &hit) == .success,
+              let hit else { return nil }
+        var pid: pid_t = 0
+        AXUIElementGetPid(hit, &pid)
+
+        var role: CFTypeRef?
+        AXUIElementCopyAttributeValue(hit, kAXRoleAttribute as CFString, &role)
+        if role as? String == kAXWindowRole {
+            return WindowController(element: hit, pid: pid)
+        }
+        var window: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(hit, kAXWindowAttribute as CFString, &window) == .success,
+              let window, CFGetTypeID(window) == AXUIElementGetTypeID() else { return nil }
+        // swiftlint:disable:next force_cast
+        return WindowController(element: window as! AXUIElement, pid: pid)
+    }
+
     static func windows(forPID pid: pid_t) -> [WindowController] {
         let app = AXUIElementCreateApplication(pid)
         var value: CFTypeRef?

@@ -5,6 +5,7 @@ import KeyboardShortcuts
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let permission = AccessibilityPermission()
     let parking = ParkingManager()
+    private let windowObserver = WindowObserver()
     private var statusItemController: StatusItemController?
     private var onboarding: OnboardingWindowController?
 
@@ -20,6 +21,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard let parking = self?.parking else { return }
             Task { await parking.parkFrontmostWindow(to: .right) }
         }
+
+        windowObserver.onDrop = { [weak self] drop in
+            guard let parking = self?.parking else { return }
+            Task {
+                await parking.park(
+                    drop.window, edge: drop.zone.edge, screen: drop.zone.screen,
+                    offset: drop.zone.offset, restoreFrame: drop.startFrame,
+                    settleDelay: MacOSTiling.isEdgeDragTilingEnabled ? .milliseconds(350) : .milliseconds(50))
+            }
+        }
+        windowObserver.start()
 
         if !permission.isTrusted {
             showOnboarding()
