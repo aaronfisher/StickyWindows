@@ -33,6 +33,12 @@ final class ParkingManager {
             MainActor.assumeIsolated { if let pid { self?.appTerminated(pid: pid) } }
         }
         workspace.addObserver(
+            forName: NSWorkspace.didUnhideApplicationNotification, object: nil, queue: .main
+        ) { [weak self] note in
+            let pid = (note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?.processIdentifier
+            MainActor.assumeIsolated { if let pid { self?.appUnhidden(pid: pid) } }
+        }
+        workspace.addObserver(
             forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main
         ) { [weak self] note in
             let pid = (note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?.processIdentifier
@@ -126,9 +132,7 @@ final class ParkingManager {
         guard !parkedWindow.isRevealed, !parkedWindow.isTransitioning else { return }
         cancelHover(parkedWindow)
         let frontmost = NSWorkspace.shared.frontmostApplication
-        if parkedWindow.hiddenBy == .minimize {
-            parkedWindow.window.setMinimized(false)
-        }
+        unhide(parkedWindow)
         parkedWindow.window.setFrame(parkedWindow.storedFrame)
         parkedWindow.window.raise()
         parkedWindow.hiddenBy = nil
@@ -218,7 +222,7 @@ final class ParkingManager {
     /// Restores a hidden window to its frame (a revealed one stays put) and removes the tab.
     func release(_ parkedWindow: ParkedWindow) {
         if parkedWindow.window.isValid, !parkedWindow.isRevealed {
-            if parkedWindow.hiddenBy == .minimize { parkedWindow.window.setMinimized(false) }
+            unhide(parkedWindow)
             parkedWindow.window.setFrame(parkedWindow.storedFrame)
         }
         remove(parkedWindow)
@@ -296,9 +300,12 @@ final class ParkingManager {
 
     // MARK: Hiding
 
+    /// Tries, in order: offscreen corner, hiding the app, minimizing. Remembers per app when offscreen fails.
     private func hide(_ parkedWindow: ParkedWindow) async {
         let window = parkedWindow.window
+        let app = NSRunningApplication(processIdentifier: window.pid)
         if parkedWindow.hiddenBy == .minimize, window.isMinimized { return }
+        if parkedWindow.hiddenBy == .appHidden, app?.isHidden == true { return }
 
         if strategies.method(for: parkedWindow.bundleID) == .offscreen,
            let target = offscreenOrigin(for: parkedWindow) {
@@ -307,38 +314,72 @@ final class ParkingManager {
             window.setPosition(target)
             // Some apps re-clamp asynchronously, so check after they've had a moment.
             try? await Task.sleep(for: .milliseconds(150))
-            if let frame = window.frame, !ScreenGeometry.isVisible(frame) {
+            let landed = window.frame
+            if let landed, ScreenGeometry.isEssentiallyOffscreen(landed) {
                 parkedWindow.hiddenBy = .offscreen
                 return
             }
-            log.notice("\(parkedWindow.bundleID ?? "?", privacy: .public) clamped offscreen move; using minimize")
+            log.notice("""
+                \(parkedWindow.bundleID ?? "?", privacy: .public) clamped offscreen move to \
+                \(target.debugDescription, privacy: .public); landed at \
+                \(landed?.debugDescription ?? "?", privacy: .public)
+                """)
             strategies.setMethod(.minimize, for: parkedWindow.bundleID)
             window.setFrame(parkedWindow.storedFrame)
+        }
+
+        if let app, canHideApp(for: parkedWindow), app.hide() {
+            parkedWindow.hiddenBy = .appHidden
+            return
         }
 
         window.setMinimized(true)
         parkedWindow.hiddenBy = .minimize
     }
 
-    /// Just past the parked edge of the window's display, or past every display if another one sits beyond that edge.
-    private func offscreenOrigin(for parkedWindow: ParkedWindow) -> CGPoint? {
-        guard let screen = ScreenGeometry.screen(withDisplayID: parkedWindow.displayID) else { return nil }
-        let screenFrame = ScreenGeometry.axFrame(of: screen)
-        let union = ScreenGeometry.axUnion
-        let frame = parkedWindow.storedFrame
+    /// Hiding the app is only safe when it hides nothing the user didn't park.
+    private func canHideApp(for parkedWindow: ParkedWindow) -> Bool {
+        let others = WindowController.windows(forPID: parkedWindow.window.pid).filter { other in
+            !other.isSameWindow(as: parkedWindow.window) && !other.isMinimized
+                && other.subrole == kAXStandardWindowSubrole
+                && other.frame.map { ScreenGeometry.isVisible($0) } == true
+        }
+        return others.isEmpty
+    }
 
-        func origin(edgeOf bounds: CGRect) -> CGPoint {
-            switch parkedWindow.edge {
-            case .right: CGPoint(x: bounds.maxX, y: frame.minY)
-            case .left: CGPoint(x: bounds.minX - frame.width, y: frame.minY)
-            case .bottom: CGPoint(x: frame.minX, y: bounds.maxY)
+    /// Undoes whichever hiding method is in effect, without moving the window.
+    private func unhide(_ parkedWindow: ParkedWindow) {
+        switch parkedWindow.hiddenBy {
+        case .minimize: parkedWindow.window.setMinimized(false)
+        case .appHidden: NSRunningApplication(processIdentifier: parkedWindow.window.pid)?.unhide()
+        case .offscreen, nil: break
+        }
+    }
+
+    /// The user brought a hidden app back themselves (⌘-Tab, Dock): its parked window is out now.
+    private func appUnhidden(pid: pid_t) {
+        for parkedWindow in parked where parkedWindow.window.pid == pid && parkedWindow.hiddenBy == .appHidden {
+            parkedWindow.hiddenBy = nil
+            parkedWindow.session = RevealSession(trigger: .click)
+        }
+    }
+
+    /// macOS keeps part of every window on screen, so park at a bottom corner with a 1 pt sliver showing.
+    /// Corners whose window would spill onto another display are skipped.
+    private func offscreenOrigin(for parkedWindow: ParkedWindow) -> CGPoint? {
+        let size = parkedWindow.storedFrame.size
+        let preferred = ScreenGeometry.screen(withDisplayID: parkedWindow.displayID)
+        let screens = [preferred].compactMap { $0 } + NSScreen.screens.filter { $0 != preferred }
+
+        for screen in screens {
+            let frame = ScreenGeometry.axFrame(of: screen)
+            let bottomRight = CGPoint(x: frame.maxX - 1, y: frame.maxY - 1)
+            let bottomLeft = CGPoint(x: frame.minX - size.width + 1, y: frame.maxY - 1)
+            let corners = parkedWindow.edge == .left ? [bottomLeft, bottomRight] : [bottomRight, bottomLeft]
+            if let corner = corners.first(where: { ScreenGeometry.isEssentiallyOffscreen(CGRect(origin: $0, size: size)) }) {
+                return corner
             }
         }
-
-        let nearEdge = origin(edgeOf: screenFrame)
-        if !ScreenGeometry.intersectsAnyScreen(CGRect(origin: nearEdge, size: frame.size)) {
-            return nearEdge
-        }
-        return origin(edgeOf: union)
+        return nil
     }
 }

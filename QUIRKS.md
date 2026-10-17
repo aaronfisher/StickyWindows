@@ -7,7 +7,9 @@ Log of app-specific window behavior discovered while building Ledge.
 - `kCGWindowName` (titles from the window server) needs Screen Recording permission; titles are read from AX instead.
 
 ## Parking (M2)
-- Hiding tries an offscreen move first, re-reads the frame after 150 ms, and falls back to minimize if the app pulled the window back on screen. The fallback is remembered per bundle ID (`hidingStrategies` in UserDefaults; Debug → Reset Per-App Hiding Strategies clears it).
+- macOS won't let a window go fully offscreen: it pulls a strip of it back on screen. M2's check (fail if ≥ 20 pt still visible) therefore failed for nearly every app, even Finder and Xcode, and fell back to minimize, which animates into the Dock. Fixed by parking at a bottom screen corner with a 1 pt sliver showing (the same trick other tiling window managers use) and accepting ≤ 4 pt of overlap as hidden. Corners whose window would spill onto another display are skipped.
+- Hiding ladder: offscreen corner → hide the app (only when the parked window is its one visible standard window) → minimize. Offscreen failure is remembered per bundle ID (`hidingStrategies`, versioned so old bad entries are discarded). Failures are logged with target and landed frame: `log show --predicate 'subsystem == "vc.start.Ledge"' --info`.
+- If the user brings an app-hidden app back themselves (⌘-Tab, Dock), its parked window is treated as revealed.
 - Offscreen-parked windows still belong to their app, so ⌘-Tab / Mission Control can focus them while they're invisible. Clicking the tab fixes it.
 - If Ledge is killed (Xcode ■ Stop, crash) instead of quit, `applicationWillTerminate` doesn't run and offscreen windows stay stranded. Use Debug → Recover Off-Screen Windows. Proper persistence lands in M5.
 - Full-screen windows are refused (beep).

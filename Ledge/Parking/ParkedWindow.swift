@@ -16,9 +16,11 @@ enum Edge: String, Codable, CaseIterable {
 }
 
 enum HidingMethod: String, Codable {
-    /// Move the window just past the parked edge.
+    /// Park the window at a bottom screen corner with a 1 pt sliver left on screen (macOS won't allow less).
     case offscreen
-    /// Minimize to the Dock; used when an app clamps offscreen positions.
+    /// Hide the whole app (⌘H); only used when this is the app's one visible window.
+    case appHidden
+    /// Minimize to the Dock; last resort, since it animates into the Dock.
     case minimize
 }
 

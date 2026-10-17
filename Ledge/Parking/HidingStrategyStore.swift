@@ -1,13 +1,21 @@
 import Foundation
 
-/// Remembers per app which hiding method works, so known offscreen-clampers go straight to minimize.
+/// Remembers per app whether offscreen parking works, so known clampers skip straight to the fallbacks.
 @MainActor
 final class HidingStrategyStore {
     private let defaults: UserDefaults
     private let key = "hidingStrategies"
 
+    /// Bump to discard strategies learned by an older, buggier offscreen check.
+    private let version = 2
+    private let versionKey = "hidingStrategiesVersion"
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
+        if defaults.integer(forKey: versionKey) < version {
+            defaults.removeObject(forKey: key)
+            defaults.set(version, forKey: versionKey)
+        }
     }
 
     func method(for bundleID: String?) -> HidingMethod {

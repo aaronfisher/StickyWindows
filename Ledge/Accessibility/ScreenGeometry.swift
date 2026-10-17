@@ -32,6 +32,14 @@ enum ScreenGeometry {
         }
     }
 
+    /// Whether no more than a sliver (`tolerance` points in either direction) of an AX-space rect is on any display.
+    static func isEssentiallyOffscreen(_ axRect: CGRect, tolerance: CGFloat = 4) -> Bool {
+        NSScreen.screens.allSatisfy { screen in
+            let overlap = axFrame(of: screen).intersection(axRect)
+            return overlap.isNull || overlap.width <= tolerance || overlap.height <= tolerance
+        }
+    }
+
     static func intersectsAnyScreen(_ axRect: CGRect) -> Bool {
         NSScreen.screens.contains { area(axFrame(of: $0).intersection(axRect)) > 0 }
     }
