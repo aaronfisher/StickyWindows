@@ -317,7 +317,11 @@ final class ParkingManager {
             // Undo any resize from macOS edge tiling so it comes back at the stored frame.
             window.setFrame(parkedWindow.storedFrame)
             if app.hide() {
-                try? await Task.sleep(for: .milliseconds(150))
+                // Hiding is asynchronous; Finder takes a few hundred ms. Giving up early would park the window at a
+                // corner and then have the hide land anyway.
+                for _ in 0..<20 where !app.isHidden {
+                    try? await Task.sleep(for: .milliseconds(50))
+                }
                 if app.isHidden {
                     parkedWindow.hiddenBy = .appHidden
                     traceApp("hide → appHidden", pid: window.pid)
@@ -355,49 +359,57 @@ final class ParkingManager {
 
     /// Hiding the app is only safe when it hides nothing the user didn't park.
     /// Hiding is app-wide, so every other window would come back with the app when it's revealed.
-    /// Only windows already tucked at a corner (or minimized) are unaffected by that.
+    /// Only minimized windows are unaffected by that.
     private func canHideApp(for parkedWindow: ParkedWindow) -> Bool {
         let blockers = WindowController.windows(forPID: parkedWindow.window.pid).filter { other in
             guard !other.isSameWindow(as: parkedWindow.window), !other.isMinimized,
                   other.subrole == kAXStandardWindowSubrole else { return false }
-            if let record = parked.first(where: { $0.window.isSameWindow(as: other) }) {
-                // A revealed parked window is on screen; an app-hidden one would reappear with this one.
-                return record.hiddenBy != .offscreen
-            }
+            // Any other parked window blocks it: a revealed one is on screen, and one parked at a corner gets
+            // pulled back on screen when the app is later unhidden.
+            if isParked(other) { return true }
             return other.frame.map { ScreenGeometry.isVisible($0) } == true
         }
         return blockers.isEmpty
     }
 
-    /// Moves a parked window to the corner without the async clamp check. Used to keep it tucked while its
-    /// hidden app is about to be unhidden for another window.
-    private func tuckAtCorner(_ parkedWindow: ParkedWindow) {
-        if strategies.method(for: parkedWindow.bundleID) == .offscreen, let target = offscreenOrigin(for: parkedWindow) {
-            parkedWindow.window.setSize(parkedWindow.storedFrame.size)
-            let moved = parkedWindow.window.setPosition(target)
-            parkedWindow.hiddenBy = .offscreen
-            trace("tuckAtCorner setPosition ok=\(moved) target=\(Int(target.x)),\(Int(target.y))", parkedWindow)
-        } else {
-            parkedWindow.window.setMinimized(true)
-            parkedWindow.hiddenBy = .minimize
-        }
-    }
-
     /// Makes a hidden parked window showable (the caller then sets its frame), keeping the app's other
-    /// parked windows tucked even though unhiding the app would otherwise bring them all back.
+    /// parked windows tucked even though unhiding the app brings them all back on screen.
     private func bringBack(_ parkedWindow: ParkedWindow) {
-        let app = NSRunningApplication(processIdentifier: parkedWindow.window.pid)
-        traceApp("bringBack begin for #\(parkedWindow.id.uuidString.prefix(4))", pid: parkedWindow.window.pid)
-        if app?.isHidden == true {
-            for other in parked where other !== parkedWindow
-                && other.window.pid == parkedWindow.window.pid && other.hiddenBy == .appHidden {
-                tuckAtCorner(other)
+        let pid = parkedWindow.window.pid
+        let app = NSRunningApplication(processIdentifier: pid)
+        traceApp("bringBack begin for #\(parkedWindow.id.uuidString.prefix(4))", pid: pid)
+        let unhiding = app?.isHidden == true
+        if unhiding {
+            // Shouldn't normally exist alongside this one, but if so it now has to live at a corner.
+            for other in parked where other !== parkedWindow && other.window.pid == pid && other.hiddenBy == .appHidden {
+                other.hiddenBy = .offscreen
             }
         }
         unhide(parkedWindow)
         if app?.isHidden == true {
             // This window was at a corner while another parked window had the app hidden.
             app?.unhide()
+        }
+        if unhiding {
+            retuckCorners(pid: pid, except: parkedWindow)
+        }
+    }
+
+    /// Unhiding an app pulls its corner-parked windows back on screen (measured with Finder), so put them back.
+    private func retuckCorners(pid: pid_t, except: ParkedWindow?) {
+        for delay in [150, 600] {
+            Task { [weak self] in
+                try? await Task.sleep(for: .milliseconds(delay))
+                guard let self else { return }
+                for other in self.parked where other !== except && other.window.pid == pid
+                    && other.hiddenBy == .offscreen && !other.isTransitioning {
+                    guard let frame = other.window.frame, !ScreenGeometry.isEssentiallyOffscreen(frame),
+                          let target = self.offscreenOrigin(for: other) else { continue }
+                    other.window.setSize(other.storedFrame.size)
+                    other.window.setPosition(target)
+                    self.trace("retuck after unhide +\(delay)ms", other)
+                }
+            }
         }
     }
 
@@ -413,6 +425,7 @@ final class ParkingManager {
     /// The user brought a hidden app back themselves (⌘-Tab, Dock): its parked window is out now.
     private func appUnhidden(pid: pid_t) {
         traceApp("app unhidden (notification)", pid: pid)
+        retuckCorners(pid: pid, except: nil)
         for parkedWindow in parked where parkedWindow.window.pid == pid && parkedWindow.hiddenBy == .appHidden {
             parkedWindow.hiddenBy = nil
             parkedWindow.session = RevealSession(trigger: .click)
@@ -464,8 +477,6 @@ final class ParkingManager {
             try? await Task.sleep(for: .milliseconds(400))
             guard self != nil else { return }
             snapshot("+400ms")
-            try? await Task.sleep(for: .milliseconds(1100))
-            snapshot("+1.5s")
         }
     }
 }
