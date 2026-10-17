@@ -20,6 +20,7 @@
 		3382D8B592892556B01356E4 /* EdgeTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BED0FE65D9705E1E456F7A53 /* EdgeTabView.swift */; };
 		346EEE236695800E915B93C2 /* DropIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 230E937C5FCD151D6ED82D54 /* DropIndicator.swift */; };
 		39D38758F0A2EDCB250612E4 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = E3145F411069ED87570CB258 /* KeyboardShortcuts */; };
+		3B4BEEC533ACDC19760C2598 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 4379AF1BBC5A36A730DBD682 /* AppIcon.icon */; };
 		3CFE83467ED8D3A88B8DD82B /* AccessibilityPermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07F61EBFA97D796AD4C129F1 /* AccessibilityPermission.swift */; };
 		414EF9EB7FDFC5BDE10AE9C8 /* AXWindowEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD779A70B72D1F21E9AC88DE /* AXWindowEvents.swift */; };
 		43A16B47F73C75365FC7BB83 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1035B6D9106A25A340DB8817 /* SettingsView.swift */; };
@@ -58,6 +59,7 @@
 		4009302CAE8221BDCED6C9A1 /* OnboardingWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingWindowController.swift; sourceTree = "<group>"; };
 		424A4DC598E9B15A131C3BFE /* LedgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LedgeApp.swift; sourceTree = "<group>"; };
 		42F469884A01834A711BC31F /* Ledge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ledge.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4379AF1BBC5A36A730DBD682 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		4380CA2989AABEAC1250538C /* AXWindowMover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AXWindowMover.swift; sourceTree = "<group>"; };
 		4CB6BFB98E0EA72323024506 /* WindowObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowObserver.swift; sourceTree = "<group>"; };
 		606D37A5171536A9B1C7587B /* WindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowController.swift; sourceTree = "<group>"; };
@@ -152,6 +154,7 @@
 		79B1C9D3BCC72844A46B1919 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				4379AF1BBC5A36A730DBD682 /* AppIcon.icon */,
 				7849F5A739F529038365292B /* Ledge.entitlements */,
 			);
 			path = Resources;
@@ -250,6 +253,7 @@
 			buildConfigurationList = 39A182047E84172EF7D4CA05 /* Build configuration list for PBXNativeTarget "Ledge" */;
 			buildPhases = (
 				3395479396869F9D3A89FFC2 /* Sources */,
+				3858430C87D00D75B574772E /* Resources */,
 				293AB90029F25EE05FF19A02 /* Frameworks */,
 			);
 			buildRules = (
@@ -300,6 +304,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		3858430C87D00D75B574772E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3B4BEEC533ACDC19760C2598 /* AppIcon.icon in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		3395479396869F9D3A89FFC2 /* Sources */ = {

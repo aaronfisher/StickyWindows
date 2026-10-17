@@ -81,6 +81,8 @@ open Ledge.xcodeproj
 
 Then build and run the **Ledge** scheme (⌘R). The project is generated from [project.yml](project.yml) — edit that, not the `.xcodeproj`, and re-run `xcodegen generate` after adding or removing files. Swift packages: [KeyboardShortcuts](https://github.com/sindresorhus/KeyboardShortcuts).
 
+**App icon:** `Ledge/Resources/AppIcon.icon` is an Icon Composer file (open it with Icon Composer, which ships inside Xcode). Its layers are SVGs in `Assets/`; Xcode compiles it to the Liquid Glass icon plus `AppIcon.icns` for older macOS.
+
 **Signing:** the project signs with a Developer ID certificate (team `MK738JV28L`) even for Debug builds, so the Accessibility permission survives rebuilds. To build under another team, change `DEVELOPMENT_TEAM` in `project.yml`. The app is intentionally not sandboxed: the App Sandbox blocks controlling other apps' windows.
 
 On first launch Ledge walks you through granting Accessibility access in System Settings → Privacy & Security → Accessibility.
