@@ -132,7 +132,7 @@ final class ParkingManager {
         guard !parkedWindow.isRevealed, !parkedWindow.isTransitioning else { return }
         cancelHover(parkedWindow)
         let frontmost = NSWorkspace.shared.frontmostApplication
-        unhide(parkedWindow)
+        bringBack(parkedWindow)
         parkedWindow.window.setFrame(parkedWindow.storedFrame)
         parkedWindow.window.raise()
         parkedWindow.hiddenBy = nil
@@ -222,7 +222,7 @@ final class ParkingManager {
     /// Restores a hidden window to its frame (a revealed one stays put) and removes the tab.
     func release(_ parkedWindow: ParkedWindow) {
         if parkedWindow.window.isValid, !parkedWindow.isRevealed {
-            unhide(parkedWindow)
+            bringBack(parkedWindow)
             parkedWindow.window.setFrame(parkedWindow.storedFrame)
         }
         remove(parkedWindow)
@@ -349,15 +349,49 @@ final class ParkingManager {
     }
 
     /// Hiding the app is only safe when it hides nothing the user didn't park.
+    /// Hiding is app-wide, so every other window would come back with the app when it's revealed.
+    /// Only windows already tucked at a corner (or minimized) are unaffected by that.
     private func canHideApp(for parkedWindow: ParkedWindow) -> Bool {
-        let others = WindowController.windows(forPID: parkedWindow.window.pid).filter { other in
-            !other.isSameWindow(as: parkedWindow.window) && !other.isMinimized
-                && other.subrole == kAXStandardWindowSubrole
-                && other.frame.map { ScreenGeometry.isVisible($0) } == true
-                // Its other parked windows are already tucked at a corner; hiding the app is fine for them.
-                && !isParked(other)
+        let blockers = WindowController.windows(forPID: parkedWindow.window.pid).filter { other in
+            guard !other.isSameWindow(as: parkedWindow.window), !other.isMinimized,
+                  other.subrole == kAXStandardWindowSubrole else { return false }
+            if let record = parked.first(where: { $0.window.isSameWindow(as: other) }) {
+                // A revealed parked window is on screen; an app-hidden one would reappear with this one.
+                return record.hiddenBy != .offscreen
+            }
+            return other.frame.map { ScreenGeometry.isVisible($0) } == true
         }
-        return others.isEmpty
+        return blockers.isEmpty
+    }
+
+    /// Moves a parked window to the corner without the async clamp check. Used to keep it tucked while its
+    /// hidden app is about to be unhidden for another window.
+    private func tuckAtCorner(_ parkedWindow: ParkedWindow) {
+        if strategies.method(for: parkedWindow.bundleID) == .offscreen, let target = offscreenOrigin(for: parkedWindow) {
+            parkedWindow.window.setSize(parkedWindow.storedFrame.size)
+            parkedWindow.window.setPosition(target)
+            parkedWindow.hiddenBy = .offscreen
+        } else {
+            parkedWindow.window.setMinimized(true)
+            parkedWindow.hiddenBy = .minimize
+        }
+    }
+
+    /// Makes a hidden parked window showable (the caller then sets its frame), keeping the app's other
+    /// parked windows tucked even though unhiding the app would otherwise bring them all back.
+    private func bringBack(_ parkedWindow: ParkedWindow) {
+        let app = NSRunningApplication(processIdentifier: parkedWindow.window.pid)
+        if app?.isHidden == true {
+            for other in parked where other !== parkedWindow
+                && other.window.pid == parkedWindow.window.pid && other.hiddenBy == .appHidden {
+                tuckAtCorner(other)
+            }
+        }
+        unhide(parkedWindow)
+        if app?.isHidden == true {
+            // This window was at a corner while another parked window had the app hidden.
+            app?.unhide()
+        }
     }
 
     /// Undoes whichever hiding method is in effect, without moving the window.
