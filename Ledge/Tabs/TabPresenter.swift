@@ -8,12 +8,37 @@ final class TabPresenter {
     private unowned let manager: ParkingManager
     private var panels: [UUID: TabPanel] = [:]
     private var grabOffset: CGFloat = 0
+    /// Tabs are hidden while a full-screen app is in front.
+    private var isSuppressed = false
     private let gap: CGFloat = 6
     /// How far a tab must be pulled from its edge before letting go releases it.
     private let pullAwayDistance: CGFloat = 80
 
     init(manager: ParkingManager) {
         self.manager = manager
+        NotificationCenter.default.addObserver(forName: .ledgeTabLayoutChanged, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                self.panels.values.forEach(self.applySpacesBehavior)
+                self.layout()
+            }
+        }
+    }
+
+    func setSuppressed(_ suppressed: Bool) {
+        guard suppressed != isSuppressed else { return }
+        isSuppressed = suppressed
+        if suppressed {
+            panels.values.forEach { $0.orderOut(nil) }
+        } else {
+            layout()
+        }
+    }
+
+    private func applySpacesBehavior(to panel: TabPanel) {
+        panel.collectionBehavior = manager.settings.tabsOnAllSpaces
+            ? [.canJoinAllSpaces, .stationary, .ignoresCycle, .fullScreenAuxiliary]
+            : [.managed, .ignoresCycle, .fullScreenAuxiliary]
     }
 
     func sync() {
@@ -36,6 +61,7 @@ final class TabPresenter {
     // MARK: Layout
 
     func layout(animated: Bool = false) {
+        guard !isSuppressed else { return }
         let groups = Dictionary(grouping: manager.parked) { GroupKey(displayID: $0.displayID, edge: $0.edge) }
         for (key, windows) in groups {
             guard let screen = ScreenGeometry.screen(withDisplayID: key.displayID) else { continue }
@@ -45,7 +71,7 @@ final class TabPresenter {
 
     private func layout(_ windows: [ParkedWindow], on screen: NSScreen, edge: Edge, animated: Bool) {
         let visible = ScreenGeometry.axVisibleFrame(of: screen)
-        let length = EdgeTabView.length
+        let length = manager.settings.tabMetrics.length
         let (lower, upper) = edge.isVertical ? (visible.minY, visible.maxY) : (visible.minX, visible.maxX)
 
         // Each tab starts centered on its preferred spot, then gets pushed along to avoid the one before it.
@@ -65,11 +91,11 @@ final class TabPresenter {
             }
         }
 
-        let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        let reduceMotion = manager.settings.reduceMotion
         for (window, start) in zip(sorted, starts) {
             // A tab being dragged follows the cursor instead.
             guard !window.isDragging, let panel = panels[window.id] else { continue }
-            let frame = ScreenGeometry.flip(Self.tabRect(edge: edge, screen: screen, start: start))
+            let frame = ScreenGeometry.flip(tabRect(edge: edge, screen: screen, start: start))
             if animated, !reduceMotion, panel.isVisible, panel.frame != frame {
                 NSAnimationContext.runAnimationGroup { context in
                     context.duration = 0.15
@@ -84,11 +110,11 @@ final class TabPresenter {
     }
 
     /// A tab's rect in AX coordinates, `start` points along the edge.
-    static func tabRect(edge: Edge, screen: NSScreen, start: CGFloat) -> CGRect {
+    func tabRect(edge: Edge, screen: NSScreen, start: CGFloat) -> CGRect {
         let full = ScreenGeometry.axFrame(of: screen)
         let visible = ScreenGeometry.axVisibleFrame(of: screen)
-        let thickness = EdgeTabView.thickness
-        let length = EdgeTabView.length
+        let thickness = manager.settings.tabMetrics.thickness
+        let length = manager.settings.tabMetrics.length
         return switch edge {
         case .right: CGRect(x: full.maxX - thickness, y: start, width: thickness, height: length)
         case .left: CGRect(x: full.minX, y: start, width: thickness, height: length)
@@ -100,6 +126,7 @@ final class TabPresenter {
 
     private func makePanel(for parkedWindow: ParkedWindow) -> TabPanel {
         let panel = TabPanel(rootView: EdgeTabView(parkedWindow: parkedWindow, settings: manager.settings))
+        applySpacesBehavior(to: panel)
         let view = panel.hostingView
         view.onClick = { [weak manager] in
             guard let manager else { return }
@@ -140,11 +167,11 @@ final class TabPresenter {
         }
         parkedWindow.isPulledAway = distanceFromEdge > pullAwayDistance
 
-        let length = EdgeTabView.length
+        let length = manager.settings.tabMetrics.length
         let rect: CGRect
         if parkedWindow.isPulledAway {
             // Free-floating under the cursor: letting go here releases the window.
-            let size = Self.tabRect(edge: edge, screen: screen, start: 0).size
+            let size = tabRect(edge: edge, screen: screen, start: 0).size
             rect = CGRect(x: mouse.x - size.width / 2, y: mouse.y - size.height / 2, width: size.width, height: size.height)
         } else {
             // Slide along the edge; neighbors make room as it passes them.
@@ -152,7 +179,7 @@ final class TabPresenter {
             let (lower, upper) = edge.isVertical ? (visible.minY, visible.maxY) : (visible.minX, visible.maxX)
             let start = min(max(center - length / 2, lower), upper - length)
             manager.reorder(parkedWindow, to: start + length / 2)
-            rect = Self.tabRect(edge: edge, screen: screen, start: start)
+            rect = tabRect(edge: edge, screen: screen, start: start)
             layout(animated: true)
         }
         panel.setFrame(ScreenGeometry.flip(rect), display: true)

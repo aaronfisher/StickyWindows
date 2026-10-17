@@ -13,13 +13,20 @@ final class WindowObserver {
     var onDrop: (Drop) -> Void = { _ in }
     /// A window drag that ended outside any edge zone: (window, frame when the drag began).
     var onWindowMoved: (WindowController, CGRect) -> Void = { _, _ in }
-    var detector = EdgeZoneDetector()
-    var dwell: TimeInterval = 0.25
+    private let settings: SettingsStore
+    private var detector: EdgeZoneDetector {
+        EdgeZoneDetector(enabledEdges: settings.enabledEdges)
+    }
 
     private var monitors: [Any] = []
     private var drag: DragState?
     private var dwellTimer: Timer?
-    private let indicator = DropIndicator()
+    private let indicator: DropIndicator
+
+    init(settings: SettingsStore) {
+        self.settings = settings
+        indicator = DropIndicator(settings: settings)
+    }
 
     private struct DragState {
         let window: WindowController
@@ -118,7 +125,7 @@ final class WindowObserver {
         drag = state
         guard zone != nil else { return }
 
-        dwellTimer = Timer.scheduledTimer(withTimeInterval: dwell, repeats: false) { _ in
+        dwellTimer = Timer.scheduledTimer(withTimeInterval: settings.dwellTime, repeats: false) { _ in
             MainActor.assumeIsolated { [weak self] in self?.dwellElapsed() }
         }
     }

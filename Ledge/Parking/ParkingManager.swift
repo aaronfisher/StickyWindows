@@ -2,7 +2,7 @@ import AppKit
 import Observation
 import os
 
-/// Source of truth for parked windows. Persistence arrives in M5.
+/// Source of truth for parked windows; persisted so they can be re-parked after Ledge restarts.
 @MainActor
 @Observable
 final class ParkingManager {
@@ -15,6 +15,14 @@ final class ParkingManager {
     @ObservationIgnored private lazy var peek = PeekMonitor(manager: self)
     @ObservationIgnored private let axEvents = AXWindowEvents()
     @ObservationIgnored private var hoverTasks: [UUID: Task<Void, Never>] = [:]
+    @ObservationIgnored private let persistence = ParkingPersistence()
+    @ObservationIgnored private var lastSavedRecords: [ParkedRecord]?
+    /// Saved records not yet matched to a window (apps still launching at login, say).
+    @ObservationIgnored private var pendingRestore: [ParkedRecord] = []
+    @ObservationIgnored private var restoreDeadline = Date.distantPast
+    @ObservationIgnored private var housekeepingTicks = 0
+    @ObservationIgnored private var isTerminating = false
+    @ObservationIgnored private var didRestore = false
     @ObservationIgnored private let log = Logger(subsystem: "vc.start.Ledge", category: "parking")
 
     init(settings: SettingsStore) {
@@ -23,7 +31,10 @@ final class ParkingManager {
         NotificationCenter.default.addObserver(
             forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main
         ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.tabs.layout() }
+            MainActor.assumeIsolated { self?.screensChanged() }
+        }
+        NotificationCenter.default.addObserver(forName: .ledgeTabLayoutChanged, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.updateFullScreenSuppression() }
         }
         let workspace = NSWorkspace.shared.notificationCenter
         workspace.addObserver(
@@ -42,7 +53,21 @@ final class ParkingManager {
             forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main
         ) { [weak self] note in
             let pid = (note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?.processIdentifier
-            MainActor.assumeIsolated { if let pid { self?.peek.appActivated(pid: pid) } }
+            MainActor.assumeIsolated {
+                if let pid { self?.peek.appActivated(pid: pid) }
+                self?.updateFullScreenSuppression()
+            }
+        }
+        workspace.addObserver(
+            forName: NSWorkspace.activeSpaceDidChangeNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.updateFullScreenSuppression() }
+        }
+        workspace.addObserver(
+            forName: NSWorkspace.didLaunchApplicationNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            // Its windows take a moment to appear; housekeeping keeps retrying while records are pending.
+            MainActor.assumeIsolated { self?.restoreDeadline = max(self?.restoreDeadline ?? .distantPast, Date() + 20) }
         }
 
         axEvents.handler = { [weak self] event, element, pid in
@@ -78,7 +103,8 @@ final class ParkingManager {
     ///   - settleDelay: Time to let macOS finish any edge-tiling it starts on mouse-up before hiding.
     func park(
         _ window: WindowController, edge: Edge, screen: NSScreen?,
-        offset: CGFloat? = nil, restoreFrame: CGRect? = nil, settleDelay: Duration = .zero
+        offset: CGFloat? = nil, restoreFrame: CGRect? = nil, mode: RevealMode? = nil,
+        settleDelay: Duration = .zero
     ) async {
         guard let current = window.frame else { return NSSound.beep() }
         let app = NSRunningApplication(processIdentifier: window.pid)
@@ -93,7 +119,7 @@ final class ParkingManager {
 
         let parkedWindow = ParkedWindow(
             window: window, app: app, frame: restoreFrame ?? current, edge: edge, screen: screen, offset: offset)
-        parkedWindow.mode = previous?.mode
+        parkedWindow.mode = mode ?? previous?.mode
         parkedWindow.hiddenBy = .offscreen  // Tab shows as tucked right away; hide() sets the real method.
         parked.append(parkedWindow)
         axEvents.watch(window)
@@ -132,9 +158,28 @@ final class ParkingManager {
         guard !parkedWindow.isRevealed, !parkedWindow.isTransitioning else { return }
         cancelHover(parkedWindow)
         let frontmost = NSWorkspace.shared.frontmostApplication
+        // Only corner-parked windows slide; unhiding an app or unminimizing has its own transition.
+        let slides = settings.shouldAnimateWindows && parkedWindow.hiddenBy == .offscreen
         bringBack(parkedWindow)
-        parkedWindow.window.setFrame(parkedWindow.storedFrame)
-        parkedWindow.window.raise()
+        // Its display may have been unplugged since it was parked.
+        let target = ScreenGeometry.fitted(parkedWindow.storedFrame)
+        parkedWindow.storedFrame = target
+        let window = parkedWindow.window
+
+        if slides, let start = edgeOrigin(for: parkedWindow, frame: target) {
+            window.setSize(target.size)
+            window.setPosition(start)
+            window.raise()
+            parkedWindow.isTransitioning = true
+            Task {
+                await slide(window, from: start, to: target.origin, duration: 0.22, easing: .springOut)
+                window.setFrame(target)
+                parkedWindow.isTransitioning = false
+            }
+        } else {
+            window.setFrame(target)
+            window.raise()
+        }
         parkedWindow.hiddenBy = nil
         traceApp("reveal done #\(parkedWindow.id.uuidString.prefix(4))", pid: parkedWindow.window.pid)
         parkedWindow.session = RevealSession(
@@ -156,6 +201,10 @@ final class ParkingManager {
         }
         if let title = parkedWindow.window.title, !title.isEmpty {
             parkedWindow.title = title
+        }
+        if settings.shouldAnimateWindows, let frame = parkedWindow.window.frame,
+           let end = edgeOrigin(for: parkedWindow, frame: frame) {
+            await slide(parkedWindow.window, from: frame.origin, to: end, duration: 0.18, easing: .accelerate)
         }
         await hide(parkedWindow)
 
@@ -314,8 +363,6 @@ final class ParkingManager {
 
         trace("hide begin canHideApp=\(canHideApp(for: parkedWindow))", parkedWindow)
         if let app, canHideApp(for: parkedWindow) {
-            // Undo any resize from macOS edge tiling so it comes back at the stored frame.
-            window.setFrame(parkedWindow.storedFrame)
             if app.hide() {
                 // Hiding is asynchronous; Finder takes a few hundred ms. Giving up early would park the window at a
                 // corner and then have the hide land anyway.
@@ -323,6 +370,9 @@ final class ParkingManager {
                     try? await Task.sleep(for: .milliseconds(50))
                 }
                 if app.isHidden {
+                    // Put it back at its stored frame while it's out of sight (it may have slid to the edge, or
+                    // been resized by macOS edge tiling), so unhiding shows it in the right place.
+                    window.setFrame(parkedWindow.storedFrame)
                     parkedWindow.hiddenBy = .appHidden
                     traceApp("hide → appHidden", pid: window.pid)
                     return
@@ -396,18 +446,18 @@ final class ParkingManager {
     }
 
     /// Unhiding an app pulls its corner-parked windows back on screen (measured with Finder), so put them back.
-    private func retuckCorners(pid: pid_t, except: ParkedWindow?) {
+    private func retuckCorners(pid: pid_t?, except: ParkedWindow?) {
         for delay in [150, 600] {
             Task { [weak self] in
                 try? await Task.sleep(for: .milliseconds(delay))
                 guard let self else { return }
-                for other in self.parked where other !== except && other.window.pid == pid
+                for other in self.parked where other !== except && (pid == nil || other.window.pid == pid)
                     && other.hiddenBy == .offscreen && !other.isTransitioning {
                     guard let frame = other.window.frame, !ScreenGeometry.isEssentiallyOffscreen(frame),
                           let target = self.offscreenOrigin(for: other) else { continue }
                     other.window.setSize(other.storedFrame.size)
                     other.window.setPosition(target)
-                    self.trace("retuck after unhide +\(delay)ms", other)
+                    self.trace("retuck +\(delay)ms", other)
                 }
             }
         }
@@ -449,6 +499,131 @@ final class ParkingManager {
             }
         }
         return nil
+    }
+
+    // MARK: Animation
+
+    private enum Easing {
+        /// Fast start, slight overshoot, settles: for windows sliding out.
+        case springOut
+        /// Slow start, fast finish: for windows leaving.
+        case accelerate
+
+        func value(at t: Double) -> Double {
+            switch self {
+            case .springOut: 1 - exp(-7 * t) * cos(5 * t)
+            case .accelerate: t * t * t
+            }
+        }
+    }
+
+    /// Moves a window by stepping its AX position. Time-based, so slow apps just get fewer frames.
+    private func slide(_ window: WindowController, from: CGPoint, to: CGPoint, duration: TimeInterval, easing: Easing) async {
+        let start = Date()
+        while true {
+            let t = min(1, Date().timeIntervalSince(start) / duration)
+            let e = easing.value(at: t)
+            window.setPosition(CGPoint(x: from.x + (to.x - from.x) * e, y: from.y + (to.y - from.y) * e))
+            if t >= 1 { break }
+            try? await Task.sleep(for: .milliseconds(8))
+        }
+    }
+
+    /// The window just past its parked edge, where slides start and end. macOS clamps it to a sliver anyway.
+    private func edgeOrigin(for parkedWindow: ParkedWindow, frame: CGRect) -> CGPoint? {
+        guard let screen = ScreenGeometry.screen(withDisplayID: parkedWindow.displayID) else { return nil }
+        let bounds = ScreenGeometry.axFrame(of: screen)
+        return switch parkedWindow.edge {
+        case .right: CGPoint(x: bounds.maxX - 1, y: frame.minY)
+        case .left: CGPoint(x: bounds.minX - frame.width + 1, y: frame.minY)
+        case .bottom: CGPoint(x: frame.minX, y: bounds.maxY - 1)
+        }
+    }
+
+    // MARK: Displays & Spaces
+
+    private func screensChanged() {
+        tabs.layout()
+        // Corner positions depend on the display arrangement; a new display may now overlap one.
+        retuckCorners(pid: nil, except: nil)
+    }
+
+    /// Hides all tabs while a full-screen window is in front, if the user wants that.
+    func updateFullScreenSuppression() {
+        guard settings.hideTabsInFullScreen, AXIsProcessTrusted(),
+              let app = NSWorkspace.shared.frontmostApplication,
+              app.processIdentifier != ProcessInfo.processInfo.processIdentifier,
+              let window = WindowController.focusedWindow(forPID: app.processIdentifier) else {
+            return tabs.setSuppressed(false)
+        }
+        tabs.setSuppressed(window.isFullScreen)
+    }
+
+    // MARK: Persistence & housekeeping
+
+    /// Called about once a second by `PeekMonitor`'s timer.
+    func housekeeping() {
+        housekeepingTicks += 1
+        updateFullScreenSuppression()
+        if housekeepingTicks % 3 == 0 { removeInvalidWindows() }
+        restoreSavedIfNeeded()
+        if !pendingRestore.isEmpty { attemptRestore() }
+        saveIfChanged()
+    }
+
+    /// Loads windows parked in a previous run and re-parks the ones it can find (by app + exact title).
+    /// Waits for Accessibility access; nothing is saved over the file until this has run.
+    func restoreSavedIfNeeded() {
+        guard !didRestore, AXIsProcessTrusted() else { return }
+        didRestore = true
+        pendingRestore = persistence.load()
+        lastSavedRecords = pendingRestore
+        // Apps launched at login may still be opening windows.
+        restoreDeadline = Date() + 30
+        attemptRestore()
+    }
+
+    /// Saves, then restores every window, without the restore being saved: next launch re-parks them.
+    func prepareForTermination() {
+        saveIfChanged()
+        isTerminating = true
+        releaseAll()
+    }
+
+    private func saveIfChanged() {
+        // Before the restore has loaded the file, saving would wipe it.
+        guard !isTerminating, didRestore else { return }
+        let records = parked.compactMap(ParkedRecord.init) + pendingRestore
+        guard records != lastSavedRecords else { return }
+        persistence.save(records)
+        lastSavedRecords = records
+    }
+
+    private func attemptRestore() {
+        let stillWaiting = Date() < restoreDeadline
+        var remaining: [ParkedRecord] = []
+        for record in pendingRestore {
+            guard let app = NSRunningApplication.runningApplications(withBundleIdentifier: record.bundleID).first else {
+                if stillWaiting { remaining.append(record) }
+                continue
+            }
+            let match = WindowController.windows(forPID: app.processIdentifier).first {
+                $0.title == record.title && !isParked($0)
+            }
+            if let match {
+                log.info("Restoring parked \(record.bundleID, privacy: .public) '\(record.title, privacy: .public)'")
+                Task {
+                    await park(
+                        match, edge: record.edge, screen: ScreenGeometry.screen(withDisplayID: record.displayID),
+                        offset: record.desiredOffset, restoreFrame: record.storedFrame, mode: record.mode)
+                }
+            } else if stillWaiting {
+                remaining.append(record)
+            } else {
+                log.info("Dropping parked \(record.bundleID, privacy: .public) '\(record.title, privacy: .public)': no match")
+            }
+        }
+        pendingRestore = remaining
     }
 
     // MARK: Tracing

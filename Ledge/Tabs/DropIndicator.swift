@@ -14,8 +14,9 @@ final class DropIndicatorModel {
 @MainActor
 final class DropIndicator {
     private let model = DropIndicatorModel()
+    private let settings: SettingsStore
     private lazy var panel: NSPanel = {
-        let panel = TabPanel(rootView: DropIndicatorView(model: model))
+        let panel = TabPanel(rootView: DropIndicatorView(model: model, settings: settings))
         panel.ignoresMouseEvents = true
         panel.hasShadow = false
         panel.alphaValue = 0
@@ -23,11 +24,15 @@ final class DropIndicator {
     }()
     private var isVisible = false
 
+    init(settings: SettingsStore) {
+        self.settings = settings
+    }
+
     func show(for zone: EdgeZone) {
         let full = ScreenGeometry.axFrame(of: zone.screen)
         let visible = ScreenGeometry.axVisibleFrame(of: zone.screen)
-        let thickness = EdgeTabView.thickness
-        let length = EdgeTabView.length
+        let thickness = settings.tabMetrics.thickness
+        let length = settings.tabMetrics.length
 
         let strip: CGRect = switch zone.edge {
         case .right: CGRect(x: full.maxX - thickness, y: visible.minY, width: thickness, height: visible.height)
@@ -53,7 +58,7 @@ final class DropIndicator {
         guard !isVisible else { return }
         isVisible = true
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? 0 : 0.12
+            context.duration = settings.reduceMotion ? 0 : 0.12
             panel.animator().alphaValue = 1
         }
     }
@@ -62,7 +67,7 @@ final class DropIndicator {
         guard isVisible else { return }
         isVisible = false
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? 0 : 0.1
+            context.duration = settings.reduceMotion ? 0 : 0.1
             panel.animator().alphaValue = 0
         } completionHandler: { [panel] in
             MainActor.assumeIsolated {
@@ -74,24 +79,27 @@ final class DropIndicator {
 
 private struct DropIndicatorView: View {
     let model: DropIndicatorModel
+    let settings: SettingsStore
 
     var body: some View {
         let vertical = model.edge.isVertical
         let ghost = EdgeTabView.shape(for: model.edge)
+        let metrics = settings.tabMetrics
+        let accent = settings.accentColor
 
         ZStack(alignment: alignment) {
             // Glow line hugging the screen edge.
             Rectangle()
-                .fill(Color.accentColor.opacity(0.55))
+                .fill(accent.opacity(0.55))
                 .frame(width: vertical ? 3 : nil, height: vertical ? nil : 3)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: alignment)
 
             ghost
-                .fill(Color.accentColor.opacity(0.32))
-                .overlay { ghost.strokeBorder(Color.accentColor.opacity(0.9), lineWidth: 1.5) }
+                .fill(accent.opacity(0.32))
+                .overlay { ghost.strokeBorder(accent.opacity(0.9), lineWidth: 1.5) }
                 .frame(
-                    width: vertical ? EdgeTabView.thickness : EdgeTabView.length,
-                    height: vertical ? EdgeTabView.length : EdgeTabView.thickness)
+                    width: vertical ? metrics.thickness : metrics.length,
+                    height: vertical ? metrics.length : metrics.thickness)
                 .offset(x: vertical ? 0 : model.ghostStart, y: vertical ? model.ghostStart : 0)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }

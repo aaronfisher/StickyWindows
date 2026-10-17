@@ -40,6 +40,16 @@ enum ScreenGeometry {
         }
     }
 
+    /// The frame itself if a usable part of it is on a display; otherwise the same size centered on the main display.
+    static func fitted(_ axRect: CGRect) -> CGRect {
+        if isVisible(axRect, minimumOverlap: 60) { return axRect }
+        guard let screen = NSScreen.main ?? NSScreen.screens.first else { return axRect }
+        let visible = axVisibleFrame(of: screen)
+        let size = CGSize(width: min(axRect.width, visible.width), height: min(axRect.height, visible.height))
+        return CGRect(
+            x: visible.midX - size.width / 2, y: visible.midY - size.height / 2, width: size.width, height: size.height)
+    }
+
     static func intersectsAnyScreen(_ axRect: CGRect) -> Bool {
         NSScreen.screens.contains { area(axFrame(of: $0).intersection(axRect)) > 0 }
     }

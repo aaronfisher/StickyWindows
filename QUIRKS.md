@@ -30,3 +30,10 @@ Log of app-specific window behavior discovered while building Ledge.
 - Dragging a revealed parked window more than 60 pt unparks it where it lands.
 - "Close Window" reveals the window first so a save sheet isn't stranded offscreen; the tab stays until the window is actually destroyed.
 - Tab removal: AX destroyed notification, app termination, plus a 3 s validity sweep as a safety net.
+
+## Polish (M5)
+- Slide animations step the window's AX position (~8 ms per frame, time-based so slow apps get fewer frames). Only corner-parked windows slide out; app-hidden and minimized windows appear via unhide/unminimize. Tuck slides to the edge first, then hides.
+- App-hidden windows get their stored frame set *after* the app is hidden, so neither an edge slide nor macOS edge tiling's resize shows when it's unhidden.
+- Persistence: `~/Library/Application Support/vc.start.Ledge/parked.json`, written about once a second when anything changed. Restore matches by bundle ID + exact window title; records wait up to 30 s after launch (or 20 s after any app launches) for the window to appear, then are dropped. Nothing is saved until the restore has loaded the file, so launching without Accessibility access doesn't wipe it.
+- Revealing a window whose display was unplugged centers it on the main display instead.
+- Full-screen detection: focused window of the frontmost app has `AXFullScreen`, checked on app activation, Space change, and once a second.

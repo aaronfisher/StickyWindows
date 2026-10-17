@@ -1,6 +1,11 @@
 import KeyboardShortcuts
 
 extension KeyboardShortcuts.Name {
-    /// Park the frontmost window to the right edge (M2). A recorder for it lands with the settings window.
     static let parkFrontmostRight = Self("parkFrontmostRight", default: .init(.rightArrow, modifiers: [.control, .option, .command]))
+    static let parkFrontmostLeft = Self("parkFrontmostLeft", default: .init(.leftArrow, modifiers: [.control, .option, .command]))
+    static let parkFrontmostBottom = Self("parkFrontmostBottom", default: .init(.downArrow, modifiers: [.control, .option, .command]))
+
+    static let parkShortcuts: [(name: Self, edge: Edge)] = [
+        (.parkFrontmostLeft, .left), (.parkFrontmostRight, .right), (.parkFrontmostBottom, .bottom),
+    ]
 }

@@ -5,9 +5,10 @@ struct LedgeApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
-        // Ledge lives in the menu bar; the real settings window arrives in M5.
+        // Ledge lives in the menu bar and opens its own settings window (SettingsWindowController);
+        // SwiftUI just needs a scene.
         Settings {
-            Text("Settings are coming in a later milestone.")
+            Text("Open Settings from the Ledge menu bar icon.")
                 .padding(40)
         }
     }

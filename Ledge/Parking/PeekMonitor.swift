@@ -49,8 +49,8 @@ final class PeekMonitor {
 
     private func poll() {
         ticks += 1
-        if ticks % 30 == 0 {
-            manager.removeInvalidWindows()
+        if ticks % 10 == 0 {
+            manager.housekeeping()
         }
 
         // Mid-drag or mid-resize isn't "leaving".

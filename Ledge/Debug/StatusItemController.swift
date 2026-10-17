@@ -8,14 +8,16 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     private let parking: ParkingManager
     private let tilingOverride: TilingOverride
     private let showOnboarding: () -> Void
+    private let showSettings: () -> Void
     private var windowsByTag: [Int: WindowInfo] = [:]
 
     init(permission: AccessibilityPermission, parking: ParkingManager, tilingOverride: TilingOverride,
-         showOnboarding: @escaping () -> Void) {
+         showOnboarding: @escaping () -> Void, showSettings: @escaping () -> Void) {
         self.permission = permission
         self.parking = parking
         self.tilingOverride = tilingOverride
         self.showOnboarding = showOnboarding
+        self.showSettings = showSettings
         super.init()
 
         if let button = statusItem.button {
@@ -98,6 +100,9 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         menu.addItem(debugItem)
 
         menu.addItem(.separator())
+        let settingsItem = item("Settings…", action: #selector(openSettings))
+        settingsItem.keyEquivalent = ","
+        menu.addItem(settingsItem)
         menu.addItem(item("Show Onboarding…", action: #selector(openOnboarding)))
         let quit = NSMenuItem(title: "Quit Ledge", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         menu.addItem(quit)
@@ -189,6 +194,10 @@ final class StatusItemController: NSObject, NSMenuDelegate {
 
     @objc private func resetStrategies() {
         parking.strategies.reset()
+    }
+
+    @objc private func openSettings() {
+        showSettings()
     }
 
     @objc private func openOnboarding() {

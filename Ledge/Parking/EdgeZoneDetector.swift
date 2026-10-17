@@ -18,8 +18,8 @@ struct EdgeZone {
 /// Hit-tests the cursor against the left, right, and bottom edges of every display.
 @MainActor
 struct EdgeZoneDetector {
-    var band: CGFloat = 8
     var enabledEdges: Set<Edge> = Set(Edge.allCases)
+    var band: CGFloat = 8
 
     /// `point` is in AppKit coordinates (`NSEvent.mouseLocation`).
     func zone(at point: CGPoint) -> EdgeZone? {

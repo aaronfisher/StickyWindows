@@ -4,19 +4,17 @@ struct EdgeTabView: View {
     let parkedWindow: ParkedWindow
     let settings: SettingsStore
 
-    static let thickness: CGFloat = 30
-    static let length: CGFloat = 124
-
     var body: some View {
         let shape = Self.shape(for: parkedWindow.edge)
+        let accent = settings.accentColor
 
         content
             .frame(width: size.width, height: size.height)
-            .background(.regularMaterial, in: shape)
-            .overlay { shape.fill(Color.accentColor.opacity(highlight)) }
+            .background(settings.tabMaterial.material, in: shape)
+            .overlay { shape.fill(accent.opacity(highlight)) }
             .overlay { shape.strokeBorder(.primary.opacity(0.12), lineWidth: 0.5) }
-            .overlay(alignment: .bottom) { peekMarker }
-            .opacity(parkedWindow.isPulledAway ? 0.55 : 1)
+            .overlay(alignment: parkedWindow.edge.isVertical ? .bottom : .trailing) { peekMarker(accent) }
+            .opacity((parkedWindow.isPulledAway ? 0.55 : 1) * settings.tabOpacity)
             .scaleEffect(parkedWindow.isPulledAway ? 0.92 : 1)
             .animation(.easeOut(duration: 0.12), value: parkedWindow.isHovered)
             .animation(.easeOut(duration: 0.12), value: parkedWindow.isRevealed)
@@ -31,44 +29,50 @@ struct EdgeTabView: View {
 
     /// Small dot marking tabs that auto-tuck (Peek), so the two modes are tellable apart at a glance.
     @ViewBuilder
-    private var peekMarker: some View {
+    private func peekMarker(_ accent: Color) -> some View {
         if (parkedWindow.mode ?? settings.defaultRevealMode) == .peek {
             Circle()
-                .fill(Color.accentColor)
+                .fill(accent)
                 .frame(width: 4, height: 4)
                 .padding(4)
         }
     }
 
+    private var metrics: TabMetrics { settings.tabMetrics }
+
     private var size: CGSize {
         parkedWindow.edge.isVertical
-            ? CGSize(width: Self.thickness, height: Self.length)
-            : CGSize(width: Self.length, height: Self.thickness)
+            ? CGSize(width: metrics.thickness, height: metrics.length)
+            : CGSize(width: metrics.length, height: metrics.thickness)
     }
 
     @ViewBuilder
     private var content: some View {
-        let iconSize: CGFloat = 20
-        let textLength = Self.length - iconSize - 22
-        let title = Text(parkedWindow.title)
-            .font(.system(size: 11, weight: .medium))
-            .lineLimit(1)
-            .truncationMode(.tail)
-            .foregroundStyle(.primary)
+        let iconSize = (metrics.thickness * 0.66).rounded()
+        if settings.showTitles {
+            let textLength = metrics.length - iconSize - 22
+            let title = Text(parkedWindow.title)
+                .font(.system(size: metrics.thickness >= 34 ? 12 : 11, weight: .medium))
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .foregroundStyle(.primary)
 
-        if parkedWindow.edge.isVertical {
-            VStack(spacing: 6) {
-                icon.frame(width: iconSize, height: iconSize)
-                title
-                    .frame(width: textLength, height: Self.thickness)
-                    .rotationEffect(.degrees(parkedWindow.edge == .right ? 90 : -90))
-                    .frame(width: Self.thickness, height: textLength)
+            if parkedWindow.edge.isVertical {
+                VStack(spacing: 6) {
+                    icon.frame(width: iconSize, height: iconSize)
+                    title
+                        .frame(width: textLength, height: metrics.thickness)
+                        .rotationEffect(.degrees(parkedWindow.edge == .right ? 90 : -90))
+                        .frame(width: metrics.thickness, height: textLength)
+                }
+            } else {
+                HStack(spacing: 6) {
+                    icon.frame(width: iconSize, height: iconSize)
+                    title.frame(width: textLength, alignment: .leading)
+                }
             }
         } else {
-            HStack(spacing: 6) {
-                icon.frame(width: iconSize, height: iconSize)
-                title.frame(width: textLength, alignment: .leading)
-            }
+            icon.frame(width: iconSize, height: iconSize)
         }
     }
 

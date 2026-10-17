@@ -7,9 +7,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let settings = SettingsStore()
     lazy var parking = ParkingManager(settings: settings)
     let tilingOverride = TilingOverride()
-    private let windowObserver = WindowObserver()
+    let launchAtLogin = LaunchAtLogin()
+    private lazy var windowObserver = WindowObserver(settings: settings)
     private var statusItemController: StatusItemController?
     private var onboarding: OnboardingWindowController?
+    private var settingsWindow: SettingsWindowController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         tilingOverride.restoreOnLaunch()
@@ -18,12 +20,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             permission: permission,
             parking: parking,
             tilingOverride: tilingOverride,
-            showOnboarding: { [weak self] in self?.showOnboarding() }
+            showOnboarding: { [weak self] in self?.showOnboarding() },
+            showSettings: { [weak self] in self?.showSettings() }
         )
 
-        KeyboardShortcuts.onKeyUp(for: .parkFrontmostRight) { [weak self] in
-            guard let parking = self?.parking else { return }
-            Task { await parking.parkFrontmostWindow(to: .right) }
+        for (name, edge) in KeyboardShortcuts.Name.parkShortcuts {
+            KeyboardShortcuts.onKeyUp(for: name) { [weak self] in
+                guard let parking = self?.parking else { return }
+                Task { await parking.parkFrontmostWindow(to: edge) }
+            }
         }
 
         windowObserver.onDrop = { [weak self] drop in
@@ -40,13 +45,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         windowObserver.start()
 
+        // Re-parks windows from the last run once Accessibility is available (housekeeping retries until then).
+        parking.restoreSavedIfNeeded()
+
         if !permission.isTrusted {
             showOnboarding()
         }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        parking.releaseAll()
+        parking.prepareForTermination()
         tilingOverride.restoreOnQuit()
     }
 
@@ -55,5 +63,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             onboarding = OnboardingWindowController(permission: permission, tilingOverride: tilingOverride)
         }
         onboarding?.show()
+    }
+
+    func showSettings() {
+        if settingsWindow == nil {
+            settingsWindow = SettingsWindowController(rootView: SettingsView(
+                settings: settings, tilingOverride: tilingOverride, permission: permission, launchAtLogin: launchAtLogin))
+        }
+        settingsWindow?.show()
     }
 }
