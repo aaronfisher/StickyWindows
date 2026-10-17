@@ -55,7 +55,7 @@ macOS 15 also tiles windows dragged to the left or right edge, which fights with
 
 ### Across restarts
 
-Parked windows are saved to `~/Library/Application Support/vc.start.Ledge/parked.json` and re-parked when Ledge launches again, matched by app and exact window title. Quitting Ledge (⌘Q) always puts every parked window back first.
+Parked windows are saved to `~/Library/Application Support/vc.theshirleycompany.Ledge/parked.json` and re-parked when Ledge launches again, matched by app and exact window title. Quitting Ledge (⌘Q) always puts every parked window back first.
 
 ## How windows are hidden
 
@@ -83,17 +83,17 @@ Then build and run the **Ledge** scheme (⌘R). The project is generated from [p
 
 **App icon:** `Ledge/Resources/AppIcon.icon` is an Icon Composer file (open it with Icon Composer, which ships inside Xcode). Its layers are SVGs in `Assets/`; Xcode compiles it to the Liquid Glass icon plus `AppIcon.icns` for older macOS.
 
-**Signing:** the project signs with a Developer ID certificate (team `MK738JV28L`) even for Debug builds, so the Accessibility permission survives rebuilds. To build under another team, change `DEVELOPMENT_TEAM` in `project.yml`. The app is intentionally not sandboxed: the App Sandbox blocks controlling other apps' windows.
+**Signing:** the project uses automatic signing with an Apple Development certificate for The Shirley Company LLC (team `F5N4RH3674`); Xcode creates the certificate on first build if needed. A stable signing identity is what lets macOS keep Ledge's Accessibility permission across rebuilds — never switch to "Sign to Run Locally". To build under another team, change `DEVELOPMENT_TEAM` in `project.yml`. The app is intentionally not sandboxed: the App Sandbox blocks controlling other apps' windows.
 
 On first launch Ledge walks you through granting Accessibility access in System Settings → Privacy & Security → Accessibility.
 
 ## Development notes
 
 - **Quit with ⌘Q from Ledge's menu, not Xcode's Stop button.** Stop kills Ledge without restoring parked windows. They're re-parked on the next launch; if a window is ever stranded, use *Debug → Recover Off-Screen Windows*.
-- **Logs** use subsystem `vc.start.Ledge`. Hiding fallbacks are logged at notice level; frame timing and hide/reveal state traces at debug level:
+- **Logs** use subsystem `vc.theshirleycompany.Ledge`. Hiding fallbacks are logged at notice level; frame timing and hide/reveal state traces at debug level:
 
   ```bash
-  /usr/bin/log show --last 10m --predicate 'subsystem == "vc.start.Ledge"' --debug
+  /usr/bin/log show --last 10m --predicate 'subsystem == "vc.theshirleycompany.Ledge"' --debug
   ```
 
   In zsh, `log` is a shell builtin — use the full `/usr/bin/log` path.

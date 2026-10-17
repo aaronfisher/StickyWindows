@@ -41,6 +41,7 @@
 		C0DF80CCAF6E0EBE6486D859 /* HidingStrategyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A06085802043A14AE02187F /* HidingStrategyStore.swift */; };
 		CD073FEA5676F5933CA3EDAF /* TabPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E7C2B1DD8628E295FA3B008 /* TabPanel.swift */; };
 		DD9C432FC04A187B40B0F872 /* GroupListPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBBB5BE10B3473FAEAF843BB /* GroupListPanel.swift */; };
+		DE2787EA664A69A4F76508C1 /* AppIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB2D3480660C891ACC6E9EE2 /* AppIdentity.swift */; };
 		E0B9964136E3556C9296A430 /* PreviewPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82938CCE94CAB82CC3D22EC3 /* PreviewPanel.swift */; };
 		E412724FCB75AA9F9817FDAD /* LedgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 424A4DC598E9B15A131C3BFE /* LedgeApp.swift */; };
 		F4E0A417594DA8D04169BF22 /* TabPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA63EBBD4A36ABD9CF3890B9 /* TabPresenter.swift */; };
@@ -86,6 +87,7 @@
 		D68603E8BC4C8BE57B38658C /* ParkingPersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParkingPersistence.swift; sourceTree = "<group>"; };
 		DC6B117880FA7A1891B7F904 /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
 		E858C37B8003DD182DD131E3 /* ParkedWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParkedWindow.swift; sourceTree = "<group>"; };
+		EB2D3480660C891ACC6E9EE2 /* AppIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIdentity.swift; sourceTree = "<group>"; };
 		F1C7AB98EB47175E247A0565 /* AppMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMenu.swift; sourceTree = "<group>"; };
 		F626013BD733D1DF42902E27 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		FA98A71E115262A288C31019 /* WindowInventory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowInventory.swift; sourceTree = "<group>"; };
@@ -132,6 +134,7 @@
 			isa = PBXGroup;
 			children = (
 				C0F3F41375BA0F9516BE57A4 /* AppDelegate.swift */,
+				EB2D3480660C891ACC6E9EE2 /* AppIdentity.swift */,
 				424A4DC598E9B15A131C3BFE /* LedgeApp.swift */,
 				1F27978FA60EF07C78B0E440 /* Shortcuts.swift */,
 			);
@@ -278,8 +281,8 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					DF0E90A6E67540D5C303F996 = {
-						DevelopmentTeam = MK738JV28L;
-						ProvisioningStyle = Manual;
+						DevelopmentTeam = F5N4RH3674;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -325,6 +328,7 @@
 				ACC345FEB61CE09E9D2D9C36 /* AXWindowMover.swift in Sources */,
 				3CFE83467ED8D3A88B8DD82B /* AccessibilityPermission.swift in Sources */,
 				F5817A4ECB1F4E6C03058A72 /* AppDelegate.swift in Sources */,
+				DE2787EA664A69A4F76508C1 /* AppIdentity.swift in Sources */,
 				285E0F554C3C35D77E88A18A /* AppMenu.swift in Sources */,
 				90994061E241BE5E36C3C7F3 /* AppRule.swift in Sources */,
 				0487028B22764BF2D9F735EE /* DockBadgeReader.swift in Sources */,
@@ -397,11 +401,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "Developer ID Application";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = MK738JV28L;
+				DEVELOPMENT_TEAM = F5N4RH3674;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -437,13 +441,13 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Ledge;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Start Holdings LLC";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 The Shirley Company LLC";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 0.1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = vc.start.Ledge;
+				PRODUCT_BUNDLE_IDENTIFIER = vc.theshirleycompany.Ledge;
 				PRODUCT_NAME = Ledge;
 				SDKROOT = macosx;
 			};
@@ -482,11 +486,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "Developer ID Application";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = MK738JV28L;
+				DEVELOPMENT_TEAM = F5N4RH3674;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -529,13 +533,13 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Ledge;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Start Holdings LLC";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 The Shirley Company LLC";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 0.1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = vc.start.Ledge;
+				PRODUCT_BUNDLE_IDENTIFIER = vc.theshirleycompany.Ledge;
 				PRODUCT_NAME = Ledge;
 				SDKROOT = macosx;
 			};

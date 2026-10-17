@@ -38,7 +38,7 @@ final class TilingOverride {
     private(set) var isEnabled: Bool
 
     @ObservationIgnored private let defaults: UserDefaults
-    @ObservationIgnored private let log = Logger(subsystem: "vc.start.Ledge", category: "tiling")
+    @ObservationIgnored private let log = Logger(subsystem: AppIdentity.id, category: "tiling")
 
     private enum Key {
         static let enabled = "tilingOverrideEnabled"

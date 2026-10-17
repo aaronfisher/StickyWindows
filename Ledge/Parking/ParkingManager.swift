@@ -31,7 +31,7 @@ final class ParkingManager {
     @ObservationIgnored private var previewTask: Task<Void, Never>?
     /// When Ledge itself last activated each app, to tell its activations from the user's (Dock click, ⌘-Tab).
     @ObservationIgnored private var ledgeActivations: [pid_t: Date] = [:]
-    @ObservationIgnored private let log = Logger(subsystem: "vc.start.Ledge", category: "parking")
+    @ObservationIgnored private let log = Logger(subsystem: AppIdentity.id, category: "parking")
 
     init(settings: SettingsStore) {
         self.settings = settings
@@ -911,7 +911,7 @@ final class ParkingManager {
     // MARK: Tracing
 
     /// Detailed state dump for diagnosing hide/reveal across multi-window apps.
-    /// Debug level. Read with: /usr/bin/log show --last 10m --predicate 'subsystem == "vc.start.Ledge"' --debug
+    /// Debug level. Read with: /usr/bin/log show --last 10m --predicate 'subsystem == "vc.theshirleycompany.Ledge"' --debug
     private func trace(_ event: String, _ parkedWindow: ParkedWindow) {
         let app = NSRunningApplication(processIdentifier: parkedWindow.window.pid)
         let frame = parkedWindow.window.frame.map { "\(Int($0.minX)),\(Int($0.minY)) \(Int($0.width))x\(Int($0.height))" } ?? "nil"

@@ -31,11 +31,11 @@ struct ParkedRecord: Codable, Equatable {
 @MainActor
 final class ParkingPersistence {
     private let url: URL
-    private let log = Logger(subsystem: "vc.start.Ledge", category: "persistence")
+    private let log = Logger(subsystem: AppIdentity.id, category: "persistence")
 
     init() {
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        let folder = support.appending(path: "vc.start.Ledge", directoryHint: .isDirectory)
+        let folder = support.appending(path: AppIdentity.id, directoryHint: .isDirectory)
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         url = folder.appending(path: "parked.json")
     }

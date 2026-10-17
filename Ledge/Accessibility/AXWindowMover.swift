@@ -19,7 +19,7 @@ final class AXWindowMover: @unchecked Sendable {
 
     // AXUIElement isn't Sendable, but it's only ever touched on `queue`.
     private let element: AXUIElement
-    private let queue = DispatchQueue(label: "vc.start.Ledge.window-mover", qos: .userInteractive)
+    private let queue = DispatchQueue(label: "\(AppIdentity.id).window-mover", qos: .userInteractive)
     private let state = OSAllocatedUnfairLock(initialState: State())
 
     init(element: AXUIElement) {

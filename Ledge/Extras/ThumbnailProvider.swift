@@ -6,7 +6,7 @@ import os
 /// everything returns nil and Ledge falls back to icon + title. Never prompts.
 @MainActor
 final class ThumbnailProvider {
-    private let log = Logger(subsystem: "vc.start.Ledge", category: "thumbnails")
+    private let log = Logger(subsystem: AppIdentity.id, category: "thumbnails")
     /// Longest side of a thumbnail, in pixels (Retina-sharp at the preview's ~280 pt).
     private let maxPixels: CGFloat = 640
 
