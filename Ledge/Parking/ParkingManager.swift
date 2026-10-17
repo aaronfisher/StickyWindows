@@ -136,6 +136,7 @@ final class ParkingManager {
         parkedWindow.window.setFrame(parkedWindow.storedFrame)
         parkedWindow.window.raise()
         parkedWindow.hiddenBy = nil
+        traceApp("reveal done #\(parkedWindow.id.uuidString.prefix(4))", pid: parkedWindow.window.pid)
         parkedWindow.session = RevealSession(
             trigger: trigger,
             previousApp: frontmost?.processIdentifier == parkedWindow.window.pid ? nil : frontmost)
@@ -311,6 +312,7 @@ final class ParkingManager {
         if parkedWindow.hiddenBy == .minimize, window.isMinimized { return }
         if parkedWindow.hiddenBy == .appHidden, app?.isHidden == true { return }
 
+        trace("hide begin canHideApp=\(canHideApp(for: parkedWindow))", parkedWindow)
         if let app, canHideApp(for: parkedWindow) {
             // Undo any resize from macOS edge tiling so it comes back at the stored frame.
             window.setFrame(parkedWindow.storedFrame)
@@ -318,6 +320,7 @@ final class ParkingManager {
                 try? await Task.sleep(for: .milliseconds(150))
                 if app.isHidden {
                     parkedWindow.hiddenBy = .appHidden
+                    traceApp("hide → appHidden", pid: window.pid)
                     return
                 }
             }
@@ -333,6 +336,7 @@ final class ParkingManager {
             let landed = window.frame
             if let landed, ScreenGeometry.isEssentiallyOffscreen(landed) {
                 parkedWindow.hiddenBy = .offscreen
+                traceApp("hide → corner", pid: window.pid)
                 return
             }
             log.notice("""
@@ -346,6 +350,7 @@ final class ParkingManager {
 
         window.setMinimized(true)
         parkedWindow.hiddenBy = .minimize
+        traceApp("hide → minimize", pid: window.pid)
     }
 
     /// Hiding the app is only safe when it hides nothing the user didn't park.
@@ -369,8 +374,9 @@ final class ParkingManager {
     private func tuckAtCorner(_ parkedWindow: ParkedWindow) {
         if strategies.method(for: parkedWindow.bundleID) == .offscreen, let target = offscreenOrigin(for: parkedWindow) {
             parkedWindow.window.setSize(parkedWindow.storedFrame.size)
-            parkedWindow.window.setPosition(target)
+            let moved = parkedWindow.window.setPosition(target)
             parkedWindow.hiddenBy = .offscreen
+            trace("tuckAtCorner setPosition ok=\(moved) target=\(Int(target.x)),\(Int(target.y))", parkedWindow)
         } else {
             parkedWindow.window.setMinimized(true)
             parkedWindow.hiddenBy = .minimize
@@ -381,6 +387,7 @@ final class ParkingManager {
     /// parked windows tucked even though unhiding the app would otherwise bring them all back.
     private func bringBack(_ parkedWindow: ParkedWindow) {
         let app = NSRunningApplication(processIdentifier: parkedWindow.window.pid)
+        traceApp("bringBack begin for #\(parkedWindow.id.uuidString.prefix(4))", pid: parkedWindow.window.pid)
         if app?.isHidden == true {
             for other in parked where other !== parkedWindow
                 && other.window.pid == parkedWindow.window.pid && other.hiddenBy == .appHidden {
@@ -405,6 +412,7 @@ final class ParkingManager {
 
     /// The user brought a hidden app back themselves (⌘-Tab, Dock): its parked window is out now.
     private func appUnhidden(pid: pid_t) {
+        traceApp("app unhidden (notification)", pid: pid)
         for parkedWindow in parked where parkedWindow.window.pid == pid && parkedWindow.hiddenBy == .appHidden {
             parkedWindow.hiddenBy = nil
             parkedWindow.session = RevealSession(trigger: .click)
@@ -428,5 +436,36 @@ final class ParkingManager {
             }
         }
         return nil
+    }
+
+    // MARK: Tracing
+
+    /// Detailed state dump for diagnosing hide/reveal across multi-window apps.
+    /// Read with: log show --last 10m --predicate 'subsystem == "vc.start.Ledge"' --info
+    private func trace(_ event: String, _ parkedWindow: ParkedWindow) {
+        let app = NSRunningApplication(processIdentifier: parkedWindow.window.pid)
+        let frame = parkedWindow.window.frame.map { "\(Int($0.minX)),\(Int($0.minY)) \(Int($0.width))x\(Int($0.height))" } ?? "nil"
+        log.notice("""
+            [\(event, privacy: .public)] \(parkedWindow.appName, privacy: .public) \
+            '\(parkedWindow.title, privacy: .public)' #\(parkedWindow.id.uuidString.prefix(4), privacy: .public) \
+            hiddenBy=\(parkedWindow.hiddenBy?.rawValue ?? "revealed", privacy: .public) frame=\(frame, privacy: .public) \
+            minimized=\(parkedWindow.window.isMinimized, privacy: .public) appHidden=\(app?.isHidden ?? false, privacy: .public)
+            """)
+    }
+
+    /// Snapshots every parked window of an app now and shortly after, to catch apps that re-clamp windows later.
+    private func traceApp(_ event: String, pid: pid_t) {
+        let snapshot = { [weak self] (label: String) in
+            guard let self else { return }
+            for other in self.parked where other.window.pid == pid { self.trace("\(event) \(label)", other) }
+        }
+        snapshot("+0")
+        Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(400))
+            guard self != nil else { return }
+            snapshot("+400ms")
+            try? await Task.sleep(for: .milliseconds(1100))
+            snapshot("+1.5s")
+        }
     }
 }
