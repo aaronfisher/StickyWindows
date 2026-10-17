@@ -11,6 +11,8 @@ final class WindowObserver {
     }
 
     var onDrop: (Drop) -> Void = { _ in }
+    /// A window drag that ended outside any edge zone: (window, frame when the drag began).
+    var onWindowMoved: (WindowController, CGRect) -> Void = { _, _ in }
     var detector = EdgeZoneDetector()
     var dwell: TimeInterval = 0.25
 
@@ -87,9 +89,12 @@ final class WindowObserver {
 
     private func mouseUp() {
         defer { reset() }
-        guard let state = drag, state.isMovingWindow, state.isArmed,
-              let zone = detector.zone(at: NSEvent.mouseLocation), zone.isSameZone(as: state.zone) else { return }
-        onDrop(Drop(window: state.window, zone: zone, startFrame: state.startFrame))
+        guard let state = drag, state.isMovingWindow else { return }
+        if state.isArmed, let zone = detector.zone(at: NSEvent.mouseLocation), zone.isSameZone(as: state.zone) {
+            onDrop(Drop(window: state.window, zone: zone, startFrame: state.startFrame))
+        } else {
+            onWindowMoved(state.window, state.startFrame)
+        }
     }
 
     // MARK: Zones

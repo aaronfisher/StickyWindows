@@ -2,9 +2,7 @@ import SwiftUI
 
 struct EdgeTabView: View {
     let parkedWindow: ParkedWindow
-    let onClick: () -> Void
-
-    @State private var isHovering = false
+    let settings: SettingsStore
 
     static let thickness: CGFloat = 30
     static let length: CGFloat = 124
@@ -15,16 +13,31 @@ struct EdgeTabView: View {
         content
             .frame(width: size.width, height: size.height)
             .background(.regularMaterial, in: shape)
-            .overlay {
-                shape.fill(Color.accentColor.opacity(parkedWindow.isRevealed ? 0.28 : (isHovering ? 0.12 : 0)))
-            }
+            .overlay { shape.fill(Color.accentColor.opacity(highlight)) }
             .overlay { shape.strokeBorder(.primary.opacity(0.12), lineWidth: 0.5) }
-            .contentShape(shape)
-            .onHover { isHovering = $0 }
-            .onTapGesture(perform: onClick)
-            .help("\(parkedWindow.appName) — \(parkedWindow.title)")
-            .animation(.easeOut(duration: 0.12), value: isHovering)
+            .overlay(alignment: .bottom) { peekMarker }
+            .opacity(parkedWindow.isPulledAway ? 0.55 : 1)
+            .scaleEffect(parkedWindow.isPulledAway ? 0.92 : 1)
+            .animation(.easeOut(duration: 0.12), value: parkedWindow.isHovered)
             .animation(.easeOut(duration: 0.12), value: parkedWindow.isRevealed)
+            .animation(.easeOut(duration: 0.12), value: parkedWindow.isPulledAway)
+    }
+
+    private var highlight: Double {
+        if parkedWindow.isRevealed { return 0.28 }
+        if parkedWindow.isHovered || parkedWindow.isDragging { return 0.12 }
+        return 0
+    }
+
+    /// Small dot marking tabs that auto-tuck (Peek), so the two modes are tellable apart at a glance.
+    @ViewBuilder
+    private var peekMarker: some View {
+        if (parkedWindow.mode ?? settings.defaultRevealMode) == .peek {
+            Circle()
+                .fill(Color.accentColor)
+                .frame(width: 4, height: 4)
+                .padding(4)
+        }
     }
 
     private var size: CGSize {

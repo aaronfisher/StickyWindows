@@ -8,17 +8,41 @@ import os
 final class ParkingManager {
     private(set) var parked: [ParkedWindow] = []
 
+    @ObservationIgnored let settings: SettingsStore
     @ObservationIgnored let strategies = HidingStrategyStore()
     @ObservationIgnored var onNeedsPermission: () -> Void = {}
     @ObservationIgnored private lazy var tabs = TabPresenter(manager: self)
+    @ObservationIgnored private lazy var peek = PeekMonitor(manager: self)
+    @ObservationIgnored private let axEvents = AXWindowEvents()
+    @ObservationIgnored private var hoverTasks: [UUID: Task<Void, Never>] = [:]
     @ObservationIgnored private let log = Logger(subsystem: "vc.start.Ledge", category: "parking")
 
-    init() {
+    init(settings: SettingsStore) {
+        self.settings = settings
+
         NotificationCenter.default.addObserver(
             forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main
         ) { [weak self] _ in
             MainActor.assumeIsolated { self?.tabs.layout() }
         }
+        let workspace = NSWorkspace.shared.notificationCenter
+        workspace.addObserver(
+            forName: NSWorkspace.didTerminateApplicationNotification, object: nil, queue: .main
+        ) { [weak self] note in
+            let pid = (note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?.processIdentifier
+            MainActor.assumeIsolated { if let pid { self?.appTerminated(pid: pid) } }
+        }
+        workspace.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main
+        ) { [weak self] note in
+            let pid = (note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?.processIdentifier
+            MainActor.assumeIsolated { if let pid { self?.peek.appActivated(pid: pid) } }
+        }
+
+        axEvents.handler = { [weak self] event, element, pid in
+            self?.handle(event, element: element, pid: pid)
+        }
+        peek.start()
     }
 
     // MARK: Parking
@@ -57,13 +81,16 @@ final class ParkingManager {
             return NSSound.beep()
         }
 
-        // Re-parking a revealed window (dragged to an edge again) replaces its old tab.
-        parked.removeAll { $0.window.isSameWindow(as: window) }
+        // Re-parking a revealed window (dragged to an edge again) replaces its old tab, keeping its mode.
+        let previous = parked.first { $0.window.isSameWindow(as: window) }
+        if let previous { forget(previous) }
 
         let parkedWindow = ParkedWindow(
             window: window, app: app, frame: restoreFrame ?? current, edge: edge, screen: screen, offset: offset)
+        parkedWindow.mode = previous?.mode
         parkedWindow.hiddenBy = .offscreen  // Tab shows as tucked right away; hide() sets the real method.
         parked.append(parkedWindow)
+        axEvents.watch(window)
         tabs.sync()
         if settleDelay > .zero {
             try? await Task.sleep(for: settleDelay)
@@ -71,28 +98,53 @@ final class ParkingManager {
         await hide(parkedWindow)
     }
 
-    /// Tab click: reveal a tucked window, or tuck a revealed one (pop-out behavior).
-    func toggle(_ parkedWindow: ParkedWindow) async {
-        guard parkedWindow.window.isValid else { return remove(parkedWindow) }
-        if parkedWindow.isRevealed {
-            await tuck(parkedWindow)
-        } else {
-            reveal(parkedWindow)
-        }
+    // MARK: Reveal & tuck
+
+    func effectiveMode(of parkedWindow: ParkedWindow) -> RevealMode {
+        parkedWindow.mode ?? settings.defaultRevealMode
     }
 
-    func reveal(_ parkedWindow: ParkedWindow) {
+    /// Whether this revealed window should tuck itself away on focus loss / cursor leave.
+    func autoTucks(_ parkedWindow: ParkedWindow) -> Bool {
+        parkedWindow.session?.trigger == .hover || effectiveMode(of: parkedWindow) == .peek
+    }
+
+    func tabClicked(_ parkedWindow: ParkedWindow) async {
         guard parkedWindow.window.isValid else { return remove(parkedWindow) }
+        guard parkedWindow.isRevealed else { return reveal(parkedWindow, trigger: .click) }
+        if parkedWindow.session?.trigger == .hover {
+            // Clicking a hover peek keeps it out, following the tab's mode from here.
+            parkedWindow.session?.trigger = .click
+            parkedWindow.session?.previousApp = nil
+            return
+        }
+        await tuck(parkedWindow)
+    }
+
+    func reveal(_ parkedWindow: ParkedWindow, trigger: RevealSession.Trigger = .click) {
+        guard parkedWindow.window.isValid else { return remove(parkedWindow) }
+        guard !parkedWindow.isRevealed, !parkedWindow.isTransitioning else { return }
+        cancelHover(parkedWindow)
+        let frontmost = NSWorkspace.shared.frontmostApplication
         if parkedWindow.hiddenBy == .minimize {
             parkedWindow.window.setMinimized(false)
         }
         parkedWindow.window.setFrame(parkedWindow.storedFrame)
         parkedWindow.window.raise()
         parkedWindow.hiddenBy = nil
+        parkedWindow.session = RevealSession(
+            trigger: trigger,
+            previousApp: frontmost?.processIdentifier == parkedWindow.window.pid ? nil : frontmost)
     }
 
     func tuck(_ parkedWindow: ParkedWindow) async {
+        guard parkedWindow.isRevealed, !parkedWindow.isTransitioning else { return }
         guard parkedWindow.window.isValid else { return remove(parkedWindow) }
+        parkedWindow.isTransitioning = true
+        defer { parkedWindow.isTransitioning = false }
+        let session = parkedWindow.session
+        parkedWindow.session = nil
+
         // Keep whatever frame the user moved/resized it to while it was out.
         if let frame = parkedWindow.window.frame, ScreenGeometry.isVisible(frame) {
             parkedWindow.storedFrame = frame
@@ -101,11 +153,71 @@ final class ParkingManager {
             parkedWindow.title = title
         }
         await hide(parkedWindow)
+
+        // A hover peek borrowed focus; hand it back.
+        if session?.trigger == .hover, let previous = session?.previousApp,
+           NSWorkspace.shared.frontmostApplication?.processIdentifier == parkedWindow.window.pid {
+            previous.activate()
+        }
     }
 
-    /// Restores the window to its frame and removes the tab.
+    func tabHoverChanged(_ parkedWindow: ParkedWindow, isHovering: Bool) {
+        parkedWindow.isHovered = isHovering
+        guard isHovering else { return cancelHover(parkedWindow) }
+        guard settings.hoverToPeek, !parkedWindow.isRevealed, !parkedWindow.isDragging else { return }
+        hoverTasks[parkedWindow.id]?.cancel()
+        let delay = settings.hoverDelay
+        hoverTasks[parkedWindow.id] = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(delay))
+            guard !Task.isCancelled, let self, parkedWindow.isHovered, !parkedWindow.isDragging,
+                  self.parked.contains(where: { $0 === parkedWindow }) else { return }
+            self.reveal(parkedWindow, trigger: .hover)
+        }
+    }
+
+    func cancelHover(_ parkedWindow: ParkedWindow) {
+        hoverTasks[parkedWindow.id]?.cancel()
+        hoverTasks[parkedWindow.id] = nil
+    }
+
+    // MARK: Tab actions
+
+    func setMode(_ mode: RevealMode?, for parkedWindow: ParkedWindow) {
+        parkedWindow.mode = mode
+        if effectiveMode(of: parkedWindow) == .popOut, parkedWindow.session?.trigger == .hover {
+            parkedWindow.session?.trigger = .click
+        }
+    }
+
+    func move(_ parkedWindow: ParkedWindow, to edge: Edge) async {
+        guard edge != parkedWindow.edge else { return }
+        parkedWindow.edge = edge
+        let frame = parkedWindow.storedFrame
+        parkedWindow.desiredOffset = edge.isVertical ? frame.midY : frame.midX
+        tabs.layout()
+        // An offscreen window has to move past the new edge.
+        if parkedWindow.hiddenBy == .offscreen, !parkedWindow.isTransitioning {
+            await hide(parkedWindow)
+        }
+    }
+
+    func reorder(_ parkedWindow: ParkedWindow, to offset: CGFloat) {
+        parkedWindow.desiredOffset = offset
+    }
+
+    /// Closes the underlying window. It's revealed first so a "Save changes?" sheet isn't left offscreen.
+    func closeWindow(_ parkedWindow: ParkedWindow) {
+        reveal(parkedWindow)
+        guard parkedWindow.window.close() else { return NSSound.beep() }
+        Task {
+            try? await Task.sleep(for: .milliseconds(500))
+            if !parkedWindow.window.isValid { remove(parkedWindow) }
+        }
+    }
+
+    /// Restores a hidden window to its frame (a revealed one stays put) and removes the tab.
     func release(_ parkedWindow: ParkedWindow) {
-        if parkedWindow.window.isValid {
+        if parkedWindow.window.isValid, !parkedWindow.isRevealed {
             if parkedWindow.hiddenBy == .minimize { parkedWindow.window.setMinimized(false) }
             parkedWindow.window.setFrame(parkedWindow.storedFrame)
         }
@@ -123,15 +235,70 @@ final class ParkingManager {
         parked.contains { $0.window.isSameWindow(as: window) }
     }
 
-    private func remove(_ parkedWindow: ParkedWindow) {
-        parked.removeAll { $0 === parkedWindow }
+    func tabFrame(of parkedWindow: ParkedWindow) -> CGRect? {
+        tabs.frame(of: parkedWindow)
+    }
+
+    // MARK: Lifecycle
+
+    /// A revealed parked window dragged well away from where it was revealed is unparked where it lands.
+    func windowWasDragged(_ window: WindowController, from start: CGRect) {
+        guard let parkedWindow = parked.first(where: { $0.window.isSameWindow(as: window) }),
+              parkedWindow.isRevealed, !parkedWindow.isTransitioning,
+              let end = window.frame, hypot(end.minX - start.minX, end.minY - start.minY) > 60 else { return }
+        log.info("Unparked \(parkedWindow.appName, privacy: .public) by dragging the window off")
+        remove(parkedWindow)
+    }
+
+    /// Safety net for windows that vanished without a destroyed notification.
+    func removeInvalidWindows() {
+        for parkedWindow in parked where !parkedWindow.isTransitioning && !parkedWindow.window.isValid {
+            remove(parkedWindow)
+        }
+    }
+
+    private func handle(_ event: AXWindowEvents.Event, element: AXUIElement, pid: pid_t) {
+        switch event {
+        case .destroyed:
+            if let parkedWindow = parked.first(where: { CFEqual($0.window.element, element) }) {
+                remove(parkedWindow)
+            }
+        case .titleChanged:
+            if let parkedWindow = parked.first(where: { CFEqual($0.window.element, element) }),
+               let title = parkedWindow.window.title, !title.isEmpty {
+                parkedWindow.title = title
+            }
+        case .focusedWindowChanged:
+            peek.focusedWindowChanged(pid: pid)
+        }
+    }
+
+    private func appTerminated(pid: pid_t) {
+        let gone = parked.filter { $0.window.pid == pid }
+        guard !gone.isEmpty else { return }
+        for parkedWindow in gone { cancelHover(parkedWindow) }
+        parked.removeAll { $0.window.pid == pid }
+        axEvents.forget(pid: pid)
         tabs.sync()
+    }
+
+    private func remove(_ parkedWindow: ParkedWindow) {
+        forget(parkedWindow)
+        tabs.sync()
+    }
+
+    /// Drops the record without touching the window or tabs.
+    private func forget(_ parkedWindow: ParkedWindow) {
+        cancelHover(parkedWindow)
+        axEvents.unwatch(parkedWindow.window)
+        parked.removeAll { $0 === parkedWindow }
     }
 
     // MARK: Hiding
 
     private func hide(_ parkedWindow: ParkedWindow) async {
         let window = parkedWindow.window
+        if parkedWindow.hiddenBy == .minimize, window.isMinimized { return }
 
         if strategies.method(for: parkedWindow.bundleID) == .offscreen,
            let target = offscreenOrigin(for: parkedWindow) {

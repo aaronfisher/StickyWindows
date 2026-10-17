@@ -18,3 +18,10 @@ Log of app-specific window behavior discovered while building Ledge.
 - Opt-in "Let Ledge Handle Left/Right Edge Drags" (menu + onboarding) writes `EnableTilingByEdgeDrag = false` while Ledge runs. The user's prior value (on/off/unset) is saved in Ledge's defaults and restored on quit, or on next launch after a crash/kill. If the user changes the setting themselves meanwhile, theirs is kept. WindowManager picks up the change immediately (confirmed on macOS 15+, Oct 2026); no restart needed.
 - The restore frame for a dragged-in window is where it was when the drag began, not where it was dropped.
 - Edges shared with another display aren't zones (the cursor passes through). Side zones stop below the menu bar.
+
+## Reveal modes & lifecycle (M4)
+- Peek tucks on: another app activating, focus moving to another window of the same app (AX `kAXFocusedWindowChangedNotification`), or the cursor staying outside window+tab (10 pt slack) for 0.5 s — but only after the cursor has been over the window once (or immediately for hover peeks). Focus-based tucks ignore the first 0.4 s after a reveal, since activating an app can briefly report focus on one of its other windows.
+- Hover peeks activate the window's app (needed to bring it above other apps' windows) and hand focus back to the previous app on tuck.
+- Dragging a revealed parked window more than 60 pt unparks it where it lands.
+- "Close Window" reveals the window first so a save sheet isn't stranded offscreen; the tab stays until the window is actually destroyed.
+- Tab removal: AX destroyed notification, app termination, plus a 3 s validity sweep as a safety net.

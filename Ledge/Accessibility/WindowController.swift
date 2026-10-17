@@ -58,6 +58,16 @@ struct WindowController {
         setPosition(frame.origin)
     }
 
+    /// Presses the window's close button, as if the user clicked it. Returns false if there isn't one.
+    @discardableResult
+    func close() -> Bool {
+        var button: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(element, kAXCloseButtonAttribute as CFString, &button) == .success,
+              let button, CFGetTypeID(button) == AXUIElementGetTypeID() else { return false }
+        // swiftlint:disable:next force_cast
+        return AXUIElementPerformAction(button as! AXUIElement, kAXPressAction as CFString) == .success
+    }
+
     func setMinimized(_ minimized: Bool) {
         AXUIElementSetAttributeValue(
             element, kAXMinimizedAttribute as CFString, minimized ? kCFBooleanTrue : kCFBooleanFalse)

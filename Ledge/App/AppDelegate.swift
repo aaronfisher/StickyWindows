@@ -4,7 +4,8 @@ import KeyboardShortcuts
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let permission = AccessibilityPermission()
-    let parking = ParkingManager()
+    let settings = SettingsStore()
+    lazy var parking = ParkingManager(settings: settings)
     let tilingOverride = TilingOverride()
     private let windowObserver = WindowObserver()
     private var statusItemController: StatusItemController?
@@ -33,6 +34,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     offset: drop.zone.offset, restoreFrame: drop.startFrame,
                     settleDelay: MacOSTiling.isEdgeDragTilingEnabled ? .milliseconds(350) : .milliseconds(50))
             }
+        }
+        windowObserver.onWindowMoved = { [weak self] window, start in
+            self?.parking.windowWasDragged(window, from: start)
         }
         windowObserver.start()
 

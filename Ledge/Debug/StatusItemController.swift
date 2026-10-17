@@ -50,6 +50,23 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         menu.addItem(park)
 
         menu.addItem(disabled("Or drag any window to the left, right, or bottom edge"))
+        let modeMenu = NSMenu()
+        for mode in RevealMode.allCases {
+            let entry = ClosureMenuItem(mode.displayName, state: parking.settings.defaultRevealMode == mode ? .on : .off) {
+                [parking] in parking.settings.defaultRevealMode = mode
+            }
+            entry.toolTip = mode == .popOut
+                ? "Stays out until you click the tab again."
+                : "Tucks back when the window loses focus or the cursor leaves it."
+            modeMenu.addItem(entry)
+        }
+        let modeItem = NSMenuItem(title: "Default Reveal Mode", action: nil, keyEquivalent: "")
+        modeItem.submenu = modeMenu
+        menu.addItem(modeItem)
+        menu.addItem(ClosureMenuItem("Hover Tabs to Peek", state: parking.settings.hoverToPeek ? .on : .off) {
+            [parking] in parking.settings.hoverToPeek.toggle()
+        })
+
         let override = item("Let Ledge Handle Left/Right Edge Drags", action: #selector(toggleTilingOverride))
         override.state = tilingOverride.isEnabled ? .on : .off
         override.toolTip = "Turns off macOS \"Drag windows to left or right edge of screen to tile\" while Ledge runs, and restores your setting when Ledge quits."
