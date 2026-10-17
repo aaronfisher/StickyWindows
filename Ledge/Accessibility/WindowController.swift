@@ -31,10 +31,14 @@ struct WindowController {
     }
 
     /// Brings the window to the front and activates its app.
-    func raise() {
+    /// Brings the window to the front. Without `activating`, its app isn't made active, which avoids the
+    /// app's activation work (tens of ms in Xcode) landing in the middle of an animation.
+    func raise(activating: Bool = true) {
         AXUIElementPerformAction(element, kAXRaiseAction as CFString)
         AXUIElementSetAttributeValue(element, kAXMainAttribute as CFString, kCFBooleanTrue)
-        NSRunningApplication(processIdentifier: pid)?.activate()
+        if activating {
+            NSRunningApplication(processIdentifier: pid)?.activate()
+        }
     }
 
     @discardableResult

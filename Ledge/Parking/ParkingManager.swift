@@ -24,6 +24,7 @@ final class ParkingManager {
     @ObservationIgnored private var isTerminating = false
     @ObservationIgnored private var didRestore = false
     @ObservationIgnored private var activeSlides = 0
+    @ObservationIgnored private var deferredWork: [() -> Void] = []
     @ObservationIgnored private let log = Logger(subsystem: "vc.start.Ledge", category: "parking")
 
     init(settings: SettingsStore) {
@@ -55,14 +56,16 @@ final class ParkingManager {
         ) { [weak self] note in
             let pid = (note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?.processIdentifier
             MainActor.assumeIsolated {
-                if let pid { self?.peek.appActivated(pid: pid) }
-                self?.updateFullScreenSuppression()
+                self?.whenNotAnimating { [weak self] in
+                    if let pid { self?.peek.appActivated(pid: pid) }
+                    self?.updateFullScreenSuppression()
+                }
             }
         }
         workspace.addObserver(
             forName: NSWorkspace.activeSpaceDidChangeNotification, object: nil, queue: .main
         ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.updateFullScreenSuppression() }
+            MainActor.assumeIsolated { self?.whenNotAnimating { self?.updateFullScreenSuppression() } }
         }
         workspace.addObserver(
             forName: NSWorkspace.didLaunchApplicationNotification, object: nil, queue: .main
@@ -177,7 +180,8 @@ final class ParkingManager {
                 window.setSize(target.size)
             }
             window.setPosition(start)
-            window.raise()
+            // Activate the app only once it has arrived: activation keeps the app busy for tens of ms.
+            window.raise(activating: false)
             log.notice("""
                 [timing reveal] \(parkedWindow.appName, privacy: .public) from=\(method, privacy: .public) \
                 bringBack=\(bringBackMs, privacy: .public)ms prep(size+pos+raise)=\(Int(Date().timeIntervalSince(prep) * 1000), privacy: .public)ms
@@ -188,6 +192,7 @@ final class ParkingManager {
                     window, from: start, to: target.origin, duration: 0.26, easing: .springOut,
                     on: ScreenGeometry.screen(withDisplayID: parkedWindow.displayID))
                 window.setFrame(target)
+                window.raise()
                 parkedWindow.isTransitioning = false
             }
         } else {
@@ -348,7 +353,7 @@ final class ParkingManager {
                 parkedWindow.title = title
             }
         case .focusedWindowChanged:
-            peek.focusedWindowChanged(pid: pid)
+            whenNotAnimating { [weak self] in self?.peek.focusedWindowChanged(pid: pid) }
         }
     }
 
@@ -547,38 +552,55 @@ final class ParkingManager {
         }
     }
 
-    /// Moves a window by stepping its AX position once per display refresh.
+    /// Moves a window once per display refresh. Moves are applied off the main thread, newest position wins.
     private func slide(
         _ window: WindowController, from: CGPoint, to: CGPoint, duration: TimeInterval, easing: Easing, on screen: NSScreen?
     ) async {
         let start = Date()
-        // Frame timing, to diagnose stutter: how long each AX move takes and the gaps between moves.
+        let mover = AXWindowMover(element: window.element)
         var frames = 0
-        var axTotal = 0.0, axMax = 0.0, gapMax = 0.0
-        var lastMove = start
+        var gapMax = 0.0
+        var lastFrame = start
         let animator = WindowSlideAnimator(duration: duration) { t in
             let now = Date()
-            gapMax = max(gapMax, now.timeIntervalSince(lastMove))
+            gapMax = max(gapMax, now.timeIntervalSince(lastFrame))
+            lastFrame = now
             let e = easing.value(at: t)
-            window.setPosition(CGPoint(x: from.x + (to.x - from.x) * e, y: from.y + (to.y - from.y) * e))
-            let ax = Date().timeIntervalSince(now)
-            axTotal += ax
-            axMax = max(axMax, ax)
+            mover.move(to: CGPoint(x: from.x + (to.x - from.x) * e, y: from.y + (to.y - from.y) * e))
             frames += 1
-            lastMove = Date()
         }
         activeSlides += 1
         await animator.run(on: screen)
+        await mover.flush()
         activeSlides -= 1
+        if activeSlides == 0 { runDeferredWork() }
 
+        // Frame timing, to diagnose stutter. frames = display refreshes; moves = positions the app applied.
         let total = Date().timeIntervalSince(start)
+        let stats = mover.stats
         log.notice("""
             [timing slide] pid=\(window.pid, privacy: .public) \(easing == .springOut ? "out" : "in", privacy: .public) \
             planned=\(Int(duration * 1000), privacy: .public)ms actual=\(Int(total * 1000), privacy: .public)ms \
-            frames=\(frames, privacy: .public) fps=\(Int(Double(frames) / max(total, 0.001)), privacy: .public) \
-            ax avg=\(String(format: "%.1f", axTotal / Double(max(frames, 1)) * 1000), privacy: .public)ms \
-            max=\(String(format: "%.1f", axMax * 1000), privacy: .public)ms gapMax=\(String(format: "%.1f", gapMax * 1000), privacy: .public)ms
+            frames=\(frames, privacy: .public) moves=\(stats.moves, privacy: .public) \
+            ax avg=\(String(format: "%.1f", stats.axTotal / Double(max(stats.moves, 1)) * 1000), privacy: .public)ms \
+            max=\(String(format: "%.1f", stats.axMax * 1000), privacy: .public)ms frameGapMax=\(String(format: "%.1f", gapMax * 1000), privacy: .public)ms
             """)
+    }
+
+    /// Runs `work` now, or once no slide is running: activation and focus handlers query the app over AX,
+    /// which blocks the main thread while that app is busy.
+    private func whenNotAnimating(_ work: @escaping () -> Void) {
+        if isAnimating {
+            deferredWork.append(work)
+        } else {
+            work()
+        }
+    }
+
+    private func runDeferredWork() {
+        let work = deferredWork
+        deferredWork.removeAll()
+        work.forEach { $0() }
     }
 
     /// While a window slides, polling and housekeeping wait so they can't steal a frame.
