@@ -300,16 +300,32 @@ final class ParkingManager {
 
     // MARK: Hiding
 
-    /// Tries, in order: offscreen corner, hiding the app, minimizing. Remembers per app when offscreen fails.
+    /// Tries, in order: hiding the app, an offscreen corner, minimizing.
+    ///
+    /// macOS always keeps part of a window on screen (a 1 pt column, and the title bar above the Dock), so the
+    /// corner leaves a visible strip. Hiding the app leaves nothing, so it's preferred whenever it hides nothing
+    /// else. Offscreen failure is remembered per app.
     private func hide(_ parkedWindow: ParkedWindow) async {
         let window = parkedWindow.window
         let app = NSRunningApplication(processIdentifier: window.pid)
         if parkedWindow.hiddenBy == .minimize, window.isMinimized { return }
         if parkedWindow.hiddenBy == .appHidden, app?.isHidden == true { return }
 
+        if let app, canHideApp(for: parkedWindow) {
+            // Undo any resize from macOS edge tiling so it comes back at the stored frame.
+            window.setFrame(parkedWindow.storedFrame)
+            if app.hide() {
+                try? await Task.sleep(for: .milliseconds(150))
+                if app.isHidden {
+                    parkedWindow.hiddenBy = .appHidden
+                    return
+                }
+            }
+            log.notice("\(parkedWindow.bundleID ?? "?", privacy: .public) refused to hide; trying offscreen")
+        }
+
         if strategies.method(for: parkedWindow.bundleID) == .offscreen,
            let target = offscreenOrigin(for: parkedWindow) {
-            // Undo any resize from macOS edge tiling so the offscreen frame matches the stored one.
             window.setSize(parkedWindow.storedFrame.size)
             window.setPosition(target)
             // Some apps re-clamp asynchronously, so check after they've had a moment.
@@ -328,11 +344,6 @@ final class ParkingManager {
             window.setFrame(parkedWindow.storedFrame)
         }
 
-        if let app, canHideApp(for: parkedWindow), app.hide() {
-            parkedWindow.hiddenBy = .appHidden
-            return
-        }
-
         window.setMinimized(true)
         parkedWindow.hiddenBy = .minimize
     }
@@ -343,6 +354,8 @@ final class ParkingManager {
             !other.isSameWindow(as: parkedWindow.window) && !other.isMinimized
                 && other.subrole == kAXStandardWindowSubrole
                 && other.frame.map { ScreenGeometry.isVisible($0) } == true
+                // Its other parked windows are already tucked at a corner; hiding the app is fine for them.
+                && !isParked(other)
         }
         return others.isEmpty
     }
@@ -364,7 +377,7 @@ final class ParkingManager {
         }
     }
 
-    /// macOS keeps part of every window on screen, so park at a bottom corner with a 1 pt sliver showing.
+    /// macOS keeps part of every window on screen, so park at a bottom corner with as little showing as it allows.
     /// Corners whose window would spill onto another display are skipped.
     private func offscreenOrigin(for parkedWindow: ParkedWindow) -> CGPoint? {
         let size = parkedWindow.storedFrame.size
