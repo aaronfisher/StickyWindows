@@ -16,6 +16,7 @@
 		1AE0893624A9A227F067B102 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F626013BD733D1DF42902E27 /* OnboardingView.swift */; };
 		1BAD679636B00EF0EEB55DA8 /* ScreenGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E0E2F1AE34582D616EB984C /* ScreenGeometry.swift */; };
 		23E97C5EDD23F5BB0369D96F /* MacOSTiling.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C60E37D8B99C4501B041CD /* MacOSTiling.swift */; };
+		285E0F554C3C35D77E88A18A /* AppMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C7AB98EB47175E247A0565 /* AppMenu.swift */; };
 		3382D8B592892556B01356E4 /* EdgeTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BED0FE65D9705E1E456F7A53 /* EdgeTabView.swift */; };
 		346EEE236695800E915B93C2 /* DropIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 230E937C5FCD151D6ED82D54 /* DropIndicator.swift */; };
 		39D38758F0A2EDCB250612E4 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = E3145F411069ED87570CB258 /* KeyboardShortcuts */; };
@@ -83,6 +84,7 @@
 		D68603E8BC4C8BE57B38658C /* ParkingPersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParkingPersistence.swift; sourceTree = "<group>"; };
 		DC6B117880FA7A1891B7F904 /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
 		E858C37B8003DD182DD131E3 /* ParkedWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParkedWindow.swift; sourceTree = "<group>"; };
+		F1C7AB98EB47175E247A0565 /* AppMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMenu.swift; sourceTree = "<group>"; };
 		F626013BD733D1DF42902E27 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		FA98A71E115262A288C31019 /* WindowInventory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowInventory.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -158,6 +160,7 @@
 		7B636F89BFB42C74EA3176A2 /* Rules */ = {
 			isa = PBXGroup;
 			children = (
+				F1C7AB98EB47175E247A0565 /* AppMenu.swift */,
 				B1E77D9A7A9092C45AE23AAA /* AppRule.swift */,
 				2822DD294778992E1DDAAEAC /* RulesSettings.swift */,
 			);
@@ -307,6 +310,7 @@
 				ACC345FEB61CE09E9D2D9C36 /* AXWindowMover.swift in Sources */,
 				3CFE83467ED8D3A88B8DD82B /* AccessibilityPermission.swift in Sources */,
 				F5817A4ECB1F4E6C03058A72 /* AppDelegate.swift in Sources */,
+				285E0F554C3C35D77E88A18A /* AppMenu.swift in Sources */,
 				90994061E241BE5E36C3C7F3 /* AppRule.swift in Sources */,
 				0487028B22764BF2D9F735EE /* DockBadgeReader.swift in Sources */,
 				346EEE236695800E915B93C2 /* DropIndicator.swift in Sources */,

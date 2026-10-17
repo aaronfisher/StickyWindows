@@ -9,25 +9,14 @@ struct RulesSettings: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Choose apps Ledge should never park, or should park automatically when they launch.")
+            Text("Choose apps Ledge should never park or park automatically at launch, and apps like Mail whose main window should open when you click them in the Dock while only parked windows are open.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
 
             List(selection: $selection) {
                 ForEach($settings.appRules) { $rule in
-                    HStack(spacing: 10) {
-                        Image(nsImage: rule.icon ?? NSImage(systemSymbolName: "app", accessibilityDescription: nil)!)
-                            .resizable()
-                            .frame(width: 22, height: 22)
-                        Text(rule.name)
-                        Spacer()
-                        Picker("", selection: $rule.action) {
-                            ForEach(AppRule.Action.allCases, id: \.self) { Text($0.displayName) }
-                        }
-                        .labelsHidden()
-                        .fixedSize()
-                    }
-                    .tag(rule.bundleID)
+                    RuleRow(rule: $rule)
+                        .tag(rule.bundleID)
                 }
             }
             .frame(minHeight: 220)
@@ -95,7 +84,59 @@ struct RulesSettings: View {
 
     private func addRule(bundleID: String, name: String) {
         guard !settings.appRules.contains(where: { $0.bundleID == bundleID }) else { return }
-        settings.appRules.append(AppRule(bundleID: bundleID, name: name, action: .exclude))
+        settings.appRules.append(AppRule(bundleID: bundleID, name: name, action: .noParking))
         selection = bundleID
+    }
+}
+
+private struct RuleRow: View {
+    @Binding var rule: AppRule
+    /// The app's menu commands, read when the row appears (only possible while the app is running).
+    @State private var commands: [AppMenu.Path] = []
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 10) {
+                Image(nsImage: rule.icon ?? NSImage(systemSymbolName: "app", accessibilityDescription: nil)!)
+                    .resizable()
+                    .frame(width: 22, height: 22)
+                Text(rule.name)
+                Spacer()
+                Picker("", selection: $rule.action) {
+                    ForEach(AppRule.Action.allCases, id: \.self) { Text($0.displayName) }
+                }
+                .labelsHidden()
+                .fixedSize()
+            }
+            HStack(spacing: 8) {
+                Toggle("Dock click shows main window", isOn: $rule.dockClickShowsMainWindow)
+                    .toggleStyle(.checkbox)
+                    .help("When you bring this app forward and all it has open are parked windows, open its main window (for example Mail's viewer).")
+                if rule.dockClickShowsMainWindow {
+                    Picker("using", selection: $rule.mainWindowCommand) {
+                        Text("Automatic").tag(AppMenu.Path?.none)
+                        if let current = rule.mainWindowCommand, !commands.contains(current) {
+                            Text(current.joined(separator: " → ")).tag(AppMenu.Path?.some(current))
+                        }
+                        ForEach(commands, id: \.self) { path in
+                            Text(path.joined(separator: " → ")).tag(AppMenu.Path?.some(path))
+                        }
+                    }
+                    .fixedSize()
+                    .help(commands.isEmpty ? "Open the app to choose a specific menu command." : "The menu command that opens the main window.")
+                }
+            }
+            .padding(.leading, 32)
+            .font(.callout)
+        }
+        .padding(.vertical, 2)
+        .onAppear(perform: loadCommands)
+        .onChange(of: rule.dockClickShowsMainWindow) { loadCommands() }
+    }
+
+    private func loadCommands() {
+        guard rule.dockClickShowsMainWindow,
+              let app = NSRunningApplication.runningApplications(withBundleIdentifier: rule.bundleID).first else { return }
+        commands = AppMenu.commands(pid: app.processIdentifier)
     }
 }

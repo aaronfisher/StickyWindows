@@ -29,6 +29,8 @@ final class ParkingManager {
     @ObservationIgnored private let thumbnails = ThumbnailProvider()
     @ObservationIgnored private lazy var preview = PreviewPanel()
     @ObservationIgnored private var previewTask: Task<Void, Never>?
+    /// When Ledge itself last activated each app, to tell its activations from the user's (Dock click, ⌘-Tab).
+    @ObservationIgnored private var ledgeActivations: [pid_t: Date] = [:]
     @ObservationIgnored private let log = Logger(subsystem: "vc.start.Ledge", category: "parking")
 
     init(settings: SettingsStore) {
@@ -61,7 +63,10 @@ final class ParkingManager {
             let pid = (note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?.processIdentifier
             MainActor.assumeIsolated {
                 self?.whenNotAnimating { [weak self] in
-                    if let pid { self?.peek.appActivated(pid: pid) }
+                    if let pid {
+                        self?.peek.appActivated(pid: pid)
+                        self?.showMainWindowIfNeeded(pid: pid)
+                    }
                     self?.updateFullScreenSuppression()
                 }
             }
@@ -219,12 +224,14 @@ final class ParkingManager {
                     window, from: start, to: target.origin, duration: 0.26, easing: .springOut,
                     on: ScreenGeometry.screen(withDisplayID: parkedWindow.displayID))
                 window.setFrame(target)
+                self.noteLedgeActivation(of: window.pid)
                 window.raise()
                 parkedWindow.isTransitioning = false
             }
         } else {
             let prep = Date()
             window.setFrame(target)
+            noteLedgeActivation(of: window.pid)
             window.raise()
             log.debug("""
                 [timing reveal] \(parkedWindow.appName, privacy: .public) from=\(method, privacy: .public) no-slide \
@@ -269,6 +276,7 @@ final class ParkingManager {
         // A hover peek borrowed focus; hand it back.
         if session?.trigger == .hover, let previous = session?.previousApp,
            NSWorkspace.shared.frontmostApplication?.processIdentifier == parkedWindow.window.pid {
+            noteLedgeActivation(of: previous.processIdentifier)
             previous.activate()
         }
     }
@@ -501,7 +509,9 @@ final class ParkingManager {
         if parkedWindow.hiddenBy == .appHidden, app?.isHidden == true { return }
 
         trace("hide begin canHideApp=\(canHideApp(for: parkedWindow))", parkedWindow)
-        if let app, canHideApp(for: parkedWindow) {
+        // Apps that show their main window on a Dock click must not be hidden: unhiding would bring parked windows back.
+        let mayHideApp = settings.fullRule(for: parkedWindow.bundleID)?.dockClickShowsMainWindow != true
+        if let app, mayHideApp, canHideApp(for: parkedWindow) {
             if app.hide() {
                 // Hiding is asynchronous; Finder takes a few hundred ms. Giving up early would park the window at a
                 // corner and then have the hide land anyway.
@@ -813,6 +823,44 @@ final class ParkingManager {
             }
         }
         pendingRestore = remaining
+    }
+
+    // MARK: Main window on activation
+
+    private func noteLedgeActivation(of pid: pid_t) {
+        ledgeActivations[pid] = Date()
+    }
+
+    /// For apps with the "Dock click shows main window" rule (Mail): when the user brings the app forward and all
+    /// it has are parked windows, which macOS still counts as open so the app shows nothing, open its main window.
+    private func showMainWindowIfNeeded(pid: pid_t) {
+        guard let app = NSRunningApplication(processIdentifier: pid),
+              let rule = settings.fullRule(for: app.bundleIdentifier), rule.dockClickShowsMainWindow else { return }
+        if let at = ledgeActivations[pid], Date().timeIntervalSince(at) < 1.5 { return }
+        let mine = parked.filter { $0.window.pid == pid }
+        guard !mine.isEmpty, !mine.contains(where: \.isRevealed) else { return }
+
+        Task { [weak self] in
+            // Give the app a moment to handle the click itself; it may open a window on its own.
+            try? await Task.sleep(for: .milliseconds(300))
+            guard let self, !self.hasVisibleUnparkedWindow(pid: pid) else { return }
+            guard let command = rule.mainWindowCommand ?? AppMenu.automaticMainWindowCommand(pid: pid) else {
+                self.log.notice("\(rule.bundleID, privacy: .public): no main-window command found")
+                return
+            }
+            let pressed = AppMenu.press(command, pid: pid)
+            self.log.info("""
+                \(rule.bundleID, privacy: .public): showing main window via \(command.joined(separator: " → "), privacy: .public) \
+                ok=\(pressed, privacy: .public)
+                """)
+        }
+    }
+
+    private func hasVisibleUnparkedWindow(pid: pid_t) -> Bool {
+        WindowController.windows(forPID: pid).contains { window in
+            window.subrole == kAXStandardWindowSubrole && !window.isMinimized && !isParked(window)
+                && window.frame.map { ScreenGeometry.isVisible($0) } == true
+        }
     }
 
     // MARK: Badges

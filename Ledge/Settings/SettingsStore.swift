@@ -120,6 +120,11 @@ final class SettingsStore {
         rule(for: bundleID) == .exclude
     }
 
+    func fullRule(for bundleID: String?) -> AppRule? {
+        guard let bundleID else { return nil }
+        return appRules.first { $0.bundleID == bundleID }
+    }
+
     var accentColor: Color { customAccent ?? .accentColor }
 
     var tabMetrics: TabMetrics {

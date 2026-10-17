@@ -46,7 +46,7 @@ Open with *Settings…* (⌘,) in the menu-bar menu.
 - **General:** launch at login, which edges accept drops, dwell time, default reveal mode, hover-to-peek and its delay, slide animations (off automatically with Reduce Motion), letting Ledge handle left/right edge drags, tabs on all Spaces vs. the current one, hiding tabs when a full-screen app is in front.
 - **Appearance:** tab size, window titles on/off, material, opacity, accent color, Dock badges, hover previews.
 - **Shortcuts:** park shortcuts for each edge.
-- **Rules:** per app, *Never park* (drags and shortcuts ignore it) or *Park on left/right/bottom edge at launch*.
+- **Rules:** per app, *Never park* (drags and shortcuts ignore it) or *Park on left/right/bottom edge at launch*; and *Dock click shows main window* for apps like Mail that stay open without windows — when you bring the app forward and all it has open are parked windows, Ledge opens its main window (e.g. Mail's viewer) through the app's own menu command, chosen automatically or picked from the app's menus.
 - **Permissions:** Accessibility (required) and Screen Recording (optional, for live previews).
 
 ### macOS edge tiling
