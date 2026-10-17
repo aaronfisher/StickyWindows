@@ -6,12 +6,15 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     private let permission: AccessibilityPermission
     private let parking: ParkingManager
+    private let tilingOverride: TilingOverride
     private let showOnboarding: () -> Void
     private var windowsByTag: [Int: WindowInfo] = [:]
 
-    init(permission: AccessibilityPermission, parking: ParkingManager, showOnboarding: @escaping () -> Void) {
+    init(permission: AccessibilityPermission, parking: ParkingManager, tilingOverride: TilingOverride,
+         showOnboarding: @escaping () -> Void) {
         self.permission = permission
         self.parking = parking
+        self.tilingOverride = tilingOverride
         self.showOnboarding = showOnboarding
         super.init()
 
@@ -47,6 +50,10 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         menu.addItem(park)
 
         menu.addItem(disabled("Or drag any window to the left, right, or bottom edge"))
+        let override = item("Let Ledge Handle Left/Right Edge Drags", action: #selector(toggleTilingOverride))
+        override.state = tilingOverride.isEnabled ? .on : .off
+        override.toolTip = "Turns off macOS \"Drag windows to left or right edge of screen to tile\" while Ledge runs, and restores your setting when Ledge quits."
+        menu.addItem(override)
         if MacOSTiling.isEdgeDragTilingEnabled {
             let hint = item("macOS edge tiling is on and may fight left/right drops…", action: #selector(openTilingSettings))
             hint.image = NSImage(systemSymbolName: "exclamationmark.triangle", accessibilityDescription: nil)
@@ -135,6 +142,10 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     @objc private func parkFrontmost() {
         // Ledge never activates for its menu, so the frontmost app is still the user's.
         Task { await parking.parkFrontmostWindow(to: .right) }
+    }
+
+    @objc private func toggleTilingOverride() {
+        tilingOverride.setEnabled(!tilingOverride.isEnabled)
     }
 
     @objc private func openTilingSettings() {

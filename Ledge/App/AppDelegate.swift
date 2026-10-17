@@ -5,15 +5,18 @@ import KeyboardShortcuts
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let permission = AccessibilityPermission()
     let parking = ParkingManager()
+    let tilingOverride = TilingOverride()
     private let windowObserver = WindowObserver()
     private var statusItemController: StatusItemController?
     private var onboarding: OnboardingWindowController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        tilingOverride.restoreOnLaunch()
         parking.onNeedsPermission = { [weak self] in self?.showOnboarding() }
         statusItemController = StatusItemController(
             permission: permission,
             parking: parking,
+            tilingOverride: tilingOverride,
             showOnboarding: { [weak self] in self?.showOnboarding() }
         )
 
@@ -40,11 +43,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         parking.releaseAll()
+        tilingOverride.restoreOnQuit()
     }
 
     func showOnboarding() {
         if onboarding == nil {
-            onboarding = OnboardingWindowController(permission: permission)
+            onboarding = OnboardingWindowController(permission: permission, tilingOverride: tilingOverride)
         }
         onboarding?.show()
     }

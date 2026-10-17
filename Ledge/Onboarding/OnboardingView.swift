@@ -2,6 +2,7 @@ import SwiftUI
 
 struct OnboardingView: View {
     let permission: AccessibilityPermission
+    let tilingOverride: TilingOverride
     let onDone: () -> Void
 
     var body: some View {
@@ -21,6 +22,7 @@ struct OnboardingView: View {
             statusRow
 
             if permission.isTrusted {
+                tilingChoice
                 Button("Done", action: onDone)
                     .keyboardShortcut(.defaultAction)
                     .controlSize(.large)
@@ -43,6 +45,22 @@ struct OnboardingView: View {
         .padding(32)
         .frame(width: 460)
         .onAppear { permission.startPolling() }
+    }
+
+    /// macOS edge tiling also grabs windows dragged to the left/right edges; offer to step it aside.
+    private var tilingChoice: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Toggle(isOn: Binding(get: { tilingOverride.isEnabled }, set: { tilingOverride.setEnabled($0) })) {
+                Text("Let Ledge handle left and right edge drags").font(.callout.weight(.medium))
+            }
+            .toggleStyle(.switch)
+            Text("macOS also tiles windows dragged to the left or right edge. Ledge can turn that off while it runs and restore your setting when it quits. Keyboard and menu tiling keep working.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(12)
+        .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 10))
     }
 
     private var statusRow: some View {
