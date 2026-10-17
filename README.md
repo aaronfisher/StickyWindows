@@ -1,1 +1,103 @@
 # Ledge
+
+Edge tabs for macOS — a modern take on Mac OS 9's pop-up windows. Drag any window to a screen edge and it tucks away into a tab parked on that edge. Click the tab to slide the window back out; click again to tuck it away.
+
+Ledge is a menu-bar app (no Dock icon) for macOS 15 Sequoia and later, written in Swift 6 with SwiftUI and AppKit, and it controls other apps' windows through the Accessibility API.
+
+**Status:** Milestones 1–5 are done (see [SPEC.md](SPEC.md)). Next up: M6 (thumbnails, badges, tab groups, per-app rules) and M7 (signing, notarization, Sparkle, .dmg).
+
+## Using Ledge
+
+### Parking a window
+
+- **Drag** a window by its title bar until the cursor rests against the left, right, or bottom edge. After a short dwell a drop indicator appears; let go to park it there.
+- **Keyboard:** ⌃⌥⌘← / ⌃⌥⌘→ / ⌃⌥⌘↓ park the frontmost window on the left / right / bottom edge. Pressing it again on a revealed parked window tucks it back. Shortcuts can be changed in Settings.
+- **Menu:** *Park Frontmost Window on Right Edge* in the menu-bar menu.
+
+### Tabs
+
+| Action | Result |
+|---|---|
+| Click | Reveal the window (it slides out), or tuck it away again |
+| Hover (if enabled) | Peek at the window; it tucks back when the cursor leaves |
+| Drag along the edge | Reorder tabs |
+| Drag ~80 pt away from the edge | Release: the window returns to where it was and the tab goes away |
+| Right-click / Control-click | Show/Hide, Mode, Move to Edge, Release, Close Window |
+
+Dragging a revealed window more than ~60 pt away also releases it, where you drop it.
+
+### Reveal modes
+
+- **Pop-out** (default): the window stays out until you click the tab again.
+- **Peek:** the window tucks itself back when it loses focus or the cursor leaves it. Peek tabs show a small dot.
+
+Set the default in Settings or the menu; override per tab from its context menu.
+
+### Settings
+
+Open with *Settings…* (⌘,) in the menu-bar menu.
+
+- **General:** launch at login, which edges accept drops, dwell time, default reveal mode, hover-to-peek and its delay, slide animations (off automatically with Reduce Motion), letting Ledge handle left/right edge drags, tabs on all Spaces vs. the current one, hiding tabs when a full-screen app is in front.
+- **Appearance:** tab size, window titles on/off, material, opacity, accent color.
+- **Shortcuts:** park shortcuts for each edge.
+- **Permissions:** Accessibility (required) and Screen Recording (optional, for upcoming thumbnails).
+
+### macOS edge tiling
+
+macOS 15 also tiles windows dragged to the left or right edge, which fights with Ledge. *Let Ledge handle left and right edge drags* (Settings → General, the menu, or onboarding) turns macOS's "Drag windows to left or right edge of screen to tile" off while Ledge runs and restores your setting when it quits — or on the next launch, if it crashed. Keyboard and menu tiling keep working.
+
+### Across restarts
+
+Parked windows are saved to `~/Library/Application Support/vc.start.Ledge/parked.json` and re-parked when Ledge launches again, matched by app and exact window title. Quitting Ledge (⌘Q) always puts every parked window back first.
+
+## How windows are hidden
+
+macOS never lets a window go fully off screen — it keeps at least a 1 pt column visible and the title bar above the Dock. So Ledge picks, per window:
+
+1. **Hide the app** (like ⌘H) when the parked window is its app's only visible window. Nothing stays on screen and nothing animates into the Dock.
+2. **Park at a bottom screen corner** for apps with other windows still in use. A thin strip of the window (about 1 pt wide) stays visible there.
+3. **Minimize** only if an app refuses both.
+
+[QUIRKS.md](QUIRKS.md) logs the measurements and app-specific behavior behind this.
+
+## Building
+
+Requirements: macOS 15+, Xcode with the macOS 15 SDK or later, and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`).
+
+```bash
+xcodegen generate
+```
+
+```bash
+open Ledge.xcodeproj
+```
+
+Then build and run the **Ledge** scheme (⌘R). The project is generated from [project.yml](project.yml) — edit that, not the `.xcodeproj`, and re-run `xcodegen generate` after adding or removing files. Swift packages: [KeyboardShortcuts](https://github.com/sindresorhus/KeyboardShortcuts).
+
+**Signing:** the project signs with a Developer ID certificate (team `MK738JV28L`) even for Debug builds, so the Accessibility permission survives rebuilds. To build under another team, change `DEVELOPMENT_TEAM` in `project.yml`. The app is intentionally not sandboxed: the App Sandbox blocks controlling other apps' windows.
+
+On first launch Ledge walks you through granting Accessibility access in System Settings → Privacy & Security → Accessibility.
+
+## Development notes
+
+- **Quit with ⌘Q from Ledge's menu, not Xcode's Stop button.** Stop kills Ledge without restoring parked windows. They're re-parked on the next launch; if a window is ever stranded, use *Debug → Recover Off-Screen Windows*.
+- **Logs** use subsystem `vc.start.Ledge`. Hiding fallbacks are logged at notice level; frame timing and hide/reveal state traces at debug level:
+
+  ```bash
+  /usr/bin/log show --last 10m --predicate 'subsystem == "vc.start.Ledge"' --debug
+  ```
+
+  In zsh, `log` is a shell builtin — use the full `/usr/bin/log` path.
+- **Debug menu** (in the menu-bar menu): list of on-screen windows (click to raise), copy the list, recover off-screen windows, reset per-app hiding strategies.
+
+### Layout
+
+| Folder | Contents |
+|---|---|
+| `Ledge/App` | App entry, `AppDelegate`, shortcut names |
+| `Ledge/Accessibility` | AX window wrapper, window list, screen geometry, AX notifications, background window mover, permission |
+| `Ledge/Parking` | `ParkingManager` (source of truth), drag observer, edge zones, peek monitor, hiding strategies, persistence, macOS tiling override, slide animator |
+| `Ledge/Tabs` | Tab panels, tab view, layout/drag/context menu, drop indicator |
+| `Ledge/Settings` | `SettingsStore`, settings window, launch at login |
+| `Ledge/Onboarding` | First-run Accessibility onboarding |
+| `Ledge/Debug` | Menu-bar status item and debug menu |

@@ -182,7 +182,7 @@ final class ParkingManager {
             window.setPosition(start)
             // Activate the app only once it has arrived: activation keeps the app busy for tens of ms.
             window.raise(activating: false)
-            log.notice("""
+            log.debug("""
                 [timing reveal] \(parkedWindow.appName, privacy: .public) from=\(method, privacy: .public) \
                 bringBack=\(bringBackMs, privacy: .public)ms prep(size+pos+raise)=\(Int(Date().timeIntervalSince(prep) * 1000), privacy: .public)ms
                 """)
@@ -199,7 +199,7 @@ final class ParkingManager {
             let prep = Date()
             window.setFrame(target)
             window.raise()
-            log.notice("""
+            log.debug("""
                 [timing reveal] \(parkedWindow.appName, privacy: .public) from=\(method, privacy: .public) no-slide \
                 bringBack=\(bringBackMs, privacy: .public)ms frame+raise=\(Int(Date().timeIntervalSince(prep) * 1000), privacy: .public)ms
                 """)
@@ -233,7 +233,7 @@ final class ParkingManager {
         }
         let hideStart = Date()
         await hide(parkedWindow)
-        log.notice("""
+        log.debug("""
             [timing tuck] \(parkedWindow.appName, privacy: .public) hide=\(Int(Date().timeIntervalSince(hideStart) * 1000), privacy: .public)ms \
             → \(parkedWindow.hiddenBy?.rawValue ?? "?", privacy: .public)
             """)
@@ -578,7 +578,7 @@ final class ParkingManager {
         // Frame timing, to diagnose stutter. frames = display refreshes; moves = positions the app applied.
         let total = Date().timeIntervalSince(start)
         let stats = mover.stats
-        log.notice("""
+        log.debug("""
             [timing slide] pid=\(window.pid, privacy: .public) \(easing == .springOut ? "out" : "in", privacy: .public) \
             planned=\(Int(duration * 1000), privacy: .public)ms actual=\(Int(total * 1000), privacy: .public)ms \
             frames=\(frames, privacy: .public) moves=\(stats.moves, privacy: .public) \
@@ -707,11 +707,11 @@ final class ParkingManager {
     // MARK: Tracing
 
     /// Detailed state dump for diagnosing hide/reveal across multi-window apps.
-    /// Read with: log show --last 10m --predicate 'subsystem == "vc.start.Ledge"' --info
+    /// Debug level. Read with: /usr/bin/log show --last 10m --predicate 'subsystem == "vc.start.Ledge"' --debug
     private func trace(_ event: String, _ parkedWindow: ParkedWindow) {
         let app = NSRunningApplication(processIdentifier: parkedWindow.window.pid)
         let frame = parkedWindow.window.frame.map { "\(Int($0.minX)),\(Int($0.minY)) \(Int($0.width))x\(Int($0.height))" } ?? "nil"
-        log.notice("""
+        log.debug("""
             [\(event, privacy: .public)] \(parkedWindow.appName, privacy: .public) \
             '\(parkedWindow.title, privacy: .public)' #\(parkedWindow.id.uuidString.prefix(4), privacy: .public) \
             hiddenBy=\(parkedWindow.hiddenBy?.rawValue ?? "revealed", privacy: .public) frame=\(frame, privacy: .public) \
