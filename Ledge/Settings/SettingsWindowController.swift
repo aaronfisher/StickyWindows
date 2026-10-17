@@ -8,16 +8,19 @@ final class SettingsWindowController {
     private let window: NSWindow
 
     init(rootView: SettingsView) {
-        window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 520, height: 560),
-            styleMask: [.titled, .closable],
-            backing: .buffered,
-            defer: false
-        )
-        window.title = "Ledge Settings"
+        let controller = NSHostingController(rootView: rootView)
+        window = NSWindow(contentViewController: controller)
+        window.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
+        // A unified toolbar gives the split view its System Settings look: title beside the sidebar.
+        window.toolbar = NSToolbar(identifier: "LedgeSettings")
+        window.toolbarStyle = .unified
         window.isReleasedWhenClosed = false
-        window.contentView = NSHostingView(rootView: rootView)
-        window.center()
+        window.setContentSize(NSSize(width: 760, height: 560))
+        // Reopen where the user left it; first time, centered.
+        if !window.setFrameUsingName("LedgeSettingsWindow") {
+            window.center()
+        }
+        window.setFrameAutosaveName("LedgeSettingsWindow")
     }
 
     func show() {

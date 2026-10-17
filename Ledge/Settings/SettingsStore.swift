@@ -159,6 +159,7 @@ final class SettingsStore {
         static let showBadges = "showBadges"
         static let showThumbnails = "showThumbnails"
         static let appRules = "appRules"
+        static let seededRulesVersion = "seededRulesVersion"
     }
 
     init(defaults: UserDefaults = .standard) {
@@ -181,6 +182,23 @@ final class SettingsStore {
         showBadges = value(Key.showBadges, default: true)
         showThumbnails = value(Key.showThumbnails, default: true)
         appRules = defaults.data(forKey: Key.appRules).flatMap { try? JSONDecoder().decode([AppRule].self, from: $0) } ?? []
+        seedDefaultRules()
+    }
+
+    /// Built-in rules for apps known to need them, added once per seeding version. A rule the user already has
+    /// for the app is left alone, and a seeded rule the user deletes stays deleted.
+    private func seedDefaultRules() {
+        let version = 1
+        guard defaults.integer(forKey: Key.seededRulesVersion) < version else { return }
+        defaults.set(version, forKey: Key.seededRulesVersion)
+        let builtIn = [
+            // Mail stays open with no windows; a Dock click should open the viewer, not "show" parked drafts.
+            AppRule(bundleID: "com.apple.mail", name: "Mail", action: .noParking, dockClickShowsMainWindow: true),
+        ]
+        let missing = builtIn.filter { rule in !appRules.contains { $0.bundleID == rule.bundleID } }
+        guard !missing.isEmpty else { return }
+        appRules += missing  // didSet doesn't run during init; save explicitly.
+        defaults.set(try? JSONEncoder().encode(appRules), forKey: Key.appRules)
     }
 
     private func save(_ value: Any, _ key: String, relayout: Bool) {

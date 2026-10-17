@@ -21,7 +21,7 @@ struct AppRule: Codable, Identifiable, Equatable {
 
         var displayName: String {
             switch self {
-            case .noParking: "No parking rule"
+            case .noParking: "Park normally"
             case .exclude: "Never park"
             case .parkLeft: "Park on left edge at launch"
             case .parkRight: "Park on right edge at launch"
@@ -42,10 +42,11 @@ struct AppRule: Codable, Identifiable, Equatable {
 
     var id: String { bundleID }
 
-    init(bundleID: String, name: String, action: Action) {
+    init(bundleID: String, name: String, action: Action, dockClickShowsMainWindow: Bool = false) {
         self.bundleID = bundleID
         self.name = name
         self.action = action
+        self.dockClickShowsMainWindow = dockClickShowsMainWindow
     }
 
     // Rules saved before these options existed decode with defaults.

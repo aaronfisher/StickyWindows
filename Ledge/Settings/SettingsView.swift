@@ -1,27 +1,93 @@
 import KeyboardShortcuts
 import SwiftUI
 
+/// The settings panes, in sidebar order.
+enum SettingsPane: String, CaseIterable, Identifiable {
+    case general, appearance, shortcuts, rules, permissions
+
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .general: "General"
+        case .appearance: "Appearance"
+        case .shortcuts: "Shortcuts"
+        case .rules: "App Rules"
+        case .permissions: "Permissions"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .general: "gearshape.fill"
+        case .appearance: "paintbrush.fill"
+        case .shortcuts: "keyboard.fill"
+        case .rules: "app.badge.checkmark.fill"
+        case .permissions: "lock.shield.fill"
+        }
+    }
+
+    var tint: Color {
+        switch self {
+        case .general: .gray
+        case .appearance: .blue
+        case .shortcuts: .purple
+        case .rules: .orange
+        case .permissions: .green
+        }
+    }
+}
+
+/// System Settings–style window: panes in a sidebar on the left, the selected pane on the right.
 struct SettingsView: View {
     let settings: SettingsStore
     let tilingOverride: TilingOverride
     let permission: AccessibilityPermission
     let launchAtLogin: LaunchAtLogin
 
+    @AppStorage("settingsPane") private var pane: SettingsPane = .general
+
     var body: some View {
-        TabView {
-            GeneralSettings(settings: settings, tilingOverride: tilingOverride, launchAtLogin: launchAtLogin)
-                .tabItem { Label("General", systemImage: "gearshape") }
-            AppearanceSettings(settings: settings)
-                .tabItem { Label("Appearance", systemImage: "paintbrush") }
-            ShortcutSettings()
-                .tabItem { Label("Shortcuts", systemImage: "keyboard") }
-            RulesSettings(settings: settings)
-                .tabItem { Label("Rules", systemImage: "list.bullet.rectangle") }
-            PermissionSettings(permission: permission)
-                .tabItem { Label("Permissions", systemImage: "lock.shield") }
+        NavigationSplitView {
+            List(SettingsPane.allCases, selection: Binding<SettingsPane?>(get: { pane }, set: { if let new = $0 { pane = new } })) { pane in
+                Label {
+                    Text(pane.title)
+                } icon: {
+                    PaneIcon(pane: pane)
+                }
+                .tag(pane)
+            }
+            .navigationSplitViewColumnWidth(min: 180, ideal: 200, max: 240)
+            .toolbar(removing: .sidebarToggle)
+        } detail: {
+            detail
+                .navigationTitle(pane.title)
         }
-        .frame(width: 520)
-        .fixedSize(horizontal: false, vertical: true)
+        .frame(minWidth: 720, minHeight: 500)
+    }
+
+    @ViewBuilder
+    private var detail: some View {
+        switch pane {
+        case .general: GeneralSettings(settings: settings, tilingOverride: tilingOverride, launchAtLogin: launchAtLogin)
+        case .appearance: AppearanceSettings(settings: settings)
+        case .shortcuts: ShortcutSettings()
+        case .rules: RulesSettings(settings: settings)
+        case .permissions: PermissionSettings(permission: permission)
+        }
+    }
+}
+
+/// White symbol on a colored rounded square, like System Settings.
+private struct PaneIcon: View {
+    let pane: SettingsPane
+
+    var body: some View {
+        Image(systemName: pane.symbol)
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundStyle(.white)
+            .frame(width: 20, height: 20)
+            .background(pane.tint.gradient, in: RoundedRectangle(cornerRadius: 5, style: .continuous))
     }
 }
 

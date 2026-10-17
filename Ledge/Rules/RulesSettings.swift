@@ -2,57 +2,142 @@ import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// Settings → Rules: per-app exclude / auto-park.
+/// Settings → App Rules: one section per app.
 struct RulesSettings: View {
     @Bindable var settings: SettingsStore
-    @State private var selection: String?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Choose apps Ledge should never park or park automatically at launch, and apps like Mail whose main window should open when you click them in the Dock while only parked windows are open.")
-                .font(.callout)
-                .foregroundStyle(.secondary)
-
-            List(selection: $selection) {
-                ForEach($settings.appRules) { $rule in
-                    RuleRow(rule: $rule)
-                        .tag(rule.bundleID)
-                }
-            }
-            .frame(minHeight: 220)
-            .overlay {
-                if settings.appRules.isEmpty {
-                    Text("No rules yet").foregroundStyle(.tertiary)
-                }
+        Form {
+            Section {
+                Text("Choose how Ledge treats specific apps: keep them from being parked, park them automatically when they open, or—for apps like Mail that stay open without windows—open their main window when you click them in the Dock.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
-            HStack(spacing: 0) {
-                Menu {
-                    let running = runningApps()
-                    if !running.isEmpty {
-                        Section("Running apps") {
-                            ForEach(running, id: \.bundleIdentifier) { app in
-                                Button(app.localizedName ?? app.bundleIdentifier ?? "?") { add(app) }
+            ForEach($settings.appRules) { $rule in
+                Section {
+                    RuleEditor(rule: $rule)
+                } header: {
+                    RuleHeader(rule: rule) {
+                        settings.appRules.removeAll { $0.bundleID == rule.bundleID }
+                    }
+                }
+            }
+
+            Section {
+                AddAppMenu(settings: settings)
+            }
+        }
+        .formStyle(.grouped)
+    }
+}
+
+private struct RuleHeader: View {
+    let rule: AppRule
+    let onRemove: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(nsImage: rule.icon ?? NSImage(systemSymbolName: "app", accessibilityDescription: nil)!)
+                .resizable()
+                .frame(width: 20, height: 20)
+            Text(rule.name)
+                .font(.headline)
+                .foregroundStyle(.primary)
+            Spacer()
+            Button(role: .destructive, action: onRemove) {
+                Text("Remove")
+            }
+            .buttonStyle(.borderless)
+            .controlSize(.small)
+        }
+        .textCase(nil)
+    }
+}
+
+private struct RuleEditor: View {
+    @Binding var rule: AppRule
+    /// The app's menu commands, read while it's running (needed to pick a specific command).
+    @State private var commands: [AppMenu.Path] = []
+    @State private var automatic: AppMenu.Path?
+    @State private var isRunning = false
+
+    var body: some View {
+        Picker("Parking", selection: $rule.action) {
+            ForEach(AppRule.Action.allCases, id: \.self) { Text($0.displayName) }
+        }
+
+        Toggle(isOn: $rule.dockClickShowsMainWindow) {
+            Text("Dock click shows main window")
+            Text("When you bring the app forward and only parked windows are open, Ledge opens its main window. The app is never hidden as a whole, so its parked windows stay tucked.")
+        }
+        .onAppear(perform: loadCommands)
+        .onChange(of: rule.dockClickShowsMainWindow) { loadCommands() }
+
+        if rule.dockClickShowsMainWindow {
+            Picker(selection: $rule.mainWindowCommand) {
+                Text(automaticLabel).tag(AppMenu.Path?.none)
+                if !commands.isEmpty {
+                    Divider()
+                }
+                if let current = rule.mainWindowCommand, !commands.contains(current) {
+                    Text(current.joined(separator: " → ")).tag(AppMenu.Path?.some(current))
+                }
+                ForEach(commands, id: \.self) { path in
+                    Text(path.joined(separator: " → ")).tag(AppMenu.Path?.some(path))
+                }
+            } label: {
+                Text("Menu command")
+                if !isRunning {
+                    Text("Open \(rule.name) to choose a specific command.")
+                }
+            }
+        }
+    }
+
+    private var automaticLabel: String {
+        automatic.map { "Automatic (\($0.joined(separator: " → ")))" } ?? "Automatic"
+    }
+
+    private func loadCommands() {
+        guard let app = NSRunningApplication.runningApplications(withBundleIdentifier: rule.bundleID).first else {
+            isRunning = false
+            return
+        }
+        isRunning = true
+        commands = AppMenu.commands(pid: app.processIdentifier)
+        automatic = AppMenu.automaticMainWindowCommand(pid: app.processIdentifier)
+    }
+}
+
+private struct AddAppMenu: View {
+    @Bindable var settings: SettingsStore
+
+    var body: some View {
+        Menu {
+            let running = runningApps()
+            if !running.isEmpty {
+                Section("Running Apps") {
+                    ForEach(running, id: \.bundleIdentifier) { app in
+                        Button {
+                            add(bundleID: app.bundleIdentifier!, name: app.localizedName ?? app.bundleIdentifier!)
+                        } label: {
+                            Label {
+                                Text(app.localizedName ?? app.bundleIdentifier!)
+                            } icon: {
+                                if let icon = app.icon { Image(nsImage: icon) }
                             }
                         }
                     }
-                    Button("Choose App…", action: chooseApp)
-                } label: {
-                    Image(systemName: "plus")
                 }
-                .menuIndicator(.hidden)
-                .fixedSize()
-                Button {
-                    settings.appRules.removeAll { $0.bundleID == selection }
-                    selection = nil
-                } label: {
-                    Image(systemName: "minus")
-                }
-                .disabled(selection == nil)
             }
-            .buttonStyle(.borderless)
+            Button("Choose App…", action: chooseApp)
+        } label: {
+            Label("Add App", systemImage: "plus")
         }
-        .padding(20)
+        .menuStyle(.borderlessButton)
+        .fixedSize()
     }
 
     private func runningApps() -> [NSRunningApplication] {
@@ -64,11 +149,6 @@ struct RulesSettings: View {
             .sorted { ($0.localizedName ?? "") < ($1.localizedName ?? "") }
     }
 
-    private func add(_ app: NSRunningApplication) {
-        guard let bundleID = app.bundleIdentifier else { return }
-        addRule(bundleID: bundleID, name: app.localizedName ?? bundleID)
-    }
-
     private func chooseApp() {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.application]
@@ -76,67 +156,14 @@ struct RulesSettings: View {
         panel.allowsMultipleSelection = true
         guard panel.runModal() == .OK else { return }
         for url in panel.urls {
-            guard let bundle = Bundle(url: url), let bundleID = bundle.bundleIdentifier else { continue }
+            guard let bundleID = Bundle(url: url)?.bundleIdentifier else { continue }
             let name = FileManager.default.displayName(atPath: url.path).replacingOccurrences(of: ".app", with: "")
-            addRule(bundleID: bundleID, name: name)
+            add(bundleID: bundleID, name: name)
         }
     }
 
-    private func addRule(bundleID: String, name: String) {
+    private func add(bundleID: String, name: String) {
         guard !settings.appRules.contains(where: { $0.bundleID == bundleID }) else { return }
         settings.appRules.append(AppRule(bundleID: bundleID, name: name, action: .noParking))
-        selection = bundleID
-    }
-}
-
-private struct RuleRow: View {
-    @Binding var rule: AppRule
-    /// The app's menu commands, read when the row appears (only possible while the app is running).
-    @State private var commands: [AppMenu.Path] = []
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 10) {
-                Image(nsImage: rule.icon ?? NSImage(systemSymbolName: "app", accessibilityDescription: nil)!)
-                    .resizable()
-                    .frame(width: 22, height: 22)
-                Text(rule.name)
-                Spacer()
-                Picker("", selection: $rule.action) {
-                    ForEach(AppRule.Action.allCases, id: \.self) { Text($0.displayName) }
-                }
-                .labelsHidden()
-                .fixedSize()
-            }
-            HStack(spacing: 8) {
-                Toggle("Dock click shows main window", isOn: $rule.dockClickShowsMainWindow)
-                    .toggleStyle(.checkbox)
-                    .help("When you bring this app forward and all it has open are parked windows, open its main window (for example Mail's viewer).")
-                if rule.dockClickShowsMainWindow {
-                    Picker("using", selection: $rule.mainWindowCommand) {
-                        Text("Automatic").tag(AppMenu.Path?.none)
-                        if let current = rule.mainWindowCommand, !commands.contains(current) {
-                            Text(current.joined(separator: " → ")).tag(AppMenu.Path?.some(current))
-                        }
-                        ForEach(commands, id: \.self) { path in
-                            Text(path.joined(separator: " → ")).tag(AppMenu.Path?.some(path))
-                        }
-                    }
-                    .fixedSize()
-                    .help(commands.isEmpty ? "Open the app to choose a specific menu command." : "The menu command that opens the main window.")
-                }
-            }
-            .padding(.leading, 32)
-            .font(.callout)
-        }
-        .padding(.vertical, 2)
-        .onAppear(perform: loadCommands)
-        .onChange(of: rule.dockClickShowsMainWindow) { loadCommands() }
-    }
-
-    private func loadCommands() {
-        guard rule.dockClickShowsMainWindow,
-              let app = NSRunningApplication.runningApplications(withBundleIdentifier: rule.bundleID).first else { return }
-        commands = AppMenu.commands(pid: app.processIdentifier)
     }
 }
