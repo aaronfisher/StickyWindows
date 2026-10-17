@@ -160,16 +160,24 @@ final class ParkingManager {
         let frontmost = NSWorkspace.shared.frontmostApplication
         // Only corner-parked windows slide; unhiding an app or unminimizing has its own transition.
         let slides = settings.shouldAnimateWindows && parkedWindow.hiddenBy == .offscreen
+        let method = parkedWindow.hiddenBy?.rawValue ?? "?"
+        let clock = Date()
         bringBack(parkedWindow)
+        let bringBackMs = Int(Date().timeIntervalSince(clock) * 1000)
         // Its display may have been unplugged since it was parked.
         let target = ScreenGeometry.fitted(parkedWindow.storedFrame)
         parkedWindow.storedFrame = target
         let window = parkedWindow.window
 
         if slides, let start = edgeOrigin(for: parkedWindow, frame: target) {
+            let prep = Date()
             window.setSize(target.size)
             window.setPosition(start)
             window.raise()
+            log.notice("""
+                [timing reveal] \(parkedWindow.appName, privacy: .public) from=\(method, privacy: .public) \
+                bringBack=\(bringBackMs, privacy: .public)ms prep(size+pos+raise)=\(Int(Date().timeIntervalSince(prep) * 1000), privacy: .public)ms
+                """)
             parkedWindow.isTransitioning = true
             Task {
                 await slide(window, from: start, to: target.origin, duration: 0.22, easing: .springOut)
@@ -177,8 +185,13 @@ final class ParkingManager {
                 parkedWindow.isTransitioning = false
             }
         } else {
+            let prep = Date()
             window.setFrame(target)
             window.raise()
+            log.notice("""
+                [timing reveal] \(parkedWindow.appName, privacy: .public) from=\(method, privacy: .public) no-slide \
+                bringBack=\(bringBackMs, privacy: .public)ms frame+raise=\(Int(Date().timeIntervalSince(prep) * 1000), privacy: .public)ms
+                """)
         }
         parkedWindow.hiddenBy = nil
         traceApp("reveal done #\(parkedWindow.id.uuidString.prefix(4))", pid: parkedWindow.window.pid)
@@ -206,7 +219,12 @@ final class ParkingManager {
            let end = edgeOrigin(for: parkedWindow, frame: frame) {
             await slide(parkedWindow.window, from: frame.origin, to: end, duration: 0.18, easing: .accelerate)
         }
+        let hideStart = Date()
         await hide(parkedWindow)
+        log.notice("""
+            [timing tuck] \(parkedWindow.appName, privacy: .public) hide=\(Int(Date().timeIntervalSince(hideStart) * 1000), privacy: .public)ms \
+            → \(parkedWindow.hiddenBy?.rawValue ?? "?", privacy: .public)
+            """)
 
         // A hover peek borrowed focus; hand it back.
         if session?.trigger == .hover, let previous = session?.previousApp,
@@ -503,7 +521,7 @@ final class ParkingManager {
 
     // MARK: Animation
 
-    private enum Easing {
+    private enum Easing: Equatable {
         /// Fast start, slight overshoot, settles: for windows sliding out.
         case springOut
         /// Slow start, fast finish: for windows leaving.
@@ -520,13 +538,34 @@ final class ParkingManager {
     /// Moves a window by stepping its AX position. Time-based, so slow apps just get fewer frames.
     private func slide(_ window: WindowController, from: CGPoint, to: CGPoint, duration: TimeInterval, easing: Easing) async {
         let start = Date()
+        // Frame timing, to diagnose stutter: how long each AX move takes and the gaps between moves.
+        var frames = 0
+        var axTotal = 0.0, axMax = 0.0, gapMax = 0.0
+        var lastMove = start
         while true {
-            let t = min(1, Date().timeIntervalSince(start) / duration)
+            let now = Date()
+            gapMax = max(gapMax, now.timeIntervalSince(lastMove))
+            let t = min(1, now.timeIntervalSince(start) / duration)
             let e = easing.value(at: t)
+            let moveStart = Date()
             window.setPosition(CGPoint(x: from.x + (to.x - from.x) * e, y: from.y + (to.y - from.y) * e))
+            let ax = Date().timeIntervalSince(moveStart)
+            axTotal += ax
+            axMax = max(axMax, ax)
+            frames += 1
+            lastMove = Date()
             if t >= 1 { break }
             try? await Task.sleep(for: .milliseconds(8))
         }
+        let total = Date().timeIntervalSince(start)
+        let pid = window.pid
+        log.notice("""
+            [timing slide] pid=\(pid, privacy: .public) \(easing == .springOut ? "out" : "in", privacy: .public) \
+            planned=\(Int(duration * 1000), privacy: .public)ms actual=\(Int(total * 1000), privacy: .public)ms \
+            frames=\(frames, privacy: .public) fps=\(Int(Double(frames) / max(total, 0.001)), privacy: .public) \
+            ax avg=\(String(format: "%.1f", axTotal / Double(max(frames, 1)) * 1000), privacy: .public)ms \
+            max=\(String(format: "%.1f", axMax * 1000), privacy: .public)ms gapMax=\(String(format: "%.1f", gapMax * 1000), privacy: .public)ms
+            """)
     }
 
     /// The window just past its parked edge, where slides start and end. macOS clamps it to a sliver anyway.
