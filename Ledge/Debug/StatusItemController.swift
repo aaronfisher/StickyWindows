@@ -5,11 +5,13 @@ import AppKit
 final class StatusItemController: NSObject, NSMenuDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     private let permission: AccessibilityPermission
+    private let parking: ParkingManager
     private let showOnboarding: () -> Void
     private var windowsByTag: [Int: WindowInfo] = [:]
 
-    init(permission: AccessibilityPermission, showOnboarding: @escaping () -> Void) {
+    init(permission: AccessibilityPermission, parking: ParkingManager, showOnboarding: @escaping () -> Void) {
         self.permission = permission
+        self.parking = parking
         self.showOnboarding = showOnboarding
         super.init()
 
@@ -35,6 +37,27 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         } else {
             menu.addItem(disabled("Accessibility: Not granted", symbol: "exclamationmark.triangle.fill"))
             menu.addItem(item("Grant Accessibility Access…", action: #selector(openOnboarding)))
+        }
+
+        menu.addItem(.separator())
+        let park = item("Park Frontmost Window on Right Edge", action: #selector(parkFrontmost))
+        park.keyEquivalent = String(Character(UnicodeScalar(NSRightArrowFunctionKey)!))
+        park.keyEquivalentModifierMask = [.control, .option, .command]
+        park.isEnabled = permission.isTrusted
+        menu.addItem(park)
+
+        if !parking.parked.isEmpty {
+            menu.addItem(disabled("Parked (\(parking.parked.count))"))
+            for parkedWindow in parking.parked {
+                let entry = item("\(parkedWindow.appName) — \(truncate(parkedWindow.title, limit: 40))",
+                                 action: #selector(releaseParked(_:)))
+                entry.representedObject = parkedWindow.id
+                entry.image = parkedWindow.icon.map(Self.menuIcon)
+                entry.toolTip = "Release: restore the window and remove its tab. Hidden by \(parkedWindow.hiddenBy?.rawValue ?? "— (revealed)")."
+                entry.indentationLevel = 1
+                menu.addItem(entry)
+            }
+            menu.addItem(item("Release All", action: #selector(releaseAll)))
         }
 
         menu.addItem(.separator())
@@ -78,6 +101,8 @@ final class StatusItemController: NSObject, NSMenuDelegate {
 
         menu.addItem(.separator())
         menu.addItem(item("Copy Window List", action: #selector(copyWindowList)))
+        menu.addItem(item("Recover Off-Screen Windows", action: #selector(recoverOffscreen)))
+        menu.addItem(item("Reset Per-App Hiding Strategies", action: #selector(resetStrategies)))
         return menu
     }
 
@@ -97,6 +122,33 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         }
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(lines.joined(separator: "\n"), forType: .string)
+    }
+
+    @objc private func parkFrontmost() {
+        // Ledge never activates for its menu, so the frontmost app is still the user's.
+        Task { await parking.parkFrontmostWindow(to: .right) }
+    }
+
+    @objc private func releaseParked(_ sender: NSMenuItem) {
+        guard let id = sender.representedObject as? UUID,
+              let parkedWindow = parking.parked.first(where: { $0.id == id }) else { return }
+        parking.release(parkedWindow)
+    }
+
+    @objc private func releaseAll() {
+        parking.releaseAll()
+    }
+
+    @objc private func recoverOffscreen() {
+        let count = WindowInventory.recoverOffscreenWindows(excluding: parking.isParked)
+        let alert = NSAlert()
+        alert.messageText = count == 0 ? "No stranded windows found" : "Moved \(count) window\(count == 1 ? "" : "s") back on screen"
+        NSApp.activate()
+        alert.runModal()
+    }
+
+    @objc private func resetStrategies() {
+        parking.strategies.reset()
     }
 
     @objc private func openOnboarding() {

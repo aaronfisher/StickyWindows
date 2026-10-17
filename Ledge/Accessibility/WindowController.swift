@@ -10,6 +10,18 @@ struct WindowController {
     var title: String? { attribute(kAXTitleAttribute) as String? }
     var isMinimized: Bool { attribute(kAXMinimizedAttribute) as Bool? ?? false }
     var subrole: String? { attribute(kAXSubroleAttribute) as String? }
+    var isFullScreen: Bool { attribute("AXFullScreen") as Bool? ?? false }
+
+    /// False once the window has been closed or its app has quit.
+    var isValid: Bool {
+        var value: CFTypeRef?
+        let error = AXUIElementCopyAttributeValue(element, kAXRoleAttribute as CFString, &value)
+        return error != .invalidUIElement && error != .cannotComplete
+    }
+
+    func isSameWindow(as other: WindowController) -> Bool {
+        CFEqual(element, other.element)
+    }
 
     /// Frame in global top-left-origin coordinates (same space as CGWindowList bounds).
     var frame: CGRect? {
@@ -23,6 +35,45 @@ struct WindowController {
         AXUIElementPerformAction(element, kAXRaiseAction as CFString)
         AXUIElementSetAttributeValue(element, kAXMainAttribute as CFString, kCFBooleanTrue)
         NSRunningApplication(processIdentifier: pid)?.activate()
+    }
+
+    @discardableResult
+    func setPosition(_ point: CGPoint) -> Bool {
+        var point = point
+        guard let value = AXValueCreate(.cgPoint, &point) else { return false }
+        return AXUIElementSetAttributeValue(element, kAXPositionAttribute as CFString, value) == .success
+    }
+
+    @discardableResult
+    func setSize(_ size: CGSize) -> Bool {
+        var size = size
+        guard let value = AXValueCreate(.cgSize, &size) else { return false }
+        return AXUIElementSetAttributeValue(element, kAXSizeAttribute as CFString, value) == .success
+    }
+
+    /// Position, size, then position again: moving across displays can resize before the move lands.
+    func setFrame(_ frame: CGRect) {
+        setPosition(frame.origin)
+        setSize(frame.size)
+        setPosition(frame.origin)
+    }
+
+    func setMinimized(_ minimized: Bool) {
+        AXUIElementSetAttributeValue(
+            element, kAXMinimizedAttribute as CFString, minimized ? kCFBooleanTrue : kCFBooleanFalse)
+    }
+
+    static func focusedWindow(forPID pid: pid_t) -> WindowController? {
+        let app = AXUIElementCreateApplication(pid)
+        for attribute in [kAXFocusedWindowAttribute, kAXMainWindowAttribute] {
+            var value: CFTypeRef?
+            if AXUIElementCopyAttributeValue(app, attribute as CFString, &value) == .success,
+               let value, CFGetTypeID(value) == AXUIElementGetTypeID() {
+                // swiftlint:disable:next force_cast
+                return WindowController(element: value as! AXUIElement, pid: pid)
+            }
+        }
+        return nil
     }
 
     static func windows(forPID pid: pid_t) -> [WindowController] {

@@ -66,6 +66,28 @@ enum WindowInventory {
     }
 }
 
+extension WindowInventory {
+    /// Brings back unminimized windows left outside every display, e.g. after Ledge was killed while windows were parked.
+    static func recoverOffscreenWindows(excluding isExcluded: (WindowController) -> Bool) -> Int {
+        guard AXIsProcessTrusted(), let screen = NSScreen.main else { return 0 }
+        let target = ScreenGeometry.axVisibleFrame(of: screen)
+        var recovered = 0
+        for app in NSWorkspace.shared.runningApplications where app.activationPolicy == .regular {
+            for window in WindowController.windows(forPID: app.processIdentifier) {
+                guard !window.isMinimized, !isExcluded(window),
+                      let frame = window.frame, frame.width > 40, frame.height > 40,
+                      !ScreenGeometry.isVisible(frame) else { continue }
+                let origin = CGPoint(
+                    x: target.minX + max(0, (target.width - frame.width) / 2),
+                    y: target.minY + max(0, (target.height - frame.height) / 2))
+                window.setPosition(origin)
+                recovered += 1
+            }
+        }
+        return recovered
+    }
+}
+
 private extension CGRect {
     func isClose(to other: CGRect, tolerance: CGFloat = 2) -> Bool {
         abs(minX - other.minX) <= tolerance && abs(minY - other.minY) <= tolerance
