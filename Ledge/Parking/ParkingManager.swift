@@ -25,6 +25,10 @@ final class ParkingManager {
     @ObservationIgnored private var didRestore = false
     @ObservationIgnored private var activeSlides = 0
     @ObservationIgnored private var deferredWork: [() -> Void] = []
+    @ObservationIgnored private let badgeReader = DockBadgeReader()
+    @ObservationIgnored private let thumbnails = ThumbnailProvider()
+    @ObservationIgnored private lazy var preview = PreviewPanel()
+    @ObservationIgnored private var previewTask: Task<Void, Never>?
     @ObservationIgnored private let log = Logger(subsystem: "vc.start.Ledge", category: "parking")
 
     init(settings: SettingsStore) {
@@ -69,9 +73,13 @@ final class ParkingManager {
         }
         workspace.addObserver(
             forName: NSWorkspace.didLaunchApplicationNotification, object: nil, queue: .main
-        ) { [weak self] _ in
-            // Its windows take a moment to appear; housekeeping keeps retrying while records are pending.
-            MainActor.assumeIsolated { self?.restoreDeadline = max(self?.restoreDeadline ?? .distantPast, Date() + 20) }
+        ) { [weak self] note in
+            let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
+            MainActor.assumeIsolated {
+                // Its windows take a moment to appear; housekeeping keeps retrying while records are pending.
+                self?.restoreDeadline = max(self?.restoreDeadline ?? .distantPast, Date() + 20)
+                if let app { self?.applyAutoParkRule(to: app, waitForWindows: true) }
+            }
         }
 
         axEvents.handler = { [weak self] event, element, pid in
@@ -112,6 +120,10 @@ final class ParkingManager {
     ) async {
         guard let current = window.frame else { return NSSound.beep() }
         let app = NSRunningApplication(processIdentifier: window.pid)
+        guard !settings.isExcluded(app?.bundleIdentifier) else {
+            log.info("Park: \(app?.bundleIdentifier ?? "?", privacy: .public) is excluded by a rule")
+            return NSSound.beep()
+        }
         guard !window.isFullScreen else {
             log.info("Park: \(app?.bundleIdentifier ?? "?", privacy: .public) window is full screen")
             return NSSound.beep()
@@ -124,6 +136,8 @@ final class ParkingManager {
         let parkedWindow = ParkedWindow(
             window: window, app: app, frame: restoreFrame ?? current, edge: edge, screen: screen, offset: offset)
         parkedWindow.mode = mode ?? previous?.mode
+        parkedWindow.windowID = previous?.windowID ?? WindowInventory.windowID(for: window)
+        captureThumbnail(of: parkedWindow)
         parkedWindow.hiddenBy = .offscreen  // Tab shows as tucked right away; hide() sets the real method.
         parked.append(parkedWindow)
         axEvents.watch(window)
@@ -146,6 +160,7 @@ final class ParkingManager {
     }
 
     func tabClicked(_ parkedWindow: ParkedWindow) async {
+        hidePreview()
         guard parkedWindow.window.isValid else { return remove(parkedWindow) }
         guard parkedWindow.isRevealed else { return reveal(parkedWindow, trigger: .click) }
         if parkedWindow.session?.trigger == .hover {
@@ -225,6 +240,7 @@ final class ParkingManager {
         if let title = parkedWindow.window.title, !title.isEmpty {
             parkedWindow.title = title
         }
+        captureThumbnail(of: parkedWindow)
         if settings.shouldAnimateWindows, let frame = parkedWindow.window.frame,
            let end = edgeOrigin(for: parkedWindow, frame: frame) {
             await slide(
@@ -248,6 +264,9 @@ final class ParkingManager {
     func tabHoverChanged(_ parkedWindow: ParkedWindow, isHovering: Bool) {
         parkedWindow.isHovered = isHovering
         guard isHovering else { return cancelHover(parkedWindow) }
+        if !settings.hoverToPeek {
+            schedulePreview(for: parkedWindow)
+        }
         guard settings.hoverToPeek, !parkedWindow.isRevealed, !parkedWindow.isDragging else { return }
         hoverTasks[parkedWindow.id]?.cancel()
         let delay = settings.hoverDelay
@@ -262,6 +281,46 @@ final class ParkingManager {
     func cancelHover(_ parkedWindow: ParkedWindow) {
         hoverTasks[parkedWindow.id]?.cancel()
         hoverTasks[parkedWindow.id] = nil
+        hidePreview()
+    }
+
+    // MARK: Previews
+
+    /// Grabs a preview while the window is still visible, without delaying whatever comes next.
+    private func captureThumbnail(of parkedWindow: ParkedWindow) {
+        guard settings.showThumbnails, thumbnails.isAvailable, let windowID = parkedWindow.windowID else { return }
+        Task { [thumbnails] in
+            if let image = await thumbnails.capture(windowID: windowID) {
+                parkedWindow.thumbnail = image
+            }
+        }
+    }
+
+    /// After a short hover, shows a preview beside the tab and keeps it live (about once a second).
+    private func schedulePreview(for parkedWindow: ParkedWindow) {
+        previewTask?.cancel()
+        // Without Screen Recording the card still shows icon + full title (handy when tab titles are truncated or off).
+        guard settings.showThumbnails, !parkedWindow.isRevealed else { return }
+        previewTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(350))
+            guard let self, !Task.isCancelled, parkedWindow.isHovered, !parkedWindow.isRevealed,
+                  !parkedWindow.isDragging, let tabFrame = self.tabFrame(of: parkedWindow) else { return }
+            self.preview.show(for: parkedWindow, image: parkedWindow.thumbnail, beside: tabFrame)
+            while self.thumbnails.isAvailable, !Task.isCancelled, parkedWindow.isHovered, !parkedWindow.isRevealed {
+                if let windowID = parkedWindow.windowID, let image = await self.thumbnails.capture(windowID: windowID),
+                   !Task.isCancelled {
+                    parkedWindow.thumbnail = image
+                    self.preview.update(image: image)
+                }
+                try? await Task.sleep(for: .seconds(1))
+            }
+        }
+    }
+
+    private func hidePreview() {
+        previewTask?.cancel()
+        previewTask = nil
+        preview.hide()
     }
 
     // MARK: Tab actions
@@ -644,6 +703,7 @@ final class ParkingManager {
         housekeepingTicks += 1
         updateFullScreenSuppression()
         if housekeepingTicks % 3 == 0 { removeInvalidWindows() }
+        if housekeepingTicks % 2 == 0 { refreshBadges() }
         restoreSavedIfNeeded()
         if !pendingRestore.isEmpty { attemptRestore() }
         saveIfChanged()
@@ -702,6 +762,51 @@ final class ParkingManager {
             }
         }
         pendingRestore = remaining
+    }
+
+    // MARK: Badges
+
+    private func refreshBadges() {
+        guard !parked.isEmpty else { return }
+        let badges = settings.showBadges ? badgeReader.badges() : [:]
+        for parkedWindow in parked {
+            let badge = parkedWindow.bundleID.flatMap { badges[$0] }
+            if parkedWindow.badge != badge { parkedWindow.badge = badge }
+        }
+    }
+
+    // MARK: Rules
+
+    /// Parks the app's visible standard windows on its rule's edge. At app launch, waits for windows to appear.
+    func applyAutoParkRule(to app: NSRunningApplication, waitForWindows: Bool) {
+        guard let edge = settings.rule(for: app.bundleIdentifier)?.edge, AXIsProcessTrusted() else { return }
+        Task { [weak self] in
+            // Up to ~15 s for a launching app to open its first window.
+            for attempt in 0..<30 {
+                guard let self, !app.isTerminated else { return }
+                let windows = WindowController.windows(forPID: app.processIdentifier).filter { window in
+                    window.subrole == kAXStandardWindowSubrole && !window.isMinimized && !self.isParked(window)
+                        && window.frame.map { ScreenGeometry.isVisible($0) } == true
+                }
+                if !windows.isEmpty {
+                    self.log.info("Auto-parking \(windows.count) \(app.bundleIdentifier ?? "?", privacy: .public) window(s)")
+                    for window in windows {
+                        let screen = window.frame.flatMap(ScreenGeometry.screen(containing:))
+                        await self.park(window, edge: edge, screen: screen)
+                    }
+                    return
+                }
+                guard waitForWindows, attempt < 29 else { return }
+                try? await Task.sleep(for: .milliseconds(500))
+            }
+        }
+    }
+
+    /// At Ledge launch: apps with auto-park rules that are already running (e.g. opened at login).
+    func applyAutoParkRulesToRunningApps() {
+        for app in NSWorkspace.shared.runningApplications where app.activationPolicy == .regular {
+            applyAutoParkRule(to: app, waitForWindows: false)
+        }
     }
 
     // MARK: Tracing

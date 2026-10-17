@@ -97,6 +97,29 @@ final class SettingsStore {
         didSet { save(showTitles, Key.showTitles, relayout: true) }
     }
 
+    // MARK: Extras (M6)
+
+    /// Show the app's Dock badge (unread count, etc.) on its tab.
+    var showBadges: Bool {
+        didSet { defaults.set(showBadges, forKey: Key.showBadges) }
+    }
+    /// Show a live window preview when hovering a tab (needs Screen Recording; ignored without it).
+    var showThumbnails: Bool {
+        didSet { defaults.set(showThumbnails, forKey: Key.showThumbnails) }
+    }
+    var appRules: [AppRule] {
+        didSet { defaults.set(try? JSONEncoder().encode(appRules), forKey: Key.appRules) }
+    }
+
+    func rule(for bundleID: String?) -> AppRule.Action? {
+        guard let bundleID else { return nil }
+        return appRules.first { $0.bundleID == bundleID }?.action
+    }
+
+    func isExcluded(_ bundleID: String?) -> Bool {
+        rule(for: bundleID) == .exclude
+    }
+
     var accentColor: Color { customAccent ?? .accentColor }
 
     var tabMetrics: TabMetrics {
@@ -128,6 +151,9 @@ final class SettingsStore {
         static let tabMaterial = "tabMaterial"
         static let customAccent = "customAccent"
         static let showTitles = "showTitles"
+        static let showBadges = "showBadges"
+        static let showThumbnails = "showThumbnails"
+        static let appRules = "appRules"
     }
 
     init(defaults: UserDefaults = .standard) {
@@ -147,6 +173,9 @@ final class SettingsStore {
         tabMaterial = defaults.string(forKey: Key.tabMaterial).flatMap(TabMaterial.init) ?? .regular
         customAccent = defaults.string(forKey: Key.customAccent).flatMap(Self.color(fromHex:))
         showTitles = value(Key.showTitles, default: true)
+        showBadges = value(Key.showBadges, default: true)
+        showThumbnails = value(Key.showThumbnails, default: true)
+        appRules = defaults.data(forKey: Key.appRules).flatMap { try? JSONDecoder().decode([AppRule].self, from: $0) } ?? []
     }
 
     private func save(_ value: Any, _ key: String, relayout: Bool) {

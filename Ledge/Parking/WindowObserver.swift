@@ -70,6 +70,7 @@ final class WindowObserver {
         let point = ScreenGeometry.axPoint(fromAppKit: NSEvent.mouseLocation)
         guard let window = WindowController.window(at: point),
               window.pid != ProcessInfo.processInfo.processIdentifier,
+              !settings.isExcluded(NSRunningApplication(processIdentifier: window.pid)?.bundleIdentifier),
               let frame = window.frame, !window.isFullScreen else { return }
         drag = DragState(window: window, startFrame: frame)
     }

@@ -79,6 +79,13 @@ final class ParkedWindow: Identifiable {
     /// Set while a tuck is in flight so it isn't started twice.
     var isTransitioning = false
 
+    /// The app's Dock badge text, if any.
+    var badge: String?
+    /// Window server ID, for thumbnails. Resolved when parked.
+    var windowID: CGWindowID?
+    /// Last captured preview, taken while the window was visible.
+    var thumbnail: NSImage?
+
     // Tab UI state.
     var isHovered = false
     var isDragging = false

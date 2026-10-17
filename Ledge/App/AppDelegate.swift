@@ -47,6 +47,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Re-parks windows from the last run once Accessibility is available (housekeeping retries until then).
         parking.restoreSavedIfNeeded()
+        // After the restore has had a chance to claim windows, so rules don't double-park them.
+        Task { [parking] in
+            try? await Task.sleep(for: .seconds(3))
+            parking.applyAutoParkRulesToRunningApps()
+        }
 
         if !permission.isTrusted {
             showOnboarding()

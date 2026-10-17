@@ -67,6 +67,22 @@ enum WindowInventory {
 }
 
 extension WindowInventory {
+    /// The window server's ID for an AX window, found by matching its app and frame (there's no public direct
+    /// mapping). Call while the window is still at a distinctive on-screen frame.
+    static func windowID(for window: WindowController) -> CGWindowID? {
+        guard let frame = window.frame,
+              let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID)
+                as? [[String: Any]] else { return nil }
+        return list.lazy.compactMap { entry -> CGWindowID? in
+            guard (entry[kCGWindowLayer as String] as? Int) == 0,
+                  (entry[kCGWindowOwnerPID as String] as? pid_t) == window.pid,
+                  let boundsDict = entry[kCGWindowBounds as String] as? NSDictionary,
+                  let bounds = CGRect(dictionaryRepresentation: boundsDict as CFDictionary),
+                  bounds.isClose(to: frame) else { return nil }
+            return entry[kCGWindowNumber as String] as? CGWindowID
+        }.first
+    }
+
     /// Brings back unminimized windows left outside every display, e.g. after Ledge was killed while windows were parked.
     static func recoverOffscreenWindows(excluding isExcluded: (WindowController) -> Bool) -> Int {
         guard AXIsProcessTrusted(), let screen = NSScreen.main else { return 0 }

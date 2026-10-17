@@ -14,6 +14,7 @@ struct EdgeTabView: View {
             .overlay { shape.fill(accent.opacity(highlight)) }
             .overlay { shape.strokeBorder(.primary.opacity(0.12), lineWidth: 0.5) }
             .overlay(alignment: parkedWindow.edge.isVertical ? .bottom : .trailing) { peekMarker(accent) }
+            .overlay(alignment: badgeAlignment) { BadgeView(text: parkedWindow.badge) }
             .opacity((parkedWindow.isPulledAway ? 0.55 : 1) * settings.tabOpacity)
             .scaleEffect(parkedWindow.isPulledAway ? 0.92 : 1)
             .animation(.easeOut(duration: 0.12), value: parkedWindow.isHovered)
@@ -35,6 +36,15 @@ struct EdgeTabView: View {
                 .fill(accent)
                 .frame(width: 4, height: 4)
                 .padding(4)
+        }
+    }
+
+    /// Top corner on the inward side, where it can't be clipped by the screen edge.
+    private var badgeAlignment: Alignment {
+        switch parkedWindow.edge {
+        case .right: .topLeading
+        case .left: .topTrailing
+        case .bottom: .topTrailing
         }
     }
 
@@ -92,6 +102,24 @@ struct EdgeTabView: View {
         case .right: UnevenRoundedRectangle(topLeadingRadius: r, bottomLeadingRadius: r)
         case .left: UnevenRoundedRectangle(bottomTrailingRadius: r, topTrailingRadius: r)
         case .bottom: UnevenRoundedRectangle(topLeadingRadius: r, topTrailingRadius: r)
+        }
+    }
+}
+
+/// Red Dock-style badge capsule.
+struct BadgeView: View {
+    let text: String?
+
+    var body: some View {
+        if let text, !text.isEmpty {
+            Text(text.count > 3 ? "99+" : text)
+                .font(.system(size: 9, weight: .bold))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 4)
+                .frame(minWidth: 15, minHeight: 15)
+                .background(Color.red, in: Capsule())
+                .padding(2)
+                .transition(.scale.combined(with: .opacity))
         }
     }
 }

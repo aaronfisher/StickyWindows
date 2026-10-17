@@ -15,6 +15,8 @@ struct SettingsView: View {
                 .tabItem { Label("Appearance", systemImage: "paintbrush") }
             ShortcutSettings()
                 .tabItem { Label("Shortcuts", systemImage: "keyboard") }
+            RulesSettings(settings: settings)
+                .tabItem { Label("Rules", systemImage: "list.bullet.rectangle") }
             PermissionSettings(permission: permission)
                 .tabItem { Label("Permissions", systemImage: "lock.shield") }
         }
@@ -109,6 +111,13 @@ private struct AppearanceSettings: View {
                 }
                 .pickerStyle(.segmented)
                 Toggle("Show window titles", isOn: $settings.showTitles)
+                Toggle("Show Dock badges on tabs", isOn: $settings.showBadges)
+                Toggle(isOn: $settings.showThumbnails) {
+                    Text("Show a window preview when hovering a tab")
+                    Text(CGPreflightScreenCaptureAccess()
+                        ? "Not shown while Hover to Peek is on."
+                        : "Live previews need Screen Recording access (Permissions tab). Without it, the preview shows the icon and full title.")
+                }
                 Picker("Material", selection: $settings.tabMaterial) {
                     ForEach(TabMaterial.allCases) { Text($0.displayName).tag($0) }
                 }
