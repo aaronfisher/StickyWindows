@@ -49,7 +49,7 @@ targets:
         NSHumanReadableCopyright: © 2026 The Shirley Company LLC
         LSMinimumSystemVersion: "15.0"
         # Sparkle
-        SUFeedURL: https://aaronfisher.github.io/sticky-windows/appcast.xml
+        SUFeedURL: https://stickywindows.com/appcast.xml
         SUPublicEDKey: lqvdEdmyX6ncEW9uu8fjjcjfcC57nevid6gCmcNn5Vg=
         SUEnableAutomaticChecks: true
         SUScheduledCheckInterval: 86400

@@ -86,7 +86,7 @@ cp "$DMG" "$OUT/appcast/"
 [[ -f "$SITE_DIR/appcast.xml" ]] && cp "$SITE_DIR/appcast.xml" "$OUT/appcast/appcast.xml"
 "$SPARKLE_BIN/generate_appcast" "${SIGN_ARGS[@]}" \
   --download-url-prefix "$DOWNLOAD_PREFIX" \
-  --link "https://aaronfisher.github.io/sticky-windows/" \
+  --link "https://stickywindows.com/" \
   -o "$OUT/appcast/appcast.xml" "$OUT/appcast"
 if [[ -d "$SITE_DIR" ]]; then cp "$OUT/appcast/appcast.xml" "$SITE_DIR/appcast.xml"; fi
 
