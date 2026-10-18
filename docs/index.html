@@ -168,57 +168,105 @@
   .demo { padding-block: 1rem 3rem; }
   .demo .card { padding-block: 0; overflow: hidden; gap: 0; }
   .display {
-    position: relative; aspect-ratio: 16 / 10; max-width: 100%; user-select: none;
-    background: linear-gradient(160deg, var(--wall-a), var(--wall-b)); touch-action: none;
+    position: relative; aspect-ratio: 16 / 10; max-width: 100%; user-select: none; touch-action: none;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", var(--font-sans);
+    /* Sequoia-style wallpaper: layered color fields */
+    background:
+      radial-gradient(120% 80% at 15% 0%, #7FB8FF 0%, rgba(127,184,255,0) 55%),
+      radial-gradient(90% 70% at 90% 20%, #FF8FA3 0%, rgba(255,143,163,0) 55%),
+      radial-gradient(110% 90% at 70% 110%, #5B3DFF 0%, rgba(91,61,255,0) 60%),
+      radial-gradient(70% 60% at 30% 80%, #2DD4BF 0%, rgba(45,212,191,0) 55%),
+      linear-gradient(160deg, #1B2B7A, #0A0F2E);
   }
   .demo .card-footer { padding-block: .875rem; border-top: 1px solid var(--border); justify-content: space-between; flex-wrap: wrap; }
+
+  /* Menu bar */
   .display .menubar {
-    position: absolute; inset: 0 0 auto 0; height: 7%; min-height: 22px;
-    background: rgba(255,255,255,.18); backdrop-filter: blur(12px);
-    display: flex; align-items: center; gap: 4%; padding-inline: 3%;
-    color: rgba(255,255,255,.92); font-size: clamp(9px, 1.2vw, 13px); font-weight: 600;
+    position: absolute; inset: 0 0 auto 0; height: 3.6%; min-height: 18px;
+    background: rgba(10, 12, 30, .28); -webkit-backdrop-filter: blur(20px) saturate(1.4); backdrop-filter: blur(20px) saturate(1.4);
+    display: flex; align-items: center; gap: 1.9%; padding-inline: 1.6%;
+    color: rgba(255,255,255,.95); font-size: clamp(6.5px, .85vw, 12px); font-weight: 500; letter-spacing: .005em;
   }
-  .display .menubar .apple { width: 1.1em; height: 1.1em; }
-  .display .menubar .clock { margin-left: auto; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .display .menubar .apple { width: 1.15em; height: 1.15em; margin-right: .2em; }
+  .display .menubar .app { font-weight: 700; }
+  .display .menubar .sys { margin-left: auto; display: flex; align-items: center; gap: 1.3em; }
+  .display .menubar .sys svg { width: 1.25em; height: 1.25em; display: block; }
+  .display .menubar .clock { font-variant-numeric: tabular-nums; }
+
+  /* Dock */
   .display .dock {
-    position: absolute; left: 50%; bottom: 2.5%; transform: translateX(-50%);
-    height: 9%; min-height: 28px; padding-inline: 1.2%; border-radius: 14px;
-    background: rgba(255,255,255,.22); backdrop-filter: blur(16px);
-    display: flex; align-items: center; gap: 1.2%;
+    position: absolute; left: 50%; bottom: 1.4%; transform: translateX(-50%);
+    height: 8.4%; min-height: 30px; padding-inline: .8%; border-radius: 1.6em;
+    background: rgba(255,255,255,.22); -webkit-backdrop-filter: blur(24px) saturate(1.5); backdrop-filter: blur(24px) saturate(1.5);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.3), 0 10px 30px -10px rgba(0,0,0,.5);
+    display: flex; align-items: center; gap: .55%; font-size: clamp(8px, 1.2vw, 16px);
   }
-  .display .dock i { display: block; height: 68%; aspect-ratio: 1; border-radius: 22%; background: var(--dc, #fff); opacity: .95; }
+  .display .dock svg { display: block; height: 74%; aspect-ratio: 1; border-radius: 22%; filter: drop-shadow(0 2px 2px rgba(0,0,0,.25)); transition: transform .15s; }
+  .display .dock svg:hover { transform: translateY(-8%) scale(1.08); }
+  .display .dock .sep { width: 1px; height: 60%; background: rgba(255,255,255,.4); margin-inline: .4%; }
+  @media (prefers-reduced-motion: reduce) { .display .dock svg { transition: none; } }
+
   .hint {
-    position: absolute; left: 4%; bottom: 15%; max-width: 19em;
-    color: rgba(255,255,255,.92); font-size: clamp(.78rem, 1.5vw, 1rem); line-height: 1.35;
-    padding: .6em .9em; border-radius: 10px; background: rgba(0,0,0,.28); backdrop-filter: blur(8px);
+    position: absolute; left: 3%; bottom: 14%; max-width: 19em;
+    color: rgba(255,255,255,.95); font-size: clamp(.78rem, 1.5vw, 1rem); line-height: 1.35;
+    padding: .6em .9em; border-radius: 10px; background: rgba(10,12,30,.42); backdrop-filter: blur(10px);
     pointer-events: none; transition: opacity .3s;
   }
   .hint strong { color: #fff; }
   .hint.faded { opacity: 0; }
 
+  /* Windows: Sequoia chrome */
   .win {
-    position: absolute; width: 44%; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden;
-    background: #F7F7FA; color: #1C1C1E; box-shadow: 0 2px 6px rgba(0,0,0,.18), 0 24px 48px -16px rgba(0,0,0,.45);
-    cursor: grab; will-change: transform; font-size: clamp(7px, 1.1vw, 12px);
+    position: absolute; width: 46%; aspect-ratio: 3 / 2; border-radius: 11px; overflow: hidden;
+    background: #FFFFFF; color: #1D1D1F; display: grid; grid-template-rows: auto 1fr;
+    box-shadow: 0 0 0 .5px rgba(0,0,0,.35), 0 2px 6px rgba(0,0,0,.18), 0 22px 50px -14px rgba(0,0,0,.55);
+    cursor: grab; will-change: transform; font-size: clamp(6px, .95vw, 12px);
   }
   .win.dragging { cursor: grabbing; }
-  .win .tb { height: 2.4em; background: #EAEAEF; display: flex; align-items: center; gap: .6em; padding-inline: .9em; border-bottom: 1px solid #D9D9E0; }
-  .win .tb i { width: .9em; height: .9em; border-radius: 50%; display: block; }
-  .win .tb .t { margin-left: .4em; font-weight: 600; color: #3A3A3C; letter-spacing: .01em; }
-  .win .body { padding: 1em; display: grid; gap: .6em; }
-  .win .row { height: .9em; border-radius: .45em; background: #D5D6DE; }
-  .win .row.short { width: 60%; }
-  .win .row.mid { width: 80%; }
-  .win .cover { height: 7em; border-radius: .6em; background: linear-gradient(135deg, #FF6B6B, #FFB43A); }
+  .win .tb {
+    height: 3.2em; background: #F6F6F8; border-bottom: 1px solid #E2E2E7;
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding-inline: 1em;
+  }
+  .win .lights { display: flex; gap: .6em; }
+  .win .lights i { width: 1em; height: 1em; border-radius: 50%; display: block; box-shadow: inset 0 0 0 .5px rgba(0,0,0,.15); }
+  .win .t { display: flex; align-items: center; gap: .5em; font-weight: 600; color: #3A3A3C; font-size: 1.05em; }
+  .win .t svg { width: 1.5em; height: 1.5em; border-radius: 22%; }
+  .win .tools { display: flex; justify-content: flex-end; gap: .5em; }
+  .win .tools i { width: 2.2em; height: 1.7em; border-radius: .45em; background: #E9E9EE; display: block; }
+  .win .main { display: grid; grid-template-columns: 34% 1fr; min-height: 0; }
+  .win .side { background: #F2F2F6; border-right: 1px solid #E2E2E7; padding: .8em .7em; display: grid; gap: .45em; align-content: start; }
+  .win .side .h { font-size: .8em; font-weight: 700; color: #8E8E93; text-transform: uppercase; letter-spacing: .05em; margin-top: .4em; }
+  .win .side .h:first-child { margin-top: 0; }
+  .win .side div:not(.h) { font-size: .95em; padding: .35em .5em; border-radius: .4em; display: flex; align-items: center; gap: .5em; color: #1D1D1F; }
+  .win .side div.sel { background: #D9D9DF; }
+  .win .side div i { width: 1.1em; height: 1.1em; border-radius: .25em; display: inline-block; flex: none; }
+  .win .content { padding: 1em 1.2em; display: grid; gap: .6em; align-content: start; min-width: 0; }
+  .win .content .title { font-size: 1.5em; font-weight: 700; }
+  .win .content .date { font-size: .8em; color: #8E8E93; }
+  .win .row { height: .85em; border-radius: .45em; background: #E5E5EA; }
+  .win .row.short { width: 55%; } .win .row.mid { width: 78%; }
+  .win .check { display: flex; align-items: center; gap: .5em; font-size: .95em; }
+  .win .check i { width: 1.1em; height: 1.1em; border-radius: 50%; border: 1.5px solid #C7C7CC; flex: none; }
+  .win .check i.on { background: #FF9F0A; border-color: #FF9F0A; }
+  .win .albums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8em; }
+  .win .albums > div { min-width: 0; }
+  .win .albums > div > div { aspect-ratio: 1; width: 100%; border-radius: .5em; box-shadow: 0 2px 6px rgba(0,0,0,.18); }
+  .win .albums span { display: block; height: .7em; width: 70%; margin-top: .4em; border-radius: .35em; background: #E5E5EA; }
+  .win .now { display: flex; align-items: center; gap: .7em; border-top: 1px solid #E2E2E7; padding: .6em 1em; font-size: .9em; background: #F6F6F8; }
+  .win .now i { width: 2.2em; height: 2.2em; border-radius: .4em; background: linear-gradient(135deg, #FF6B6B, #FFB43A); flex: none; }
+  .win .now b { display: block; font-weight: 600; } .win .now small { color: #8E8E93; }
+  .win .now .bar { margin-left: auto; width: 32%; height: .35em; border-radius: .2em; background: #E5E5EA; position: relative; }
+  .win .now .bar::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 38%; background: #FC3C44; border-radius: .2em; }
+  .win.music { grid-template-rows: auto 1fr auto; }
   .win.sliding { transition: transform .26s cubic-bezier(.2,.9,.2,1); }
   @media (prefers-reduced-motion: reduce) { .win.sliding, .tab, .indicator, .hint, .btn { transition: none !important; } }
 
   .indicator { position: absolute; background: rgba(255,255,255,.18); opacity: 0; transition: opacity .12s; pointer-events: none; }
   .indicator.show { opacity: 1; }
   .indicator .ghost { position: absolute; background: rgba(255,255,255,.35); border: 2px solid #fff; }
-  .indicator.right { right: 0; top: 7%; bottom: 0; width: 6%; }
-  .indicator.left { left: 0; top: 7%; bottom: 0; width: 6%; }
-  .indicator.bottom { left: 0; right: 0; bottom: 0; height: 9%; }
+  .indicator.right { right: 0; top: 3.6%; bottom: 0; width: 6%; }
+  .indicator.left { left: 0; top: 3.6%; bottom: 0; width: 6%; }
+  .indicator.bottom { left: 0; right: 0; bottom: 11.2%; height: 8%; }
   .indicator.right .ghost, .indicator.left .ghost { width: 100%; height: 22%; }
   .indicator.right .ghost { border-radius: 10px 0 0 10px; border-right: 0; }
   .indicator.left .ghost { border-radius: 0 10px 10px 0; border-left: 0; }
@@ -233,13 +281,13 @@
   }
   .tab:hover { background: rgba(255,255,255,.75); }
   .tab.revealed { background: rgba(255,255,255,.95); box-shadow: inset 0 0 0 2px var(--blue), 0 8px 20px -8px rgba(0,0,0,.4); }
-  .tab .ic { width: 1.6em; height: 1.6em; border-radius: 28%; flex: none; }
+  .tab .ic { width: 1.7em; height: 1.7em; border-radius: 26%; flex: none; display: block; }
   .tab.right, .tab.left { width: 6%; height: 22%; flex-direction: column; }
   .tab.right { right: 0; border-radius: 10px 0 0 10px; }
   .tab.left { left: 0; border-radius: 0 10px 10px 0; }
   .tab.right .lbl { writing-mode: vertical-rl; }
   .tab.left .lbl { writing-mode: vertical-rl; transform: rotate(180deg); }
-  .tab.bottom { bottom: 0; height: 9%; width: 18%; border-radius: 10px 10px 0 0; }
+  .tab.bottom { bottom: 11.2%; height: 8%; width: 18%; border-radius: 10px 10px 0 0; }
   .tab .lbl { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   /* Sections */
@@ -336,27 +384,79 @@
       <div class="display" id="display" aria-label="Interactive demo: drag the windows to an edge of this screen to park them">
       <div class="menubar">
         <svg class="apple" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.4 12.7c0-2.5 2-3.6 2.1-3.7-1.2-1.7-3-1.9-3.6-2-1.5-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.8-1.7 0-3.2 1-4.1 2.5-1.8 3-.5 7.6 1.3 10.1.8 1.2 1.8 2.6 3.1 2.5 1.3 0 1.7-.8 3.3-.8 1.5 0 2 .8 3.3.8 1.4 0 2.2-1.2 3.1-2.5.9-1.4 1.3-2.7 1.4-2.8-.1 0-2.8-1.1-2.8-4.2zM13.9 5.4c.7-.8 1.2-2 1-3.2-1 0-2.3.7-3 1.6-.7.7-1.2 1.9-1.1 3.1 1.2.1 2.3-.6 3.1-1.5z"/></svg>
-        <span>Finder</span><span>File</span><span>Edit</span><span>View</span>
-        <span class="clock" id="clock">Fri 9:41 AM</span>
+        <span class="app">Finder</span><span>File</span><span>Edit</span><span>View</span><span>Go</span><span>Window</span><span>Help</span>
+        <span class="sys" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm-4.2-5.2 1.4 1.4a4 4 0 0 1 5.6 0l1.4-1.4a6 6 0 0 0-8.4 0zM4.9 12l1.4 1.4a8 8 0 0 1 11.4 0l1.4-1.4a10 10 0 0 0-14.2 0zM2 9.1l1.4 1.4a12 12 0 0 1 17.2 0L22 9.1a14 14 0 0 0-20 0z"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="7" width="17" height="10" rx="2.5"/><path d="M21 10.5v3" stroke-linecap="round"/><rect x="4" y="9" width="11" height="6" rx="1" fill="currentColor" stroke="none"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.8-4.8"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="6" rx="3"/><rect x="3" y="13" width="18" height="6" rx="3"/><circle cx="7" cy="8" r="1.4" fill="currentColor"/><circle cx="17" cy="16" r="1.4" fill="currentColor"/></svg>
+          <span class="clock" id="clock">Sat Oct 17  9:41 AM</span>
+        </span>
       </div>
       <div class="hint" id="hint">Drag a window to the <strong>right, left, or bottom edge</strong> and let go.</div>
 
-      <div class="win" data-id="notes" data-title="Notes" data-color="#FFD60A" style="left:12%; top:14%;">
-        <div class="tb"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i><span class="t">Notes</span></div>
-        <div class="body"><div class="row mid"></div><div class="row"></div><div class="row short"></div><div class="row"></div><div class="row mid"></div></div>
+      <div class="win notes" data-id="notes" data-title="Notes" style="left:8%; top:10%;">
+        <div class="tb">
+          <div class="lights"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div>
+          <div class="t"><svg  viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#FFF8DD"/><path d="M0 14A14 14 0 0 1 14 0h36a14 14 0 0 1 14 14v6H0z" fill="#FFD60A"/><g stroke="#C7C7CC" stroke-width="2" stroke-linecap="round"><path d="M14 32h36"/><path d="M14 41h36"/><path d="M14 50h24"/></g></svg>Notes</div>
+          <div class="tools"><i></i><i></i><i></i></div>
+        </div>
+        <div class="main">
+          <div class="side">
+            <div class="h">iCloud</div>
+            <div class="sel"><i style="background:#FFD60A"></i>Notes</div>
+            <div><i style="background:#FFD60A"></i>Groceries</div>
+            <div><i style="background:#FFD60A"></i>Ideas</div>
+            <div class="h">Tags</div>
+            <div><i style="background:#8E8E93;border-radius:50%"></i>#ledge</div>
+          </div>
+          <div class="content">
+            <div class="title">Weekend list</div>
+            <div class="date">Today at 9:41 AM</div>
+            <div class="check"><i class="on"></i>Return library books</div>
+            <div class="check"><i class="on"></i>Call the plumber back</div>
+            <div class="check"><i></i>Park this window on the edge</div>
+            <div class="row mid"></div><div class="row short"></div>
+          </div>
+        </div>
       </div>
-      <div class="win" data-id="music" data-title="Music" data-color="#FC3C44" style="left:52%; top:28%;">
-        <div class="tb"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i><span class="t">Music</span></div>
-        <div class="body"><div class="cover"></div><div class="row short"></div><div class="row mid"></div></div>
+
+      <div class="win music" data-id="music" data-title="Music" style="left:50%; top:30%;">
+        <div class="tb">
+          <div class="lights"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div>
+          <div class="t"><svg  viewBox="0 0 64 64"><defs><linearGradient id="mug" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF6B7A"/><stop offset="1" stop-color="#F0234A"/></linearGradient></defs><rect width="64" height="64" rx="14" fill="url(#mug)"/><path d="M26 44a5 5 0 1 1-4-4.9V22l20-5v22a5 5 0 1 1-4-4.9V24l-12 3z" fill="#fff"/></svg>Music</div>
+          <div class="tools"><i></i><i></i></div>
+        </div>
+        <div class="main">
+          <div class="side">
+            <div class="sel"><i style="background:#FC3C44"></i>Home</div>
+            <div><i style="background:#FC3C44"></i>Browse</div>
+            <div><i style="background:#FC3C44"></i>Radio</div>
+            <div class="h">Library</div>
+            <div><i style="background:#8E8E93"></i>Recently Added</div>
+            <div><i style="background:#8E8E93"></i>Albums</div>
+          </div>
+          <div class="content">
+            <div class="title">Recently Played</div>
+            <div class="albums">
+              <div><div style="background:linear-gradient(135deg,#FF6B6B,#FFB43A)"></div><span></span></div>
+              <div><div style="background:linear-gradient(135deg,#5B8DEF,#7FD7FF)"></div><span></span></div>
+              <div><div style="background:linear-gradient(135deg,#2D2D44,#8E6BFF)"></div><span></span></div>
+            </div>
+          </div>
+        </div>
+        <div class="now"><i></i><div><b>Edge of the Screen</b><small>Platinum</small></div><div class="bar"></div></div>
       </div>
 
       <div class="indicator" id="indicator"><div class="ghost"></div></div>
 
       <div class="dock" aria-hidden="true">
-        <i style="--dc:#3A8DFF"></i><i style="--dc:#FFD60A"></i><i style="--dc:#FC3C44"></i><i style="--dc:#34C759"></i><i style="--dc:#AF52DE"></i><i style="--dc:#8E8E93"></i>
+        <svg id="icon-finder" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#1E9BF0"/><path d="M34 0h16a14 14 0 0 1 14 14v36a14 14 0 0 1-14 14H34c-6-10-8-21-5-32 2-10 4-22 5-32z" fill="#0A6AD1"/><path d="M34 0C27 10 25 24 28 38c2 8 4 18 6 26h-4c-3-12-7-22-6-36 1-10 4-20 6-28z" fill="#0E57A8"/><circle cx="20" cy="26" r="2.6" fill="#13243F"/><circle cx="44" cy="26" r="2.6" fill="#13243F"/><path d="M16 42c8 6 24 6 32 0" fill="none" stroke="#13243F" stroke-width="2.6" stroke-linecap="round"/></svg><svg id="icon-safari" viewBox="0 0 64 64"><defs><linearGradient id="sfg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3EC9FF"/><stop offset="1" stop-color="#0A6AE0"/></linearGradient></defs><rect width="64" height="64" rx="14" fill="url(#sfg)"/><circle cx="32" cy="32" r="22" fill="#fff"/><circle cx="32" cy="32" r="20" fill="none" stroke="#C9D3E3" stroke-width="1"/><path d="M44 20 L36 36 L20 44 L28 28 Z" fill="#E5E5EA"/><path d="M44 20 L36 36 L28 28 Z" fill="#FF3B30"/></svg><svg id="icon-mail" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#2F8BFF"/><rect x="12" y="19" width="40" height="27" rx="4" fill="#fff"/><path d="M14 22l18 13 18-13" fill="none" stroke="#2F8BFF" stroke-width="2.6"/></svg><svg id="icon-notes" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#FFF8DD"/><path d="M0 14A14 14 0 0 1 14 0h36a14 14 0 0 1 14 14v6H0z" fill="#FFD60A"/><g stroke="#C7C7CC" stroke-width="2" stroke-linecap="round"><path d="M14 32h36"/><path d="M14 41h36"/><path d="M14 50h24"/></g></svg><svg id="icon-music" viewBox="0 0 64 64"><defs><linearGradient id="mug" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF6B7A"/><stop offset="1" stop-color="#F0234A"/></linearGradient></defs><rect width="64" height="64" rx="14" fill="url(#mug)"/><path d="M26 44a5 5 0 1 1-4-4.9V22l20-5v22a5 5 0 1 1-4-4.9V24l-12 3z" fill="#fff"/></svg><svg id="icon-messages" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#34C759"/><path d="M32 14c11 0 20 7 20 16s-9 16-20 16c-2 0-4-.2-6-.7L18 50l1.5-8C15 39 12 35 12 30c0-9 9-16 20-16z" fill="#fff"/></svg><svg id="icon-settings" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#8E8E93"/><circle cx="32" cy="32" r="13" fill="none" stroke="#E5E5EA" stroke-width="6" stroke-dasharray="6 4.2"/><circle cx="32" cy="32" r="6" fill="#E5E5EA"/></svg>
+        <span class="sep"></span>
+        <svg id="icon-trash" viewBox="0 0 64 64"><path d="M18 20h28l-3 32H21z" fill="rgba(255,255,255,.75)"/><rect x="14" y="14" width="36" height="5" rx="2.5" fill="rgba(255,255,255,.9)"/><path d="M26 26v20M32 26v20M38 26v20" stroke="#9A9AA3" stroke-width="2"/></svg>
       </div>
     </div>
-      <div class="card-footer">
+    <div class="card-footer">
         <span class="muted" id="status">This is a working model of the real gesture. Try it with your mouse or finger.</span>
         <button type="button" id="reset" class="btn btn-outline btn-sm">Reset demo</button>
       </div>
@@ -576,20 +676,20 @@
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const BAND = 14;        // px from the edge that counts as the zone
   const DWELL = 250;      // ms the cursor must rest there
-  const MENUBAR = 0.07;   // fraction of height taken by the menu bar
+  const MENUBAR = 0.036;  // fraction of height taken by the menu bar
 
   // Live clock, in the menu bar's own format.
   const clock = document.getElementById('clock');
   function tick() {
     const d = new Date();
-    clock.textContent = d.toLocaleDateString(undefined, { weekday: 'short' }) + ' ' +
+    clock.textContent = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) + '  ' +
       d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
   }
   tick(); setInterval(tick, 30000);
 
   const windows = new Map(); // id -> state
   display.querySelectorAll('.win').forEach(el => {
-    const st = { el, id: el.dataset.id, title: el.dataset.title, color: el.dataset.color,
+    const st = { el, id: el.dataset.id, title: el.dataset.title,
       home: null, parked: null, tab: null, revealed: false };
     windows.set(st.id, st);
     el.addEventListener('pointerdown', e => beginDrag(e, st));
@@ -702,7 +802,11 @@
     if (!st.tab) {
       const t = document.createElement('button');
       t.type = 'button';
-      t.innerHTML = '<span class="ic" style="background:' + st.color + '"></span><span class="lbl">' + st.title + '</span>';
+      const icon = document.getElementById('icon-' + st.id).cloneNode(true);
+      icon.removeAttribute('id'); icon.classList.add('ic');
+      t.appendChild(icon);
+      const lbl = document.createElement('span'); lbl.className = 'lbl'; lbl.textContent = st.title;
+      t.appendChild(lbl);
       t.addEventListener('click', () => toggle(st));
       t.addEventListener('pointerdown', e => beginTabDrag(e, st));
       display.appendChild(t);
@@ -832,7 +936,7 @@
 
   document.getElementById('reset').addEventListener('click', () => {
     const r = rect();
-    const homes = { notes: { left: .12, top: .14 }, music: { left: .52, top: .28 } };
+    const homes = { notes: { left: .08, top: .10 }, music: { left: .50, top: .30 } };
     windows.forEach(st => {
       if (st.tab) { st.tab.remove(); st.tab = null; }
       st.parked = null; st.revealed = false; st.el.hidden = false; st.el.style.transform = '';
