@@ -1,4 +1,4 @@
-name: Ledge
+name: StickyWindows
 options:
   bundleIdPrefix: vc.theshirleycompany
   deploymentTarget:
@@ -13,7 +13,7 @@ settings:
     SWIFT_VERSION: "6.0"
     MACOSX_DEPLOYMENT_TARGET: "15.0"
     # The Shirley Company LLC. Automatic signing with an Apple Development certificate (Xcode creates it on
-    # first build) gives every build the same identity, so macOS keeps Ledge's Accessibility permission.
+    # first build) gives every build the same identity, so macOS keeps the app's Accessibility permission.
     # Distribution (M7) will need a Developer ID Application certificate for this team.
     DEVELOPMENT_TEAM: F5N4RH3674
     CODE_SIGN_STYLE: Automatic
@@ -21,37 +21,37 @@ settings:
     ENABLE_HARDENED_RUNTIME: YES
     SWIFT_STRICT_CONCURRENCY: complete
 targets:
-  Ledge:
+  StickyWindows:
     type: application
     platform: macOS
     sources:
-      - path: Ledge
+      - path: StickyWindows
         excludes:
           - "Resources/AppIcon.icon/**"
       # Icon Composer file: added as one file so Xcode compiles it (Liquid Glass + fallbacks for older macOS).
-      - path: Ledge/Resources/AppIcon.icon
+      - path: StickyWindows/Resources/AppIcon.icon
         type: file
         buildPhase: resources
     dependencies:
       - package: KeyboardShortcuts
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: vc.theshirleycompany.Ledge
-        PRODUCT_NAME: Ledge
+        PRODUCT_BUNDLE_IDENTIFIER: vc.theshirleycompany.StickyWindows
+        PRODUCT_NAME: "Sticky Windows"
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_LSUIElement: YES
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        INFOPLIST_KEY_CFBundleDisplayName: Ledge
+        INFOPLIST_KEY_CFBundleDisplayName: "Sticky Windows"
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.productivity
         INFOPLIST_KEY_NSHumanReadableCopyright: "© 2026 The Shirley Company LLC"
-        CODE_SIGN_ENTITLEMENTS: Ledge/Resources/Ledge.entitlements
+        CODE_SIGN_ENTITLEMENTS: StickyWindows/Resources/StickyWindows.entitlements
         ENABLE_APP_SANDBOX: NO
 schemes:
-  Ledge:
+  StickyWindows:
     build:
       targets:
-        Ledge: all
+        StickyWindows: all
     run:
       config: Debug

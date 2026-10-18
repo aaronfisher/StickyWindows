@@ -1,6 +1,6 @@
-# Ledge — Edge Tabs for macOS
+# Sticky Windows — Edge Tabs for macOS
 
-Working name: **Ledge**. A modern revival of Mac OS 9 pop-up windows / Sticky Windows: drag any window to a screen edge and it collapses into a tab parked on that edge. Click the tab to bring the window back; click again (or click away) to tuck it away.
+Name: **Sticky Windows** (working name was Ledge until October 2026). A modern revival of Mac OS 9 pop-up windows / Sticky Windows: drag any window to a screen edge and it collapses into a tab parked on that edge. Click the tab to bring the window back; click again (or click away) to tuck it away.
 
 ## Target
 - macOS 15+ (Sequoia and later), Apple Silicon first (dev machine: M4 Mac).
