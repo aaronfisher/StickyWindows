@@ -9,155 +9,169 @@
 <title>Ledge</title>
 <meta name="description" content="Ledge parks any macOS window as a tab on the edge of your screen. Drag to park, click to reveal.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:ital,wght@0,400..700;1,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400..800&family=Geist+Mono:wght@400..600&display=swap">
 <style>
-  /* Layout: a desk. One wide "display" demo at the top, then a 12-column editorial grid where
-     copy sits left and small live diagrams sit right, with a vertical "ledge" rule running down the margin. */
+  /* Layout: a shadcn/ui landing page. A 64px top bar, a centered hero with a demo card below,
+     then sections of cards on a neutral ground. Spacing on a 4px grid, radius from --radius. */
   :root {
-    --bg: #F5F6FA;
-    --surface: #FFFFFF;
-    --fg: #141829;
-    --muted: #5D6480;
-    --line: #DCE0EC;
-    --accent: #2A62F0;
-    --accent-ink: #FFFFFF;
-    --amber: #F5A623;
-    --amber-deep: #C9801A;
-    --wall-a: #3F8BFF;
-    --wall-b: #2A2A9E;
-    --shadow: 0 1px 2px rgba(20, 24, 41, .06), 0 12px 32px -12px rgba(20, 24, 41, .25);
-    --glass: rgba(255, 255, 255, .52);
-    --glass-strong: rgba(255, 255, 255, .72);
-    --glass-edge: rgba(255, 255, 255, .85);
-    --glass-rim: rgba(20, 24, 41, .08);
-    --blob-1: #9EC3FF; --blob-2: #D9C5FF; --blob-3: #FFD79A;
-    --display: "Bricolage Grotesque", "Avenir Next", "Helvetica Neue", Arial, sans-serif;
-    --body: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
-    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    /* shadcn/ui default theme (base: neutral), light */
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.205 0 0);
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0);
+    --radius: 0.625rem;
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    /* Ledge's own: the mock display and its tabs */
+    --wall-a: #3F8BFF; --wall-b: #2A2A9E; --amber: #FFB43A; --blue: #2A62F0;
+    --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #0D1020; --surface: #161A2E; --fg: #ECEEF7; --muted: #9AA3C0; --line: #272D45;
-      --accent: #6B93FF; --accent-ink: #0B1020; --amber: #FFB94A; --amber-deep: #E39A2A;
+      --background: oklch(0.145 0 0); --foreground: oklch(0.985 0 0);
+      --card: oklch(0.205 0 0); --card-foreground: oklch(0.985 0 0);
+      --popover: oklch(0.205 0 0); --popover-foreground: oklch(0.985 0 0);
+      --primary: oklch(0.922 0 0); --primary-foreground: oklch(0.205 0 0);
+      --secondary: oklch(0.269 0 0); --secondary-foreground: oklch(0.985 0 0);
+      --muted: oklch(0.269 0 0); --muted-foreground: oklch(0.708 0 0);
+      --accent: oklch(0.269 0 0); --accent-foreground: oklch(0.985 0 0);
+      --destructive: oklch(0.704 0.191 22.216);
+      --border: oklch(1 0 0 / 10%); --input: oklch(1 0 0 / 15%); --ring: oklch(0.556 0 0);
       --wall-a: #2F6FDF; --wall-b: #1C1C70;
-      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 16px 40px -14px rgba(0,0,0,.7);
-      --glass: rgba(30, 35, 60, .42); --glass-strong: rgba(34, 40, 70, .62);
-      --glass-edge: rgba(255,255,255,.22); --glass-rim: rgba(255,255,255,.06);
-      --blob-1: #2452B8; --blob-2: #5A2FA8; --blob-3: #8A5A12;
       color-scheme: dark;
     }
   }
   :root[data-theme="dark"] {
-    --bg: #0D1020; --surface: #161A2E; --fg: #ECEEF7; --muted: #9AA3C0; --line: #272D45;
-    --accent: #6B93FF; --accent-ink: #0B1020; --amber: #FFB94A; --amber-deep: #E39A2A;
+    --background: oklch(0.145 0 0); --foreground: oklch(0.985 0 0);
+    --card: oklch(0.205 0 0); --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.205 0 0); --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.922 0 0); --primary-foreground: oklch(0.205 0 0);
+    --secondary: oklch(0.269 0 0); --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0); --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0); --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.704 0.191 22.216);
+    --border: oklch(1 0 0 / 10%); --input: oklch(1 0 0 / 15%); --ring: oklch(0.556 0 0);
     --wall-a: #2F6FDF; --wall-b: #1C1C70;
-    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 16px 40px -14px rgba(0,0,0,.7);
-    --glass: rgba(30, 35, 60, .42); --glass-strong: rgba(34, 40, 70, .62);
-    --glass-edge: rgba(255,255,255,.22); --glass-rim: rgba(255,255,255,.06);
-    --blob-1: #2452B8; --blob-2: #5A2FA8; --blob-3: #8A5A12;
     color-scheme: dark;
   }
 
-  /* Ambient color behind the glass, so there is something to refract. */
-  .ambient { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
-  .ambient i {
-    position: absolute; border-radius: 50%; filter: blur(70px); opacity: .9; display: block;
-    animation: drift 28s ease-in-out infinite alternate;
-  }
-  .ambient i:nth-child(1) { width: 58vw; height: 58vw; left: -14vw; top: -18vw; background: var(--blob-1); }
-  .ambient i:nth-child(2) { width: 50vw; height: 50vw; right: -16vw; top: 10vw; background: var(--blob-2); animation-delay: -9s; }
-  .ambient i:nth-child(3) { width: 44vw; height: 44vw; left: 30vw; top: 60vh; background: var(--blob-3); opacity: .7; animation-delay: -18s; }
-  @keyframes drift { to { transform: translate(6vw, 4vh) scale(1.08); } }
-  @media (prefers-reduced-motion: reduce) { .ambient i { animation: none; } }
-
-  /* Liquid Glass surface: blurred fill, a bright specular rim on the lit side, a soft outer rim. */
-  .glass {
-    background: var(--glass);
-    -webkit-backdrop-filter: blur(22px) saturate(1.6); backdrop-filter: blur(22px) saturate(1.6);
-    box-shadow:
-      inset 0 1px 0 var(--glass-edge),
-      inset 1px 0 0 rgba(255,255,255,.25),
-      inset 0 -1px 0 rgba(255,255,255,.08),
-      0 0 0 1px var(--glass-rim),
-      var(--shadow);
-    position: relative;
-  }
-  .glass::before {
-    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-    background: linear-gradient(135deg, rgba(255,255,255,.28), rgba(255,255,255,0) 38%, rgba(255,255,255,0) 70%, rgba(255,255,255,.1));
-  }
-
-  * { box-sizing: border-box; }
+  *, *::before, *::after { box-sizing: border-box; border-color: var(--border); }
   body {
-    background: var(--bg); color: var(--fg);
-    position: relative;
-    font-family: var(--body); font-size: 17px; line-height: 1.55;
-    -webkit-font-smoothing: antialiased;
+    background: var(--background); color: var(--foreground);
+    font-family: var(--font-sans); font-size: 16px; line-height: 1.5;
+    -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
   }
   a { color: inherit; }
-  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+  :focus-visible { outline: none; box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring); border-radius: var(--radius-md); }
   img, svg { max-width: 100%; }
-  h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.05; letter-spacing: -0.01em; }
-  h1 { font-size: clamp(2.6rem, 7vw, 5.4rem); font-weight: 700; font-variation-settings: "opsz" 96; }
-  h2 { font-size: clamp(1.9rem, 4vw, 3rem); font-weight: 650; font-variation-settings: "opsz" 72; }
-  h3 { font-size: 1.2rem; font-weight: 650; line-height: 1.25; }
-  p { margin: 0; }
-  .wrap {
-    max-width: 1120px; margin: 0 auto;
+  h1, h2, h3, h4, p { margin: 0; }
+  h1 { font-size: clamp(2.25rem, 6vw, 3.75rem); font-weight: 800; letter-spacing: -0.025em; line-height: 1.05; text-wrap: balance; }
+  h2 { font-size: clamp(1.75rem, 3.6vw, 2.25rem); font-weight: 600; letter-spacing: -0.025em; line-height: 1.15; text-wrap: balance; }
+  h3 { font-size: 1rem; font-weight: 600; line-height: 1.25; }
+  .lead { font-size: 1.25rem; color: var(--muted-foreground); line-height: 1.6; }
+  .muted { font-size: .875rem; color: var(--muted-foreground); }
+  .container {
+    max-width: 1152px; margin: 0 auto; width: 100%;
     padding-left: max(16px, env(safe-area-inset-left, 0px));
     padding-right: max(16px, env(safe-area-inset-right, 0px));
   }
-  .eyebrow {
-    font-family: var(--mono); font-size: .78rem; text-transform: uppercase; letter-spacing: .12em;
-    color: var(--muted);
+  @media (min-width: 768px) { .container { padding-left: max(32px, env(safe-area-inset-left, 0px)); padding-right: max(32px, env(safe-area-inset-right, 0px)); } }
+
+  /* Components (shadcn/ui styling, hand-written) */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem; white-space: nowrap;
+    border-radius: var(--radius-md); font-size: .875rem; font-weight: 500; line-height: 1;
+    height: 2.25rem; padding: 0 1rem; border: 1px solid transparent; text-decoration: none; cursor: pointer;
+    transition: color .15s, background-color .15s, box-shadow .15s; font-family: inherit;
   }
-  .lede { font-size: clamp(1.1rem, 1.6vw, 1.3rem); color: var(--muted); max-width: 36em; }
+  .btn svg { width: 1rem; height: 1rem; flex: none; }
+  .btn-sm { height: 2rem; padding: 0 .75rem; border-radius: var(--radius-md); }
+  .btn-lg { height: 2.5rem; padding: 0 1.5rem; font-size: .875rem; }
+  .btn-default { background: var(--primary); color: var(--primary-foreground); box-shadow: var(--shadow-xs); }
+  .btn-default:hover { background: color-mix(in oklch, var(--primary) 90%, transparent); }
+  .btn-outline { border-color: var(--input); background: var(--background); box-shadow: var(--shadow-xs); }
+  .btn-outline:hover { background: var(--accent); color: var(--accent-foreground); }
+  .btn-ghost { background: transparent; }
+  .btn-ghost:hover { background: var(--accent); color: var(--accent-foreground); }
+  .btn-icon { width: 2.25rem; padding: 0; }
+  .btn-icon.btn-sm { width: 2rem; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: .25rem; border-radius: var(--radius-md);
+    border: 1px solid transparent; padding: .125rem .5rem; font-size: .75rem; font-weight: 500; line-height: 1rem;
+    white-space: nowrap; width: fit-content;
+  }
+  .badge-default { background: var(--primary); color: var(--primary-foreground); }
+  .badge-secondary { background: var(--secondary); color: var(--secondary-foreground); }
+  .badge-outline { border-color: var(--border); color: var(--foreground); }
+
+  .card {
+    background: var(--card); color: var(--card-foreground);
+    border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-sm);
+    display: flex; flex-direction: column; gap: 1.5rem; padding-block: 1.5rem; min-width: 0;
+  }
+  .card-header { display: grid; gap: .375rem; padding-inline: 1.5rem; }
+  .card-title { font-weight: 600; line-height: 1.25; }
+  .card-desc { font-size: .875rem; color: var(--muted-foreground); }
+  .card-content { padding-inline: 1.5rem; }
+  .card-footer { display: flex; align-items: center; gap: .75rem; padding-inline: 1.5rem; }
+
   kbd {
-    font-family: var(--mono); font-size: .85em; padding: .1em .45em; border-radius: 5px;
-    border: 1px solid var(--line); background: var(--surface); box-shadow: inset 0 -1px 0 var(--line);
+    display: inline-flex; align-items: center; height: 1.25rem; padding: 0 .3rem; border-radius: var(--radius-sm);
+    background: var(--muted); color: var(--muted-foreground); font-family: var(--font-mono); font-size: .75rem; font-weight: 500;
     white-space: nowrap;
   }
-  .btn {
-    display: inline-flex; align-items: center; gap: .5em; padding: .8em 1.3em; border-radius: 999px;
-    font-weight: 600; text-decoration: none; font-size: 1rem; border: 1px solid transparent;
-    transition: transform .15s ease, box-shadow .15s ease;
-  }
-  .btn:hover { transform: translateY(-1px); }
-  .btn-primary {
-    background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 88%, white), var(--accent)); color: var(--accent-ink);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 10px 28px -10px var(--accent);
-  }
-  .btn-ghost { border-radius: 999px; }
-  .btn-ghost::before { border-radius: 999px; }
-  .btn svg { width: 1.1em; height: 1.1em; }
+  .separator { height: 1px; background: var(--border); border: 0; margin: 0; }
 
   /* Header */
-  header.top { padding-block: 16px; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; }
-  header.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
-  header.top .pill { display: flex; align-items: center; justify-content: space-between; gap: 24px; width: 100%; border-radius: 999px; padding: 8px 10px 8px 12px; }
-  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-family: var(--display); font-weight: 700; font-size: 1.25rem; }
-  .brand .mark { width: 34px; height: 34px; border-radius: 9px; flex: none; }
-  nav.links { display: flex; gap: 22px; font-size: .95rem; }
-  nav.links a { text-decoration: none; color: var(--muted); }
-  nav.links a:hover { color: var(--fg); }
-  nav.links a.go { padding: .45em 1em; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-weight: 600; }
-  @media (max-width: 560px) { nav.links a.hide-sm { display: none; } }
+  .site-header {
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50;
+    background: color-mix(in oklch, var(--background) 95%, transparent);
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+  }
+  .site-header .container { display: flex; align-items: center; height: 3.5rem; gap: 1.5rem; }
+  .brand { display: flex; align-items: center; gap: .5rem; text-decoration: none; font-weight: 600; font-size: .95rem; }
+  .brand .mark { width: 1.5rem; height: 1.5rem; border-radius: 6px; flex: none; }
+  .site-header nav { display: flex; align-items: center; gap: 1.5rem; font-size: .875rem; color: var(--muted-foreground); margin-left: .5rem; }
+  .site-header nav a { text-decoration: none; transition: color .15s; }
+  .site-header nav a:hover { color: var(--foreground); }
+  .site-header .right { margin-left: auto; display: flex; align-items: center; gap: .5rem; }
+  @media (max-width: 640px) { .site-header nav { display: none; } }
 
   /* Hero */
-  .hero { padding-block: 40px 24px; display: grid; gap: 24px; }
-  .hero .cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-  .hero .req { font-size: .9rem; color: var(--muted); }
+  .hero { padding-block: 5rem 2.5rem; display: grid; justify-items: center; text-align: center; gap: 1.25rem; }
+  .hero .lead { max-width: 42rem; }
+  .hero .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .75rem; padding-top: .25rem; }
+  .hero .meta { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; }
 
-  /* The demo "display" */
-  .display-wrap { padding-block: 8px 24px; }
-  .bezel { border-radius: 30px; padding: 12px; }
+  /* Demo card */
+  .demo { padding-block: 1rem 3rem; }
+  .demo .card { padding-block: 0; overflow: hidden; gap: 0; }
   .display {
-    position: relative; aspect-ratio: 16 / 10; max-width: 100%;
-    border-radius: 20px; overflow: hidden; user-select: none;
-    background: linear-gradient(160deg, var(--wall-a), var(--wall-b));
-    box-shadow: var(--shadow), 0 0 0 1px rgba(20, 24, 41, .08);
-    touch-action: none;
+    position: relative; aspect-ratio: 16 / 10; max-width: 100%; user-select: none;
+    background: linear-gradient(160deg, var(--wall-a), var(--wall-b)); touch-action: none;
   }
+  .demo .card-footer { padding-block: .875rem; border-top: 1px solid var(--border); justify-content: space-between; flex-wrap: wrap; }
   .display .menubar {
     position: absolute; inset: 0 0 auto 0; height: 7%; min-height: 22px;
     background: rgba(255,255,255,.18); backdrop-filter: blur(12px);
@@ -182,7 +196,6 @@
   .hint strong { color: #fff; }
   .hint.faded { opacity: 0; }
 
-  /* Mock windows */
   .win {
     position: absolute; width: 44%; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden;
     background: #F7F7FA; color: #1C1C1E; box-shadow: 0 2px 6px rgba(0,0,0,.18), 0 24px 48px -16px rgba(0,0,0,.45);
@@ -198,9 +211,8 @@
   .win .row.mid { width: 80%; }
   .win .cover { height: 7em; border-radius: .6em; background: linear-gradient(135deg, #FF6B6B, #FFB43A); }
   .win.sliding { transition: transform .26s cubic-bezier(.2,.9,.2,1); }
-  @media (prefers-reduced-motion: reduce) { .win.sliding, .tab, .indicator, .hint { transition: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .win.sliding, .tab, .indicator, .hint, .btn { transition: none !important; } }
 
-  /* Edge indicator + tabs inside the demo */
   .indicator { position: absolute; background: rgba(255,255,255,.18); opacity: 0; transition: opacity .12s; pointer-events: none; }
   .indicator.show { opacity: 1; }
   .indicator .ghost { position: absolute; background: rgba(255,255,255,.35); border: 2px solid #fff; }
@@ -214,13 +226,13 @@
 
   .tab {
     position: absolute; display: flex; align-items: center; justify-content: center; gap: .5em;
-    background: rgba(255,255,255,.55); backdrop-filter: blur(14px); color: #1C1C1E;
+    background: rgba(255,255,255,.55); backdrop-filter: blur(14px); color: #1C1C1E; border: 0; font-family: inherit;
     box-shadow: 0 1px 2px rgba(0,0,0,.15), 0 8px 20px -8px rgba(0,0,0,.4);
     cursor: pointer; font-size: clamp(7px, 1.05vw, 12px); font-weight: 600; letter-spacing: .01em;
-    transition: background .15s, transform .15s;
+    transition: background .15s, transform .15s; padding: 0;
   }
   .tab:hover { background: rgba(255,255,255,.75); }
-  .tab.revealed { background: rgba(255,255,255,.95); box-shadow: inset 0 0 0 2px var(--accent), 0 8px 20px -8px rgba(0,0,0,.4); }
+  .tab.revealed { background: rgba(255,255,255,.95); box-shadow: inset 0 0 0 2px var(--blue), 0 8px 20px -8px rgba(0,0,0,.4); }
   .tab .ic { width: 1.6em; height: 1.6em; border-radius: 28%; flex: none; }
   .tab.right, .tab.left { width: 6%; height: 22%; flex-direction: column; }
   .tab.right { right: 0; border-radius: 10px 0 0 10px; }
@@ -230,39 +242,33 @@
   .tab.bottom { bottom: 0; height: 9%; width: 18%; border-radius: 10px 10px 0 0; }
   .tab .lbl { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-  .demo-foot { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; margin-top: 12px; color: var(--muted); font-size: .9rem; }
-  .demo-foot button { font: inherit; color: var(--fg); border: 0; border-radius: 999px; padding: .5em 1.1em; cursor: pointer; }
-  .demo-foot button:hover { background: var(--glass-strong); }
-
   /* Sections */
-  section { padding-block: 80px; }
-  .sec-head { display: grid; gap: 12px; max-width: 40em; margin-bottom: 40px; }
-  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 28px 32px; }
-  .gesture { display: grid; gap: 12px; }
-  .gesture .diagram { aspect-ratio: 3 / 2; border-radius: 20px; background: linear-gradient(160deg, var(--wall-a), var(--wall-b)); position: relative; overflow: hidden; box-shadow: inset 0 1px 0 rgba(255,255,255,.35), var(--shadow); }
-  .gesture p { color: var(--muted); }
-  .g-win { position: absolute; width: 42%; height: 48%; border-radius: 6px; background: #F7F7FA; box-shadow: 0 10px 24px -10px rgba(0,0,0,.5); }
-  .g-win::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 18%; background: #E3E3E9; border-radius: 6px 6px 0 0; }
-  .g-tab { position: absolute; right: 0; top: 36%; width: 7%; height: 28%; background: rgba(255,255,255,.7); border-radius: 8px 0 0 8px; }
-  .g-arrow { position: absolute; top: 50%; height: 0; border-top: 2px dashed rgba(255,255,255,.85); }
-  .g-arrow::after { content: ""; position: absolute; right: -2px; top: -5px; border: 5px solid transparent; border-left: 7px solid #fff; border-right: 0; }
-  .g-pointer { position: absolute; width: 10px; height: 10px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 4px rgba(255,255,255,.3); }
+  section { padding-block: 4rem; }
+  .section-head { display: grid; gap: .75rem; max-width: 42rem; margin-bottom: 2.5rem; }
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+  .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
 
-  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
-  .feature { border-radius: 24px; padding: 26px 24px; display: grid; gap: 10px; align-content: start; min-width: 0; transition: transform .2s ease, background .2s ease; }
-  .feature:hover { transform: translateY(-2px); background: var(--glass-strong); }
-  @media (prefers-reduced-motion: reduce) { .feature, .btn { transition: none; } }
-  .feature .glyph { width: 30px; height: 30px; color: var(--accent); }
-  .feature p { color: var(--muted); font-size: .98rem; }
-  .feature .tag { font-family: var(--mono); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--amber-deep); }
+  .diagram { aspect-ratio: 3 / 2; border-radius: var(--radius-lg); background: var(--muted); border: 1px solid var(--border); position: relative; overflow: hidden; }
+  .g-win { position: absolute; width: 42%; height: 48%; border-radius: 6px; background: var(--card); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+  .g-win::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 18%; background: var(--secondary); border-bottom: 1px solid var(--border); border-radius: 6px 6px 0 0; }
+  .g-tab { position: absolute; right: 0; top: 36%; width: 7%; height: 28%; background: var(--card); border: 1px solid var(--border); border-right: 0; border-radius: 8px 0 0 8px; }
+  .g-tab.on { box-shadow: inset 0 0 0 2px var(--blue); }
+  .g-arrow { position: absolute; top: 50%; height: 0; border-top: 2px dashed var(--muted-foreground); }
+  .g-arrow::after { content: ""; position: absolute; right: -2px; top: -5px; border: 5px solid transparent; border-left: 7px solid var(--muted-foreground); border-right: 0; }
+  .g-pointer { position: absolute; width: 10px; height: 10px; border-radius: 50%; background: var(--foreground); box-shadow: 0 0 0 4px color-mix(in oklch, var(--foreground) 20%, transparent); }
 
-  .two { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 48px; align-items: center; }
+  .feature-top { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: .5rem; }
+  .icon-box { display: inline-flex; align-items: center; justify-content: center; width: 2.25rem; height: 2.25rem; border-radius: var(--radius-md); background: var(--muted); color: var(--foreground); }
+  .icon-box svg { width: 1.125rem; height: 1.125rem; }
+
+  .two { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 3rem; align-items: center; }
   @media (max-width: 800px) { .two { grid-template-columns: 1fr; } }
-  .two p + p { margin-top: 1em; }
+  .two .copy { display: grid; gap: 1rem; }
+  .two .copy p { line-height: 1.75; }
 
-  /* 1997 platinum nod */
+  /* Mac OS 8 pop-up window (unchanged on purpose: this is how it looked in 1997) */
   .platinum {
-    font-family: "Charcoal", "Chicago", var(--body); background: #DDDDDD; color: #000; border: 1px solid #000; border-radius: 0;
+    font-family: "Charcoal", "Chicago", var(--font-sans); background: #DDDDDD; color: #000; border: 1px solid #000; border-radius: 0;
     box-shadow: 2px 2px 0 #000; padding: 0; width: min(100%, 420px); margin-inline: auto;
   }
   .platinum .bar { height: 22px; background: repeating-linear-gradient(#DDD 0 1px, #999 1px 2px); border-bottom: 1px solid #000; display: flex; align-items: center; justify-content: center; position: relative; }
@@ -275,26 +281,20 @@
   .platinum .tabrow span { background: #DDD; border: 1px solid #000; border-bottom: 0; padding: 2px 10px; font-size: 12px; border-radius: 6px 6px 0 0; }
   .platinum .tabrow span.on { background: #fff; }
 
-  .honest { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
-  .honest > div { border-radius: 24px; padding: 24px; }
-  .honest h3 { display: flex; align-items: center; gap: 10px; }
-  .honest .ok { width: 10px; height: 10px; border-radius: 50%; background: #27C840; flex: none; }
-  .honest .opt { width: 10px; height: 10px; border-radius: 50%; background: var(--amber); flex: none; }
-  .honest p { color: var(--muted); }
+  .perm .card-header { gap: .75rem; }
+  .download-card { align-items: center; text-align: center; gap: 1.25rem; padding-block: 3rem; }
+  .download-card .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .75rem; }
+  .download-card .reqs { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; padding-inline: 1.5rem; }
+  .download-card h2 { padding-inline: 1.5rem; }
+  .download-card .lead { font-size: 1rem; padding-inline: 1.5rem; max-width: 36rem; }
 
-  .download { text-align: left; display: grid; gap: 20px; }
-  .download .panel { border-radius: 30px; padding: clamp(28px, 5vw, 56px); display: grid; gap: 20px; }
-  .reqs { display: flex; flex-wrap: wrap; gap: 10px 28px; color: var(--muted); font-size: .95rem; }
-  footer { padding-block: 24px 48px; color: var(--muted); font-size: .9rem; }
-  footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; }
+  footer { border-top: 1px solid var(--border); padding-block: 1.5rem 3rem; }
+  footer .container { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; justify-content: space-between; font-size: .875rem; color: var(--muted-foreground); }
 </style>
 </head>
 <body>
-<div class="ambient" aria-hidden="true"><i></i><i></i><i></i></div>
-
-<header class="top">
-  <div class="wrap">
-    <div class="pill glass">
+<header class="site-header">
+  <div class="container">
     <a class="brand" href="#top" aria-label="Ledge home">
       <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
         <defs><linearGradient id="mg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3F8BFF"/><stop offset="1" stop-color="#2A2A9E"/></linearGradient></defs>
@@ -307,34 +307,33 @@
       </svg>
       Ledge
     </a>
-    <nav class="links" aria-label="Page">
+    <nav aria-label="Page">
+      <a href="#how">How it works</a>
       <a href="#features">Features</a>
-      <a href="#how" class="hide-sm">How it works</a>
-      <a href="#lineage" class="hide-sm">Lineage</a>
-      <a href="#download" class="go">Download</a>
+      <a href="#lineage">Lineage</a>
+      <a href="#permissions">Permissions</a>
     </nav>
+    <div class="right">
+      <a class="btn btn-ghost btn-icon btn-sm" href="https://github.com/aaronfisher/Ledge" aria-label="Ledge on GitHub"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg></a>
+      <a class="btn btn-default btn-sm" href="#download">Download</a>
     </div>
   </div>
 </header>
 
 <main id="top">
-  <div class="wrap hero">
-    <p class="eyebrow">Window management for macOS 15 and later</p>
+  <div class="container hero">
+    <span class="badge badge-secondary">macOS 15 and later · Free while in beta</span>
     <h1>Park any window on the edge of your screen.</h1>
-    <p class="lede">Drag a window to the left, right, or bottom edge and it folds into a small tab. Click the tab and the window slides back. Mac OS 9 had this. Your Mac can have it again.</p>
-    <div class="cta">
-      <a class="btn btn-primary" href="#download">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-        Download for macOS
-      </a>
-      <a class="btn btn-ghost glass" href="#how">See how it works</a>
-      <span class="req">Free while in beta · Apple silicon and Intel</span>
+    <p class="lead">Drag a window to the left, right, or bottom edge and it folds into a small tab. Click the tab and the window slides back. Mac OS 9 had this. Your Mac can have it again.</p>
+    <div class="actions">
+      <a class="btn btn-default btn-lg" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Download for macOS</a>
+      <a class="btn btn-outline btn-lg" href="#how">See how it works</a>
     </div>
   </div>
 
-  <div class="wrap display-wrap">
-    <div class="bezel glass">
-    <div class="display" id="display" aria-label="Interactive demo: drag the windows to an edge of this screen to park them">
+  <div class="container demo">
+    <div class="card">
+      <div class="display" id="display" aria-label="Interactive demo: drag the windows to an edge of this screen to park them">
       <div class="menubar">
         <svg class="apple" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.4 12.7c0-2.5 2-3.6 2.1-3.7-1.2-1.7-3-1.9-3.6-2-1.5-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.8-1.7 0-3.2 1-4.1 2.5-1.8 3-.5 7.6 1.3 10.1.8 1.2 1.8 2.6 3.1 2.5 1.3 0 1.7-.8 3.3-.8 1.5 0 2 .8 3.3.8 1.4 0 2.2-1.2 3.1-2.5.9-1.4 1.3-2.7 1.4-2.8-.1 0-2.8-1.1-2.8-4.2zM13.9 5.4c.7-.8 1.2-2 1-3.2-1 0-2.3.7-3 1.6-.7.7-1.2 1.9-1.1 3.1 1.2.1 2.3-.6 3.1-1.5z"/></svg>
         <span>Finder</span><span>File</span><span>Edit</span><span>View</span>
@@ -357,116 +356,146 @@
         <i style="--dc:#3A8DFF"></i><i style="--dc:#FFD60A"></i><i style="--dc:#FC3C44"></i><i style="--dc:#34C759"></i><i style="--dc:#AF52DE"></i><i style="--dc:#8E8E93"></i>
       </div>
     </div>
-    </div>
-    <div class="demo-foot">
-      <span id="status">This is a working model of the real gesture. Try it with your mouse or finger.</span>
-      <button type="button" id="reset" class="glass">Reset demo</button>
+      <div class="card-footer">
+        <span class="muted" id="status">This is a working model of the real gesture. Try it with your mouse or finger.</span>
+        <button type="button" id="reset" class="btn btn-outline btn-sm">Reset demo</button>
+      </div>
     </div>
   </div>
 
+  <div class="container"><hr class="separator"></div>
+
   <section id="how">
-    <div class="wrap">
-      <div class="sec-head">
-        <p class="eyebrow">How it works</p>
+    <div class="container">
+      <div class="section-head">
         <h2>Three gestures. No new habits.</h2>
-        <p class="lede">Ledge rides on the drag you already make. There is nothing to learn and nothing to remember.</p>
+        <p class="lead">Ledge rides on the drag you already make. There is nothing to learn and nothing to remember.</p>
       </div>
       <div class="grid-3">
-        <div class="gesture">
-          <div class="diagram" aria-hidden="true">
-            <div class="g-win" style="left:14%; top:26%;"></div>
-            <div class="g-arrow" style="left:58%; width:30%;"></div>
-            <div class="g-pointer" style="right:4%; top:47%;"></div>
+        <div class="card">
+          <div class="card-content">
+            <div class="diagram" aria-hidden="true">
+              <div class="g-win" style="left:14%; top:26%;"></div>
+              <div class="g-arrow" style="left:58%; width:30%;"></div>
+              <div class="g-pointer" style="right:4%; top:47%;"></div>
+            </div>
           </div>
-          <h3>Park</h3>
-          <p>Drag a window until the cursor rests against a screen edge. After a quarter second, a glowing strip shows where the tab will land. Let go.</p>
+          <div class="card-header">
+            <h3 class="card-title">Park</h3>
+            <p class="card-desc">Drag a window until the cursor rests against a screen edge. After a quarter second, a strip shows where the tab will land. Let go.</p>
+          </div>
         </div>
-        <div class="gesture">
-          <div class="diagram" aria-hidden="true">
-            <div class="g-tab" style="background:#fff; box-shadow: inset 0 0 0 2px #2A62F0;"></div>
-            <div class="g-win" style="left:30%; top:26%;"></div>
-            <div class="g-arrow" style="left:74%; width:14%; transform: rotate(180deg);"></div>
+        <div class="card">
+          <div class="card-content">
+            <div class="diagram" aria-hidden="true">
+              <div class="g-tab on"></div>
+              <div class="g-win" style="left:30%; top:26%;"></div>
+              <div class="g-arrow" style="left:74%; width:14%; transform: rotate(180deg);"></div>
+            </div>
           </div>
-          <h3>Reveal</h3>
-          <p>Click the tab. The window slides out to exactly where it was and takes focus. Click again, or just look away in Peek mode, and it slides back.</p>
+          <div class="card-header">
+            <h3 class="card-title">Reveal</h3>
+            <p class="card-desc">Click the tab. The window slides out to exactly where it was and takes focus. Click again, or just look away in Peek mode, and it slides back.</p>
+          </div>
         </div>
-        <div class="gesture">
-          <div class="diagram" aria-hidden="true">
-            <div class="g-tab" style="opacity:.45"></div>
-            <div class="g-win" style="left:22%; top:26%; transform: rotate(-3deg);"></div>
-            <div class="g-pointer" style="left:52%; top:38%;"></div>
+        <div class="card">
+          <div class="card-content">
+            <div class="diagram" aria-hidden="true">
+              <div class="g-tab" style="opacity:.45"></div>
+              <div class="g-win" style="left:22%; top:26%; transform: rotate(-3deg);"></div>
+              <div class="g-pointer" style="left:52%; top:38%;"></div>
+            </div>
           </div>
-          <h3>Release</h3>
-          <p>Pull a tab away from the edge, or drag the revealed window off, and it becomes an ordinary window again. Nothing is ever lost.</p>
+          <div class="card-header">
+            <h3 class="card-title">Release</h3>
+            <p class="card-desc">Pull a tab away from the edge, or drag the revealed window off, and it becomes an ordinary window again. Nothing is ever lost.</p>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
   <section id="features">
-    <div class="wrap">
-      <div class="sec-head">
-        <p class="eyebrow">Features</p>
+    <div class="container">
+      <div class="section-head">
         <h2>Small tabs. A lot of room.</h2>
-        <p class="lede">Everything Ledge does serves one idea: your windows should be one click away, and out of the way until then.</p>
+        <p class="lead">Everything Ledge does serves one idea: your windows should be one click away, and out of the way until then.</p>
       </div>
-      <div class="features">
-        <div class="feature glass">
-          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/><path d="M8 10l2 2-2 2"/></svg>
-          <h3>Pop-out or Peek</h3>
-          <p>Pop-out windows stay until you tuck them. Peek windows duck back when you switch apps or move the cursor away. Choose per tab, or set a default.</p>
+      <div class="grid-cards">
+        <div class="card feature">
+          <div class="card-header">
+            <div class="feature-top"><span class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/><path d="M8 10l2 2-2 2"/></svg></span></div>
+            <h3 class="card-title">Pop-out or Peek</h3>
+            <p class="card-desc">Pop-out windows stay until you tuck them. Peek windows duck back when you switch apps or move the cursor away. Choose per tab, or set a default.</p>
+          </div>
         </div>
-        <div class="feature glass">
-          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
-          <h3>Hover previews</h3>
-          <p>Rest on a tab to see the window behind it. With Screen Recording access the preview is live, so you can watch a download or a playing track without revealing anything.</p>
+        <div class="card feature">
+          <div class="card-header">
+            <div class="feature-top"><span class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span></div>
+            <h3 class="card-title">Hover previews</h3>
+            <p class="card-desc">Rest on a tab to see the window behind it. With Screen Recording access the preview is live, so you can watch a download or a playing track without revealing anything.</p>
+          </div>
         </div>
-        <div class="feature glass">
-          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="13" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/></svg>
-          <h3>Tab groups</h3>
-          <p>Drop a window onto an existing tab to stack them. The group tab shows the apps inside and a count; click it for a list and pick the one you want.</p>
+        <div class="card feature">
+          <div class="card-header">
+            <div class="feature-top"><span class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="13" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/></svg></span></div>
+            <h3 class="card-title">Tab groups</h3>
+            <p class="card-desc">Drop a window onto an existing tab to stack them. The group tab shows the apps inside and a count; click it for a list and pick the one you want.</p>
+          </div>
         </div>
-        <div class="feature glass">
-          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="18" cy="6" r="3.2" fill="currentColor" stroke="none"/></svg>
-          <h3>Badges on tabs</h3>
-          <p>Unread counts from the Dock show on the tab, so a parked Mail or Messages window still tells you when something arrived.</p>
+        <div class="card feature">
+          <div class="card-header">
+            <div class="feature-top"><span class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="18" cy="6" r="3" fill="currentColor" stroke="none"/></svg></span></div>
+            <h3 class="card-title">Badges on tabs</h3>
+            <p class="card-desc">Unread counts from the Dock show on the tab, so a parked Mail or Messages window still tells you when something arrived.</p>
+          </div>
         </div>
-        <div class="feature glass">
-          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7"/><path d="m16 15 2 2 4-4"/></svg>
-          <h3>Rules per app</h3>
-          <p>Keep some apps from parking at all, park others the moment they open, and teach apps like Mail to show their main window when you click them in the Dock.</p>
+        <div class="card feature">
+          <div class="card-header">
+            <div class="feature-top"><span class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7"/><path d="m16 15 2 2 4-4"/></svg></span></div>
+            <h3 class="card-title">Rules per app</h3>
+            <p class="card-desc">Keep some apps from parking at all, park others the moment they open, and teach apps like Mail to show their main window when you click them in the Dock.</p>
+          </div>
         </div>
-        <div class="feature glass">
-          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/></svg>
-          <h3>Keyboard first, if you like</h3>
-          <p>Park the frontmost window with <kbd>⌃⌥⌘→</kbd>, <kbd>⌃⌥⌘←</kbd>, or <kbd>⌃⌥⌘↓</kbd>. Every shortcut can be changed.</p>
+        <div class="card feature">
+          <div class="card-header">
+            <div class="feature-top"><span class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/></svg></span></div>
+            <h3 class="card-title">Keyboard first, if you like</h3>
+            <p class="card-desc">Park the frontmost window with <kbd>⌃⌥⌘→</kbd>, <kbd>⌃⌥⌘←</kbd>, or <kbd>⌃⌥⌘↓</kbd>. Every shortcut can be changed.</p>
+          </div>
         </div>
-        <div class="feature glass">
-          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="12" height="9" rx="1.5"/><rect x="10" y="10" width="12" height="9" rx="1.5"/></svg>
-          <h3>Every display, every Space</h3>
-          <p>Tabs live on the edges of any display and follow you across Spaces. They step aside while a full-screen app is in front.</p>
+        <div class="card feature">
+          <div class="card-header">
+            <div class="feature-top"><span class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="12" height="9" rx="1.5"/><rect x="10" y="10" width="12" height="9" rx="1.5"/></svg></span></div>
+            <h3 class="card-title">Every display, every Space</h3>
+            <p class="card-desc">Tabs live on the edges of any display and follow you across Spaces. They step aside while a full-screen app is in front.</p>
+          </div>
         </div>
-        <div class="feature glass">
-          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
-          <h3>Remembers your layout</h3>
-          <p>Quit, restart, or log back in: the windows you parked come back as tabs, on the same edges, in the same order.</p>
+        <div class="card feature">
+          <div class="card-header">
+            <div class="feature-top"><span class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg></span></div>
+            <h3 class="card-title">Remembers your layout</h3>
+            <p class="card-desc">Quit, restart, or log back in: the windows you parked come back as tabs, on the same edges, in the same order.</p>
+          </div>
         </div>
-        <div class="feature glass">
-          <span class="tag">macOS 15 detail</span>
-          <h3>Plays well with edge tiling</h3>
-          <p>Sequoia also tiles windows dragged to the sides. Ledge can take over the left and right edges while it runs and hands the setting back when it quits.</p>
+        <div class="card feature">
+          <div class="card-header">
+            <div class="feature-top"><span class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M12 5v14"/></svg></span><span class="badge badge-outline">macOS 15</span></div>
+            <h3 class="card-title">Plays well with edge tiling</h3>
+            <p class="card-desc">Sequoia also tiles windows dragged to the sides. Ledge can take over the left and right edges while it runs and hands the setting back when it quits.</p>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
   <section id="lineage">
-    <div class="wrap two">
-      <div>
-        <p class="eyebrow">Lineage</p>
-        <h2 style="margin:12px 0 20px">Pop-up windows, 1997.</h2>
+    <div class="container two">
+      <div class="copy">
+        <span class="badge badge-outline">1997</span>
+        <h2>Pop-up windows, from Mac OS 8.</h2>
         <p>Mac OS 8 let you drag a Finder window to the bottom of the screen, where it became a tab. Click the tab and the window popped up; click anywhere else and it dropped back down. People who used it never stopped missing it.</p>
-        <p>Ledge brings the idea to the Mac of today: any app, any edge, Liquid Glass instead of platinum, and animations that respect Reduce Motion. The window on the right is drawn the way it looked in 1997.</p>
+        <p>Ledge brings the idea to the Mac of today: any app, any edge, and animations that respect Reduce Motion. The window on the right is drawn the way it looked in 1997.</p>
       </div>
       <div class="platinum" aria-label="A Mac OS 8 style pop-up window, drawn in CSS">
         <div class="bar"><i></i><span>Macintosh HD</span></div>
@@ -480,54 +509,58 @@
     </div>
   </section>
 
-  <section id="honest">
-    <div class="wrap">
-      <div class="sec-head">
-        <p class="eyebrow">Permissions</p>
+  <section id="permissions">
+    <div class="container">
+      <div class="section-head">
         <h2>It asks for exactly what it needs.</h2>
       </div>
-      <div class="honest">
-        <div class="glass">
-          <h3><span class="ok"></span>Accessibility</h3>
-          <p>Required. This is how Ledge moves, hides, and restores windows that belong to other apps. First launch walks you through granting it.</p>
+      <div class="grid-3 perm">
+        <div class="card">
+          <div class="card-header">
+            <span class="badge badge-default">Required</span>
+            <h3 class="card-title">Accessibility</h3>
+            <p class="card-desc">This is how Ledge moves, hides, and restores windows that belong to other apps. First launch walks you through granting it.</p>
+          </div>
         </div>
-        <div class="glass">
-          <h3><span class="opt"></span>Screen Recording</h3>
-          <p>Optional. Only used for live hover previews. Without it, Ledge still works fully; previews show the app icon and window title instead.</p>
+        <div class="card">
+          <div class="card-header">
+            <span class="badge badge-secondary">Optional</span>
+            <h3 class="card-title">Screen Recording</h3>
+            <p class="card-desc">Only used for live hover previews. Without it, Ledge still works fully; previews show the app icon and window title instead.</p>
+          </div>
         </div>
-        <div class="glass">
-          <h3>Nothing phones home</h3>
-          <p>Ledge has no account, no analytics, and no network use apart from checking for updates. Your window layout is saved in a plain file in Application Support.</p>
+        <div class="card">
+          <div class="card-header">
+            <span class="badge badge-outline">Privacy</span>
+            <h3 class="card-title">Nothing phones home</h3>
+            <p class="card-desc">Ledge has no account, no analytics, and no network use apart from checking for updates. Your window layout is saved in a plain file in Application Support.</p>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
   <section id="download">
-    <div class="wrap download">
-      <div class="panel glass">
-      <p class="eyebrow">Download</p>
-      <h2>Give your windows a ledge.</h2>
-      <div class="cta" style="display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
-        <a class="btn btn-primary" href="https://github.com/aaronfisher/Ledge/releases/latest">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-          Download for macOS
-        </a>
-        <a class="btn btn-ghost glass" href="https://github.com/aaronfisher/Ledge">Source on GitHub</a>
-      </div>
-      <div class="reqs">
-        <span>macOS 15 Sequoia or later</span>
-        <span>Apple silicon and Intel</span>
-        <span>Notarized by Apple</span>
-        <span>Menu-bar app, no Dock icon</span>
-      </div>
+    <div class="container">
+      <div class="card download-card">
+        <h2>Give your windows a ledge.</h2>
+        <p class="lead">Free while in beta. A menu-bar app with no Dock icon, notarized by Apple.</p>
+        <div class="actions">
+          <a class="btn btn-default btn-lg" href="https://github.com/aaronfisher/Ledge/releases/latest"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Download for macOS</a>
+          <a class="btn btn-outline btn-lg" href="https://github.com/aaronfisher/Ledge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>Source on GitHub</a>
+        </div>
+        <div class="reqs">
+          <span class="badge badge-secondary">macOS 15 Sequoia or later</span>
+          <span class="badge badge-secondary">Apple silicon and Intel</span>
+          <span class="badge badge-secondary">Notarized</span>
+        </div>
       </div>
     </div>
   </section>
 </main>
 
 <footer>
-  <div class="wrap">
+  <div class="container">
     <span>© 2026 The Shirley Company LLC</span>
     <span>Ledge is not affiliated with Apple. Mac and macOS are trademarks of Apple Inc.</span>
   </div>
