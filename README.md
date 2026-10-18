@@ -67,6 +67,17 @@ macOS never lets a window go fully off screen — it keeps at least a 1 pt colum
 
 [QUIRKS.md](QUIRKS.md) logs the measurements and app-specific behavior behind this.
 
+## Licensing
+
+Ledge is sold through [Lemon Squeezy](https://www.lemonsqueezy.com) ($5, unlimited devices) and uses its public [License API](https://docs.lemonsqueezy.com/api/license-api), so the app holds no API key.
+
+- **Trial:** 14 days from first launch; the start date is kept in the Keychain so reinstalling doesn't reset it.
+- **Activation:** Settings → License. The key is activated with one instance per Mac (named after the Mac) and stored in the Keychain with the instance ID.
+- **Re-validation:** once a day. A key the server reports as disabled, expired, or deactivated stops working at once; being offline is fine for 30 days, after which Ledge asks to verify.
+- **When unlicensed** (trial over, or a bad key): parking stops, drags and shortcuts open the License pane, and parked windows are released.
+
+Before shipping, fill in `Ledge/Licensing/LicenseConfig.swift` with the store ID, product ID, and checkout URL from the Lemon Squeezy dashboard, and set the product's license activation limit to unlimited.
+
 ## Website
 
 The marketing site is a single static page in [docs/index.html](docs/index.html), with a working model of the parking gesture built in HTML. Serve it with GitHub Pages (Settings → Pages → Deploy from branch → `main`, folder `/docs`) or preview it locally:

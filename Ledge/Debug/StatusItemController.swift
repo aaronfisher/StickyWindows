@@ -9,15 +9,17 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     private let tilingOverride: TilingOverride
     private let showOnboarding: () -> Void
     private let showSettings: () -> Void
+    private let license: LicenseManager
     private var windowsByTag: [Int: WindowInfo] = [:]
 
     init(permission: AccessibilityPermission, parking: ParkingManager, tilingOverride: TilingOverride,
-         showOnboarding: @escaping () -> Void, showSettings: @escaping () -> Void) {
+         showOnboarding: @escaping () -> Void, showSettings: @escaping () -> Void, license: LicenseManager) {
         self.permission = permission
         self.parking = parking
         self.tilingOverride = tilingOverride
         self.showOnboarding = showOnboarding
         self.showSettings = showSettings
+        self.license = license
         super.init()
 
         if let button = statusItem.button {
@@ -42,6 +44,20 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         } else {
             menu.addItem(disabled("Accessibility: Not granted", symbol: "exclamationmark.triangle.fill"))
             menu.addItem(item("Grant Accessibility Access…", action: #selector(openOnboarding)))
+        }
+
+        switch license.state {
+        case .trial(let endsAt):
+            let days = max(0, Int(ceil(endsAt.timeIntervalSinceNow / 86400)))
+            menu.addItem(licenseItem("Trial: \(days) day\(days == 1 ? "" : "s") left", symbol: "clock"))
+        case .trialExpired:
+            menu.addItem(licenseItem("Trial ended — Buy Ledge…", symbol: "exclamationmark.triangle.fill"))
+        case .licensed:
+            break
+        case .unverified:
+            menu.addItem(licenseItem("License needs verifying…", symbol: "wifi.exclamationmark"))
+        case .invalid:
+            menu.addItem(licenseItem("License not valid…", symbol: "xmark.octagon.fill"))
         }
 
         menu.addItem(.separator())
@@ -198,6 +214,17 @@ final class StatusItemController: NSObject, NSMenuDelegate {
 
     @objc private func openSettings() {
         showSettings()
+    }
+
+    @objc private func openLicense() {
+        UserDefaults.standard.set(SettingsPane.license.rawValue, forKey: "settingsPane")
+        showSettings()
+    }
+
+    private func licenseItem(_ title: String, symbol: String) -> NSMenuItem {
+        let entry = item(title, action: #selector(openLicense))
+        entry.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
+        return entry
     }
 
     @objc private func openOnboarding() {

@@ -11,6 +11,8 @@ final class ParkingManager {
     @ObservationIgnored let settings: SettingsStore
     @ObservationIgnored let strategies = HidingStrategyStore()
     @ObservationIgnored var onNeedsPermission: () -> Void = {}
+    @ObservationIgnored var isLicensed: () -> Bool = { true }
+    @ObservationIgnored var onNeedsLicense: () -> Void = {}
     @ObservationIgnored private lazy var tabs = TabPresenter(manager: self)
     @ObservationIgnored private lazy var peek = PeekMonitor(manager: self)
     @ObservationIgnored private let axEvents = AXWindowEvents()
@@ -124,6 +126,10 @@ final class ParkingManager {
         joining target: ParkedWindow? = nil, groupID: UUID? = nil, settleDelay: Duration = .zero
     ) async {
         guard let current = window.frame else { return NSSound.beep() }
+        guard isLicensed() else {
+            onNeedsLicense()
+            return NSSound.beep()
+        }
         let app = NSRunningApplication(processIdentifier: window.pid)
         guard !settings.isExcluded(app?.bundleIdentifier) else {
             log.info("Park: \(app?.bundleIdentifier ?? "?", privacy: .public) is excluded by a rule")

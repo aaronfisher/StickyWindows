@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0012CCC86E5476133E62A95B /* LicenseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66EE17EB7BE39FF2D2BC7303 /* LicenseManager.swift */; };
 		0267843DB8124A8B82473945 /* EdgeZoneDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2D5EFEF17033DB3E8E89FB7 /* EdgeZoneDetector.swift */; };
 		0487028B22764BF2D9F735EE /* DockBadgeReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCB21ED348CB1D80879570DB /* DockBadgeReader.swift */; };
 		0B6DA3383FF0A3A215E3D6A1 /* PeekMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF80F450A37341B623C97858 /* PeekMonitor.swift */; };
@@ -26,8 +27,10 @@
 		43A16B47F73C75365FC7BB83 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1035B6D9106A25A340DB8817 /* SettingsView.swift */; };
 		443223966D5F2906E8B69A16 /* OnboardingWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4009302CAE8221BDCED6C9A1 /* OnboardingWindowController.swift */; };
 		465FC558A427D50682A53DA2 /* WindowInventory.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA98A71E115262A288C31019 /* WindowInventory.swift */; };
+		49C054236089482E6433DBCC /* LemonSqueezyClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AADE3693E7923CBBDC838E1 /* LemonSqueezyClient.swift */; };
 		5D012373E5C9B0690E1E5459 /* WindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 606D37A5171536A9B1C7587B /* WindowController.swift */; };
 		5F34ACED038DD94441B10027 /* ParkedWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = E858C37B8003DD182DD131E3 /* ParkedWindow.swift */; };
+		703C40DACEA508EBC7543B72 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B2D379199E2003579104A8D /* Keychain.swift */; };
 		76A847F79DA04224EB67FCC6 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFB92EA164CE608EBAF71D07 /* StatusItemController.swift */; };
 		79A4E52710164382159AB861 /* RulesSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2822DD294778992E1DDAAEAC /* RulesSettings.swift */; };
 		7AEE8827C146A49D342759BA /* ThumbnailProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 873D90D3B01E0A5E95EB6436 /* ThumbnailProvider.swift */; };
@@ -35,6 +38,8 @@
 		878D78543B89E24A68DBD25D /* WindowSlideAnimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A212EF7A29DF2EA17B0FA0A1 /* WindowSlideAnimator.swift */; };
 		8D6595EA62E754DEDDB9671F /* ParkingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39BFBA2C6B541AB173E871B /* ParkingManager.swift */; };
 		90994061E241BE5E36C3C7F3 /* AppRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1E77D9A7A9092C45AE23AAA /* AppRule.swift */; };
+		96A859737F312FFD04EE5AD6 /* LicenseConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134317E0C82D5D0DB56BCE7A /* LicenseConfig.swift */; };
+		9B63814B69A7812B36DB9FF3 /* LicenseSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3490DA2472781618807414A0 /* LicenseSettings.swift */; };
 		9EB22F606568E9A1AEC49E4E /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC6B117880FA7A1891B7F904 /* SettingsWindowController.swift */; };
 		A638C5FA2BA39F4FCC7BB407 /* GroupTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04B8840B601840C89226E7D3 /* GroupTabView.swift */; };
 		ACC345FEB61CE09E9D2D9C36 /* AXWindowMover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4380CA2989AABEAC1250538C /* AXWindowMover.swift */; };
@@ -53,10 +58,13 @@
 		04B8840B601840C89226E7D3 /* GroupTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupTabView.swift; sourceTree = "<group>"; };
 		07F61EBFA97D796AD4C129F1 /* AccessibilityPermission.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityPermission.swift; sourceTree = "<group>"; };
 		1035B6D9106A25A340DB8817 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		134317E0C82D5D0DB56BCE7A /* LicenseConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseConfig.swift; sourceTree = "<group>"; };
 		1E0E2F1AE34582D616EB984C /* ScreenGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenGeometry.swift; sourceTree = "<group>"; };
 		1F27978FA60EF07C78B0E440 /* Shortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shortcuts.swift; sourceTree = "<group>"; };
 		230E937C5FCD151D6ED82D54 /* DropIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DropIndicator.swift; sourceTree = "<group>"; };
 		2822DD294778992E1DDAAEAC /* RulesSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesSettings.swift; sourceTree = "<group>"; };
+		3490DA2472781618807414A0 /* LicenseSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseSettings.swift; sourceTree = "<group>"; };
+		3B2D379199E2003579104A8D /* Keychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
 		4009302CAE8221BDCED6C9A1 /* OnboardingWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingWindowController.swift; sourceTree = "<group>"; };
 		424A4DC598E9B15A131C3BFE /* LedgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LedgeApp.swift; sourceTree = "<group>"; };
 		42F469884A01834A711BC31F /* Ledge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ledge.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -64,11 +72,13 @@
 		4380CA2989AABEAC1250538C /* AXWindowMover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AXWindowMover.swift; sourceTree = "<group>"; };
 		4CB6BFB98E0EA72323024506 /* WindowObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowObserver.swift; sourceTree = "<group>"; };
 		606D37A5171536A9B1C7587B /* WindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowController.swift; sourceTree = "<group>"; };
+		66EE17EB7BE39FF2D2BC7303 /* LicenseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseManager.swift; sourceTree = "<group>"; };
 		6E7C2B1DD8628E295FA3B008 /* TabPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabPanel.swift; sourceTree = "<group>"; };
 		7849F5A739F529038365292B /* Ledge.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Ledge.entitlements; sourceTree = "<group>"; };
 		82938CCE94CAB82CC3D22EC3 /* PreviewPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewPanel.swift; sourceTree = "<group>"; };
 		873D90D3B01E0A5E95EB6436 /* ThumbnailProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailProvider.swift; sourceTree = "<group>"; };
 		8A06085802043A14AE02187F /* HidingStrategyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HidingStrategyStore.swift; sourceTree = "<group>"; };
+		8AADE3693E7923CBBDC838E1 /* LemonSqueezyClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LemonSqueezyClient.swift; sourceTree = "<group>"; };
 		90CD92EB09BC0A881684A0E7 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
 		A1C60E37D8B99C4501B041CD /* MacOSTiling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacOSTiling.swift; sourceTree = "<group>"; };
 		A212EF7A29DF2EA17B0FA0A1 /* WindowSlideAnimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowSlideAnimator.swift; sourceTree = "<group>"; };
@@ -112,6 +122,7 @@
 				28CDD531CFA3785E5D3702A5 /* App */,
 				13D60042BFF13490D11862BA /* Debug */,
 				F047B29B976FC874EF5EED22 /* Extras */,
+				E93D8DC9FAEF552C560C05E9 /* Licensing */,
 				A62C947AD3CE837DF4DEA253 /* Onboarding */,
 				F7EE7F680BB57EE5AF9EF293 /* Parking */,
 				79B1C9D3BCC72844A46B1919 /* Resources */,
@@ -209,6 +220,18 @@
 				FA98A71E115262A288C31019 /* WindowInventory.swift */,
 			);
 			path = Accessibility;
+			sourceTree = "<group>";
+		};
+		E93D8DC9FAEF552C560C05E9 /* Licensing */ = {
+			isa = PBXGroup;
+			children = (
+				3B2D379199E2003579104A8D /* Keychain.swift */,
+				8AADE3693E7923CBBDC838E1 /* LemonSqueezyClient.swift */,
+				134317E0C82D5D0DB56BCE7A /* LicenseConfig.swift */,
+				66EE17EB7BE39FF2D2BC7303 /* LicenseManager.swift */,
+				3490DA2472781618807414A0 /* LicenseSettings.swift */,
+			);
+			path = Licensing;
 			sourceTree = "<group>";
 		};
 		F047B29B976FC874EF5EED22 /* Extras */ = {
@@ -338,8 +361,13 @@
 				DD9C432FC04A187B40B0F872 /* GroupListPanel.swift in Sources */,
 				A638C5FA2BA39F4FCC7BB407 /* GroupTabView.swift in Sources */,
 				C0DF80CCAF6E0EBE6486D859 /* HidingStrategyStore.swift in Sources */,
+				703C40DACEA508EBC7543B72 /* Keychain.swift in Sources */,
 				7DE011110AAE6FAE46BCBFDD /* LaunchAtLogin.swift in Sources */,
 				E412724FCB75AA9F9817FDAD /* LedgeApp.swift in Sources */,
+				49C054236089482E6433DBCC /* LemonSqueezyClient.swift in Sources */,
+				96A859737F312FFD04EE5AD6 /* LicenseConfig.swift in Sources */,
+				0012CCC86E5476133E62A95B /* LicenseManager.swift in Sources */,
+				9B63814B69A7812B36DB9FF3 /* LicenseSettings.swift in Sources */,
 				23E97C5EDD23F5BB0369D96F /* MacOSTiling.swift in Sources */,
 				1AE0893624A9A227F067B102 /* OnboardingView.swift in Sources */,
 				443223966D5F2906E8B69A16 /* OnboardingWindowController.swift in Sources */,

@@ -8,6 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     lazy var parking = ParkingManager(settings: settings)
     let tilingOverride = TilingOverride()
     let launchAtLogin = LaunchAtLogin()
+    let license = LicenseManager()
     private lazy var windowObserver = WindowObserver(settings: settings)
     private var statusItemController: StatusItemController?
     private var onboarding: OnboardingWindowController?
@@ -16,12 +17,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         tilingOverride.restoreOnLaunch()
         parking.onNeedsPermission = { [weak self] in self?.showOnboarding() }
+        parking.isLicensed = { [license] in license.isActive }
+        parking.onNeedsLicense = { [weak self] in self?.showSettings(pane: .license) }
+        windowObserver.isEnabled = { [license] in license.isActive }
+        license.addObserver { [weak self] state in
+            // Parking stops when the trial ends or a license goes bad; parked windows come back.
+            guard let self, !self.license.isActive else { return }
+            self.parking.releaseAll()
+            self.showSettings(pane: .license)
+        }
+        license.start()
         statusItemController = StatusItemController(
             permission: permission,
             parking: parking,
             tilingOverride: tilingOverride,
             showOnboarding: { [weak self] in self?.showOnboarding() },
-            showSettings: { [weak self] in self?.showSettings() }
+            showSettings: { [weak self] in self?.showSettings() },
+            license: license
         )
 
         for (name, edge) in KeyboardShortcuts.Name.parkShortcuts {
@@ -56,6 +68,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         if !permission.isTrusted {
             showOnboarding()
+        } else if !license.isActive {
+            showSettings(pane: .license)
         }
     }
 
@@ -71,10 +85,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         onboarding?.show()
     }
 
-    func showSettings() {
+    func showSettings(pane: SettingsPane? = nil) {
+        if let pane {
+            UserDefaults.standard.set(pane.rawValue, forKey: "settingsPane")
+        }
         if settingsWindow == nil {
             settingsWindow = SettingsWindowController(rootView: SettingsView(
-                settings: settings, tilingOverride: tilingOverride, permission: permission, launchAtLogin: launchAtLogin))
+                settings: settings, tilingOverride: tilingOverride, permission: permission, launchAtLogin: launchAtLogin,
+                license: license))
         }
         settingsWindow?.show()
     }
