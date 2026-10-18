@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
-  <channel>
-    <title>Sticky Windows</title>
-    <link>https://aaronfisher.github.io/StickyWindows/</link>
-    <description>Updates for Sticky Windows. Items are added by scripts/release.sh.</description>
-    <language>en</language>
-  </channel>
-</rss>

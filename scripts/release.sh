@@ -6,7 +6,7 @@
 # Produces in build/release/:
 #   Sticky Windows.app                 Developer ID signed, notarized, stapled
 #   StickyWindows-<version>.dmg        notarized and stapled
-#   appcast item (printed) and docs/appcast.xml updated
+#   appcast item (printed) and $SITE_DIR/appcast.xml updated
 #
 # Needs, locally or in CI:
 #   - "Developer ID Application" certificate for team F5N4RH3674 in the keychain
@@ -18,7 +18,9 @@ set -euo pipefail
 
 VERSION="${1:?usage: release.sh <version> [build]}"
 BUILD="${2:-$(date +%Y%m%d%H%M)}"
-DOWNLOAD_PREFIX="${DOWNLOAD_PREFIX:-https://github.com/aaronfisher/StickyWindows/releases/download/v$VERSION/}"
+DOWNLOAD_PREFIX="${DOWNLOAD_PREFIX:-https://github.com/aaronfisher/sticky-windows/releases/download/v$VERSION/}"
+# Checkout of the public site repo (website + appcast + releases); the appcast is read from and written there.
+SITE_DIR="${SITE_DIR:-$ROOT/../sticky-windows}"
 NOTARY_PROFILE="${NOTARY_PROFILE:-stickywindows-notary}"
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -81,14 +83,14 @@ cat "$OUT/sparkle-signature.txt"
 echo "== Updating appcast"
 mkdir -p "$OUT/appcast"
 cp "$DMG" "$OUT/appcast/"
-[[ -f docs/appcast.xml ]] && cp docs/appcast.xml "$OUT/appcast/appcast.xml"
+[[ -f "$SITE_DIR/appcast.xml" ]] && cp "$SITE_DIR/appcast.xml" "$OUT/appcast/appcast.xml"
 "$SPARKLE_BIN/generate_appcast" "${SIGN_ARGS[@]}" \
   --download-url-prefix "$DOWNLOAD_PREFIX" \
-  --link "https://aaronfisher.github.io/StickyWindows/" \
+  --link "https://aaronfisher.github.io/sticky-windows/" \
   -o "$OUT/appcast/appcast.xml" "$OUT/appcast"
-cp "$OUT/appcast/appcast.xml" docs/appcast.xml
+if [[ -d "$SITE_DIR" ]]; then cp "$OUT/appcast/appcast.xml" "$SITE_DIR/appcast.xml"; fi
 
 echo "== Done"
 echo "  $APP"
 echo "  $DMG"
-echo "  docs/appcast.xml updated (commit it so GitHub Pages serves the new version)"
+echo "  appcast: $OUT/appcast/appcast.xml (copied to $SITE_DIR if present; commit and push it there)"

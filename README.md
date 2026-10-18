@@ -80,7 +80,7 @@ Sticky Windows is sold through [Lemon Squeezy](https://www.lemonsqueezy.com) ($5
 
 ## Releasing
 
-Releases are built by `scripts/release.sh`, locally or by the GitHub Actions workflow in `.github/workflows/release.yml` (push a tag like `v1.0.0`). The script archives a universal Release build signed with Developer ID, notarizes and staples the app, builds `StickyWindows-<version>.dmg`, notarizes and staples that too, signs it for Sparkle, and writes the new item into `docs/appcast.xml`, which GitHub Pages serves as the Sparkle feed.
+Releases are built by `scripts/release.sh`, locally or by the GitHub Actions workflow in `.github/workflows/release.yml` (push a tag like `v1.0.0`). The script archives a universal Release build signed with Developer ID, notarizes and staples the app, builds `StickyWindows-<version>.dmg`, notarizes and staples that too, signs it for Sparkle, and writes the new item into `appcast.xml` in a checkout of the site repo (`SITE_DIR`, default `../sticky-windows`), which GitHub Pages serves as the Sparkle feed.
 
 Prerequisites:
 
@@ -89,7 +89,7 @@ Prerequisites:
 - The **Sparkle private key**: generated once with Sparkle's `generate_keys` and kept in the login keychain; export it with `generate_keys -x sparkle_private.key` for the CI `SPARKLE_PRIVATE_KEY` secret. The matching public key is in `project.yml` (`SUPublicEDKey`).
 - `xcodegen` (`brew install xcodegen`).
 
-The `.dmg` is attached to the GitHub Release, which is where the appcast points, so the repository (or at least its releases) must be public for downloads and updates to work.
+The `.dmg` is attached to a GitHub Release on the public site repo, which is where the appcast and the website's download button point. The CI workflow needs a `SITE_REPO_TOKEN` secret (a fine-grained personal access token with Contents: read and write on `aaronfisher/sticky-windows`) to publish there.
 
 ```bash
 scripts/release.sh 1.0.0
@@ -97,10 +97,10 @@ scripts/release.sh 1.0.0
 
 ## Website
 
-The marketing site is a single static page in [docs/index.html](docs/index.html), with a working model of the parking gesture built in HTML. Serve it with GitHub Pages (Settings → Pages → Deploy from branch → `main`, folder `/docs`) or preview it locally:
+The marketing site, the Sparkle appcast, and the downloadable releases live in the public repo [aaronfisher/sticky-windows](https://github.com/aaronfisher/sticky-windows), served by GitHub Pages at https://aaronfisher.github.io/sticky-windows/. This repo stays private. The site is a single static `index.html` with a working model of the parking gesture; preview a checkout of it locally:
 
 ```bash
-python3 -m http.server 8765 --directory docs
+python3 -m http.server 8765 --directory ../sticky-windows
 ```
 
 ## Building

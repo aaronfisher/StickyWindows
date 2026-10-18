@@ -1,7 +1,9 @@
 name: Release
 
 # Tag a commit "v1.2.3" and push the tag: this builds, signs, notarizes, and publishes a GitHub Release
-# with the .dmg, then commits the updated Sparkle appcast to main so GitHub Pages serves it.
+# with the .dmg on the public site repo (aaronfisher/sticky-windows), then commits the updated Sparkle
+# appcast there so GitHub Pages serves it. Needs a SITE_REPO_TOKEN secret (fine-grained PAT with
+# Contents: write on that repo) in addition to the signing and notary secrets.
 on:
   push:
     tags: ["v*"]
@@ -14,9 +16,13 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+
+      - name: Check out site repo
+        uses: actions/checkout@v4
         with:
-          ref: main
-          fetch-depth: 0
+          repository: aaronfisher/sticky-windows
+          token: ${{ secrets.SITE_REPO_TOKEN }}
+          path: site
 
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_16.4.app || sudo xcode-select -s "$(ls -d /Applications/Xcode*.app | sort -V | tail -1)"
@@ -54,23 +60,25 @@ jobs:
           NOTARY_ISSUER_ID: ${{ secrets.NOTARY_ISSUER_ID }}
           NOTARY_KEY_FILE: ${{ runner.temp }}/AuthKey.p8
           SPARKLE_PRIVATE_KEY_FILE: ${{ runner.temp }}/sparkle_private.key
+          SITE_DIR: ${{ github.workspace }}/site
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           chmod +x scripts/*.sh
           scripts/release.sh "$VERSION" "$GITHUB_RUN_NUMBER"
 
-      - name: Publish GitHub Release
+      - name: Publish release on the site repo
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.SITE_REPO_TOKEN }}
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           gh release create "$GITHUB_REF_NAME" "build/release/StickyWindows-$VERSION.dmg" \
-            --title "Sticky Windows $VERSION" --generate-notes
+            --repo aaronfisher/sticky-windows --title "Sticky Windows $VERSION" --notes "Sticky Windows $VERSION"
 
-      - name: Commit appcast
+      - name: Commit appcast to the site repo
+        working-directory: site
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/appcast.xml
+          git add appcast.xml
           git commit -m "Appcast: ${GITHUB_REF_NAME}" || exit 0
-          git push origin HEAD:main
+          git push
