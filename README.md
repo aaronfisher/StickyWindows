@@ -76,7 +76,7 @@ Sticky Windows is sold through [Lemon Squeezy](https://www.lemonsqueezy.com) ($5
 - **Re-validation:** once a day. A key the server reports as disabled, expired, or deactivated stops working at once; being offline is fine for 30 days, after which Sticky Windows asks to verify.
 - **When unlicensed** (trial over, or a bad key): parking stops, drags and shortcuts open the License pane, and parked windows are released.
 
-Before shipping, fill in `StickyWindows/Licensing/LicenseConfig.swift` with the store ID, product ID, and checkout URL from the Lemon Squeezy dashboard, and set the product's license activation limit to unlimited.
+`StickyWindows/Licensing/LicenseConfig.swift` holds the store ID, product ID, and checkout URL; the product's license activation limit is left blank (unlimited) and keys never expire.
 
 ## Website
 
