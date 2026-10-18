@@ -1,4 +1,5 @@
 import KeyboardShortcuts
+import Sparkle
 import SwiftUI
 
 /// The settings panes, in sidebar order.
@@ -48,6 +49,7 @@ struct SettingsView: View {
     let permission: AccessibilityPermission
     let launchAtLogin: LaunchAtLogin
     let license: LicenseManager
+    let updater: SPUUpdater
 
     @AppStorage("settingsPane") private var pane: SettingsPane = .general
 
@@ -73,7 +75,7 @@ struct SettingsView: View {
     @ViewBuilder
     private var detail: some View {
         switch pane {
-        case .general: GeneralSettings(settings: settings, tilingOverride: tilingOverride, launchAtLogin: launchAtLogin)
+        case .general: GeneralSettings(settings: settings, tilingOverride: tilingOverride, launchAtLogin: launchAtLogin, updater: updater)
         case .appearance: AppearanceSettings(settings: settings)
         case .shortcuts: ShortcutSettings()
         case .rules: RulesSettings(settings: settings)
@@ -102,6 +104,8 @@ private struct GeneralSettings: View {
     @Bindable var settings: SettingsStore
     let tilingOverride: TilingOverride
     let launchAtLogin: LaunchAtLogin
+    let updater: SPUUpdater
+    @State private var automaticUpdates = true
 
     var body: some View {
         Form {
@@ -110,7 +114,16 @@ private struct GeneralSettings: View {
                 if let error = launchAtLogin.errorMessage {
                     Text(error).font(.caption).foregroundStyle(.red)
                 }
+                Toggle("Check for updates automatically", isOn: $automaticUpdates)
+                    .onChange(of: automaticUpdates) { updater.automaticallyChecksForUpdates = automaticUpdates }
+                LabeledContent("Version") {
+                    HStack {
+                        Text(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?")
+                        Button("Check Now") { updater.checkForUpdates() }.disabled(!updater.canCheckForUpdates)
+                    }
+                }
             }
+            .onAppear { automaticUpdates = updater.automaticallyChecksForUpdates }
 
             Section("Drag to park") {
                 LabeledContent("Edges") {

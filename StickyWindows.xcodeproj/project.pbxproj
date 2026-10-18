@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		018C66DA95E0E744133F9D1C /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = AFA51711CCF188DBBA4DB41C /* KeyboardShortcuts */; };
 		0663FD0849C64DEEF771A712 /* RulesSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBA49422E09C93FB90E6B155 /* RulesSettings.swift */; };
+		0904751F3593A6B9D2EC02A8 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 4601261E50E0BB7AC9C8BC3A /* Sparkle */; };
 		13D28FA3EBAFC015CD640430 /* WindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 013C2C62D78A652916518ECD /* WindowController.swift */; };
 		1627AE204E9E803029E6B3C8 /* LemonSqueezyClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2695677FAA19626246B7623D /* LemonSqueezyClient.swift */; };
 		16E8B6BCDF31B73DE004C90B /* ParkingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00B3B8DA4C70A3A8B630E8C3 /* ParkingManager.swift */; };
@@ -70,6 +71,7 @@
 		2695677FAA19626246B7623D /* LemonSqueezyClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LemonSqueezyClient.swift; sourceTree = "<group>"; };
 		285665EA800A5180D106E420 /* PreviewPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewPanel.swift; sourceTree = "<group>"; };
 		2B7139CB4C2F981F66128C36 /* MacOSTiling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacOSTiling.swift; sourceTree = "<group>"; };
+		2E4C48AA018EF2DEAFB1681A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		32D77D71CC8AE36392448521 /* WindowSlideAnimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowSlideAnimator.swift; sourceTree = "<group>"; };
 		34B244D5043C8AAD7CA0C582 /* AppRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRule.swift; sourceTree = "<group>"; };
 		3F984E8A93A717C5F4530179 /* LaunchAtLogin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLogin.swift; sourceTree = "<group>"; };
@@ -109,6 +111,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				018C66DA95E0E744133F9D1C /* KeyboardShortcuts in Frameworks */,
+				0904751F3593A6B9D2EC02A8 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -196,6 +199,7 @@
 			isa = PBXGroup;
 			children = (
 				B96EFDB80F894E609663C239 /* AppIcon.icon */,
+				2E4C48AA018EF2DEAFB1681A /* Info.plist */,
 				6A0B19021D35509A916AD8EC /* StickyWindows.entitlements */,
 			);
 			path = Resources;
@@ -289,6 +293,7 @@
 			name = StickyWindows;
 			packageProductDependencies = (
 				AFA51711CCF188DBBA4DB41C /* KeyboardShortcuts */,
+				4601261E50E0BB7AC9C8BC3A /* Sparkle */,
 			);
 			productName = StickyWindows;
 			productReference = ED8E3775E0E47350EA910728 /* StickyWindows.app */;
@@ -305,7 +310,6 @@
 				TargetAttributes = {
 					A48A791C89DD70F58700ADB8 = {
 						DevelopmentTeam = F5N4RH3674;
-						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -320,6 +324,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				E1439E68BC36CA838605C2AE /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
+				126DBA2BDE954FB9838CE30C /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C9127D8B797A775FF852428F /* Products */;
@@ -465,11 +470,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_APP_SANDBOX = NO;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Sticky Windows";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
-				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 The Shirley Company LLC";
+				INFOPLIST_FILE = StickyWindows/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -552,23 +553,24 @@
 		F48CF619819885183BF2C108 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "arm64 x86_64";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = StickyWindows/Resources/StickyWindows.entitlements;
+				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_APP_SANDBOX = NO;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Sticky Windows";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
-				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 The Shirley Company LLC";
+				INFOPLIST_FILE = StickyWindows/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 0.1.0;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = vc.theshirleycompany.StickyWindows;
 				PRODUCT_NAME = "Sticky Windows";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -597,6 +599,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		126DBA2BDE954FB9838CE30C /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.6.0;
+			};
+		};
 		E1439E68BC36CA838605C2AE /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts";
@@ -608,6 +618,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		4601261E50E0BB7AC9C8BC3A /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 126DBA2BDE954FB9838CE30C /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
 		AFA51711CCF188DBBA4DB41C /* KeyboardShortcuts */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = E1439E68BC36CA838605C2AE /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;

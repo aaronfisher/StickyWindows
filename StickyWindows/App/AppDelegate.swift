@@ -1,5 +1,6 @@
 import AppKit
 import KeyboardShortcuts
+import Sparkle
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -9,6 +10,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let tilingOverride = TilingOverride()
     let launchAtLogin = LaunchAtLogin()
     let license = LicenseManager()
+    /// Sparkle. Starts checking on launch per Info.plist (SUFeedURL, SUPublicEDKey, SUEnableAutomaticChecks).
+    let updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
     private lazy var windowObserver = WindowObserver(settings: settings)
     private var statusItemController: StatusItemController?
     private var onboarding: OnboardingWindowController?
@@ -33,6 +36,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             tilingOverride: tilingOverride,
             showOnboarding: { [weak self] in self?.showOnboarding() },
             showSettings: { [weak self] in self?.showSettings() },
+            checkForUpdates: { [weak self] in self?.updaterController.checkForUpdates(nil) },
             license: license
         )
 
@@ -92,7 +96,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if settingsWindow == nil {
             settingsWindow = SettingsWindowController(rootView: SettingsView(
                 settings: settings, tilingOverride: tilingOverride, permission: permission, launchAtLogin: launchAtLogin,
-                license: license))
+                license: license, updater: updaterController.updater))
         }
         settingsWindow?.show()
     }

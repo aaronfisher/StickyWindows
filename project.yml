@@ -8,6 +8,9 @@ packages:
   KeyboardShortcuts:
     url: https://github.com/sindresorhus/KeyboardShortcuts
     from: 2.0.0
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: 2.6.0
 settings:
   base:
     SWIFT_VERSION: "6.0"
@@ -34,20 +37,40 @@ targets:
         buildPhase: resources
     dependencies:
       - package: KeyboardShortcuts
+      - package: Sparkle
+    info:
+      path: StickyWindows/Resources/Info.plist
+      properties:
+        CFBundleDisplayName: Sticky Windows
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSUIElement: true
+        LSApplicationCategoryType: public.app-category.productivity
+        NSHumanReadableCopyright: © 2026 The Shirley Company LLC
+        LSMinimumSystemVersion: "15.0"
+        # Sparkle
+        SUFeedURL: https://aaronfisher.github.io/StickyWindows/appcast.xml
+        SUPublicEDKey: lqvdEdmyX6ncEW9uu8fjjcjfcC57nevid6gCmcNn5Vg=
+        SUEnableAutomaticChecks: true
+        SUScheduledCheckInterval: 86400
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: vc.theshirleycompany.StickyWindows
         PRODUCT_NAME: "Sticky Windows"
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
-        GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_LSUIElement: YES
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        INFOPLIST_KEY_CFBundleDisplayName: "Sticky Windows"
-        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.productivity
-        INFOPLIST_KEY_NSHumanReadableCopyright: "© 2026 The Shirley Company LLC"
         CODE_SIGN_ENTITLEMENTS: StickyWindows/Resources/StickyWindows.entitlements
         ENABLE_APP_SANDBOX: NO
+      configs:
+        Release:
+          # Distribution outside the App Store: Developer ID, both architectures. Needs the team's
+          # "Developer ID Application" certificate in the keychain (locally or in CI).
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_IDENTITY: "Developer ID Application"
+          PROVISIONING_PROFILE_SPECIFIER: ""
+          ARCHS: "arm64 x86_64"
+          ONLY_ACTIVE_ARCH: NO
 schemes:
   StickyWindows:
     build:

@@ -10,16 +10,19 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     private let showOnboarding: () -> Void
     private let showSettings: () -> Void
     private let license: LicenseManager
+    private let checkForUpdates: () -> Void
     private var windowsByTag: [Int: WindowInfo] = [:]
 
     init(permission: AccessibilityPermission, parking: ParkingManager, tilingOverride: TilingOverride,
-         showOnboarding: @escaping () -> Void, showSettings: @escaping () -> Void, license: LicenseManager) {
+         showOnboarding: @escaping () -> Void, showSettings: @escaping () -> Void,
+         checkForUpdates: @escaping () -> Void, license: LicenseManager) {
         self.permission = permission
         self.parking = parking
         self.tilingOverride = tilingOverride
         self.showOnboarding = showOnboarding
         self.showSettings = showSettings
         self.license = license
+        self.checkForUpdates = checkForUpdates
         super.init()
 
         if let button = statusItem.button {
@@ -120,6 +123,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         settingsItem.keyEquivalent = ","
         menu.addItem(settingsItem)
         menu.addItem(item("Show Onboarding…", action: #selector(openOnboarding)))
+        menu.addItem(item("Check for Updates…", action: #selector(checkUpdates)))
         let quit = NSMenuItem(title: "Quit Sticky Windows", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         menu.addItem(quit)
     }
@@ -210,6 +214,10 @@ final class StatusItemController: NSObject, NSMenuDelegate {
 
     @objc private func resetStrategies() {
         parking.strategies.reset()
+    }
+
+    @objc private func checkUpdates() {
+        checkForUpdates()
     }
 
     @objc private func openSettings() {
