@@ -1,6 +1,6 @@
 # Sticky Windows
 
-Edge tabs for macOS — a modern take on Mac OS 9's pop-up windows. (Called Ledge until October 2026; the GitHub repository keeps that name.) Drag any window to a screen edge and it tucks away into a tab parked on that edge. Click the tab to slide the window back out; click again to tuck it away.
+Edge tabs for macOS — a modern take on Mac OS 9's pop-up windows. (Called Ledge until October 2026.) Drag any window to a screen edge and it tucks away into a tab parked on that edge. Click the tab to slide the window back out; click again to tuck it away.
 
 Sticky Windows is a menu-bar app (no Dock icon) for macOS 15 Sequoia and later, written in Swift 6 with SwiftUI and AppKit, and it controls other apps' windows through the Accessibility API.
 
