@@ -22,6 +22,9 @@ DOWNLOAD_PREFIX="${DOWNLOAD_PREFIX:-https://github.com/aaronfisher/sticky-window
 # Checkout of the public site repo (website + appcast + releases); the appcast is read from and written there.
 SITE_DIR="${SITE_DIR:-$ROOT/../sticky-windows}"
 NOTARY_PROFILE="${NOTARY_PROFILE:-stickywindows-notary}"
+# Full identity, not just the type: a keychain with Developer ID certificates for two teams makes the
+# short form ambiguous.
+SIGN_IDENTITY="${SIGN_IDENTITY:-Developer ID Application: The Shirley Company LLC (F5N4RH3674)}"
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -66,7 +69,7 @@ spctl --assess --type execute -vv "$APP"
 
 echo "== Building disk image"
 scripts/make-dmg.sh "$APP" "$DMG"
-codesign --sign "Developer ID Application" --timestamp "$DMG"
+codesign --sign "$SIGN_IDENTITY" --timestamp "$DMG"
 
 echo "== Notarizing disk image"
 # shellcheck disable=SC2046
