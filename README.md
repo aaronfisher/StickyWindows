@@ -97,7 +97,7 @@ On first launch Sticky Windows walks you through granting Accessibility access i
 
 ## Development notes
 
-- **The Debug build is a separate app.** It's "Sticky Windows Dev" with bundle ID `vc.theshirleycompany.StickyWindows.debug`, so it has its own Accessibility and Screen Recording grants, settings, and saved windows, and never offers to update itself to the released version. Grant it Accessibility once, separately from the released app. Running both copies at once shows a warning, since both would park windows.
+- **The Debug build is a separate app.** It builds as "Sticky Windows Dev.app" with bundle ID `vc.theshirleycompany.StickyWindows.debug`, so it has its own Accessibility and Screen Recording grants, settings, and saved windows, and never offers to update itself to the released version. Grant it Accessibility once, separately from the released app. Running both copies at once shows a warning, since both would park windows.
 - **Quit with ⌘Q from Sticky Windows' menu, not Xcode's Stop button.** Stop kills Sticky Windows without restoring parked windows. They're re-parked on the next launch; if a window is ever stranded, use *Debug → Recover Off-Screen Windows*.
 - **Logs** use subsystem `vc.theshirleycompany.StickyWindows`. Hiding fallbacks are logged at notice level; frame timing and hide/reveal state traces at debug level:
 
