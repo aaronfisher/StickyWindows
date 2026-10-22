@@ -1,10 +1,18 @@
 import Foundation
 
 enum AppIdentity {
-    /// Bundle ID; also the logging subsystem and the Application Support folder name.
-    static let id = "vc.theshirleycompany.StickyWindows"
-    /// Earlier identities, newest first. The app was called Ledge until October 2026.
-    static let legacyIDs = ["vc.theshirleycompany.Ledge", "vc.start.Ledge"]
+    /// Bundle ID; also the logging subsystem and the Application Support folder name. The Debug build's ID ends
+    /// in ".debug", so it keeps its own permissions and data apart from the released app.
+    static let id = Bundle.main.bundleIdentifier ?? "vc.theshirleycompany.StickyWindows"
+    static let releaseID = "vc.theshirleycompany.StickyWindows"
+    static var isDebugBuild: Bool { id.hasSuffix(".debug") }
+    /// The other build's bundle ID (release for debug, debug for release).
+    static var siblingID: String { isDebugBuild ? releaseID : releaseID + ".debug" }
+    /// Identities to migrate from, newest first. The app was called Ledge until October 2026; a fresh Debug
+    /// build also starts from the released app's settings.
+    static var legacyIDs: [String] {
+        (isDebugBuild ? [releaseID] : []) + ["vc.theshirleycompany.Ledge", "vc.start.Ledge"]
+    }
 }
 
 /// One-time move of settings and saved parked windows from an earlier identity, so a rename doesn't reset

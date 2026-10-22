@@ -17,6 +17,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var settingsWindow: SettingsWindowController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        if AppIdentity.isDebugBuild {
+            // The dev build would otherwise offer to "update" itself to the released version.
+            updaterController.updater.automaticallyChecksForUpdates = false
+        }
+        warnIfOtherCopyIsRunning()
         tilingOverride.restoreOnLaunch()
         parking.onNeedsPermission = { [weak self] in self?.showOnboarding() }
 
@@ -67,6 +72,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         parking.prepareForTermination()
         tilingOverride.restoreOnQuit()
+    }
+
+    /// Two copies parking windows at once fight over tabs and the tiling override.
+    private func warnIfOtherCopyIsRunning() {
+        guard let other = NSRunningApplication.runningApplications(withBundleIdentifier: AppIdentity.siblingID).first else { return }
+        let alert = NSAlert()
+        alert.messageText = "Another copy of Sticky Windows is running"
+        alert.informativeText = """
+            \(other.localizedName ?? AppIdentity.siblingID) is already running. Two copies at once will both try to park \
+            windows and manage the edge-tiling setting. Quit one of them.
+            """
+        alert.addButton(withTitle: "Quit This Copy")
+        alert.addButton(withTitle: "Quit the Other Copy")
+        alert.addButton(withTitle: "Keep Both")
+        NSApp.activate()
+        switch alert.runModal() {
+        case .alertFirstButtonReturn: NSApp.terminate(nil)
+        case .alertSecondButtonReturn: other.terminate()
+        default: break
+        }
     }
 
     func showOnboarding() {

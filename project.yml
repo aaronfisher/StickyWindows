@@ -41,7 +41,7 @@ targets:
     info:
       path: StickyWindows/Resources/Info.plist
       properties:
-        CFBundleDisplayName: Sticky Windows
+        CFBundleDisplayName: $(STICKY_DISPLAY_NAME)
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSUIElement: true
@@ -55,7 +55,10 @@ targets:
         SUScheduledCheckInterval: 86400
     settings:
       base:
+        # The Debug build gets its own identity (see configs below) so it doesn't share macOS privacy
+        # grants, settings, or saved windows with the released app.
         PRODUCT_BUNDLE_IDENTIFIER: vc.theshirleycompany.StickyWindows
+        STICKY_DISPLAY_NAME: Sticky Windows
         PRODUCT_NAME: "Sticky Windows"
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
@@ -63,6 +66,9 @@ targets:
         CODE_SIGN_ENTITLEMENTS: StickyWindows/Resources/StickyWindows.entitlements
         ENABLE_APP_SANDBOX: NO
       configs:
+        Debug:
+          PRODUCT_BUNDLE_IDENTIFIER: vc.theshirleycompany.StickyWindows.debug
+          STICKY_DISPLAY_NAME: Sticky Windows Dev
         Release:
           # Distribution outside the App Store: Developer ID, both architectures. Needs the team's
           # "Developer ID Application" certificate in the keychain (locally or in CI).
