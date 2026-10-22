@@ -4,7 +4,7 @@ Edge tabs for macOS — a modern take on Mac OS 9's pop-up windows. (Called Ledg
 
 Sticky Windows is a menu-bar app (no Dock icon) for macOS 15 Sequoia and later, written in Swift 6 with SwiftUI and AppKit, and it controls other apps' windows through the Accessibility API.
 
-**Status:** all seven milestones in [SPEC.md](SPEC.md) are built. Sticky Windows is free; the source will be published under an open-source license with the first release.
+**Status:** all seven milestones in [SPEC.md](SPEC.md) are built. Sticky Windows is free for personal use, and its source is available under the PolyForm Noncommercial License 1.0.0 (see [License](#license)).
 
 ## Using Sticky Windows
 
@@ -120,3 +120,7 @@ On first launch Sticky Windows walks you through granting Accessibility access i
 | `StickyWindows/Extras` | Dock badge reader, ScreenCaptureKit thumbnails, preview panel |
 | `StickyWindows/Onboarding` | First-run Accessibility onboarding |
 | `StickyWindows/Debug` | Menu-bar status item and debug menu |
+
+## License
+
+Sticky Windows is free to download, use, modify, fork, and share for noncommercial purposes under the [PolyForm Noncommercial License 1.0.0](LICENSE); every copy and fork keeps the same terms. Selling it, or any other commercial use, needs written permission from The Shirley Company LLC. "Sticky Windows" and its icon are trademarks; forks should use their own name and icon. See [NOTICE](NOTICE) and [CONTRIBUTING.md](CONTRIBUTING.md).
