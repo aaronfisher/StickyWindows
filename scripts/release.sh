@@ -18,7 +18,7 @@ set -euo pipefail
 
 VERSION="${1:?usage: release.sh <version> [build]}"
 BUILD="${2:-$(date +%Y%m%d%H%M)}"
-DOWNLOAD_PREFIX="${DOWNLOAD_PREFIX:-https://github.com/aaronfisher/sticky-windows/releases/download/v$VERSION/}"
+DOWNLOAD_PREFIX="${DOWNLOAD_PREFIX:-https://github.com/aaronfisher/StickyWindows/releases/download/v$VERSION/}"
 # Checkout of the public site repo (website + appcast + releases); the appcast is read from and written there.
 SITE_DIR="${SITE_DIR:-$ROOT/../sticky-windows}"
 NOTARY_PROFILE="${NOTARY_PROFILE:-stickywindows-notary}"
