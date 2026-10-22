@@ -46,6 +46,7 @@ struct SettingsView: View {
     let permission: AccessibilityPermission
     let launchAtLogin: LaunchAtLogin
     let updater: SPUUpdater
+    let screenRecording: ScreenRecordingPermission
 
     @AppStorage("settingsPane") private var pane: SettingsPane = .general
 
@@ -75,7 +76,7 @@ struct SettingsView: View {
         case .appearance: AppearanceSettings(settings: settings)
         case .shortcuts: ShortcutSettings()
         case .rules: RulesSettings(settings: settings)
-        case .permissions: PermissionSettings(permission: permission)
+        case .permissions: PermissionSettings(permission: permission, screenRecording: screenRecording)
         }
     }
 }
@@ -181,6 +182,7 @@ private struct GeneralSettings: View {
 
 private struct AppearanceSettings: View {
     @Bindable var settings: SettingsStore
+    private var screenRecordingGranted: Bool { CGPreflightScreenCaptureAccess() }
 
     var body: some View {
         Form {
@@ -193,7 +195,7 @@ private struct AppearanceSettings: View {
                 Toggle("Show Dock badges on tabs", isOn: $settings.showBadges)
                 Toggle(isOn: $settings.showThumbnails) {
                     Text("Show a window preview when hovering a tab")
-                    Text(CGPreflightScreenCaptureAccess()
+                    Text(screenRecordingGranted
                         ? "Not shown while Hover to Peek is on."
                         : "Live previews need Screen Recording access (Permissions tab). Without it, the preview shows the icon and full title.")
                 }
@@ -246,7 +248,7 @@ private struct ShortcutSettings: View {
 
 private struct PermissionSettings: View {
     let permission: AccessibilityPermission
-    @State private var screenRecording = CGPreflightScreenCaptureAccess()
+    let screenRecording: ScreenRecordingPermission
 
     var body: some View {
         Form {
@@ -259,21 +261,24 @@ private struct PermissionSettings: View {
                     permission.openSystemSettings()
                 }
                 row(
-                    title: "Screen Recording", detail: "Optional. Will enable live thumbnails on tabs; Sticky Windows works fully without it.",
-                    granted: screenRecording
+                    title: "Screen Recording",
+                    detail: screenRecording.needsRelaunch
+                        ? "Granted. Relaunch Sticky Windows to turn live previews on."
+                        : "Optional. Live previews of parked windows when you hover a tab; without it, previews show the app icon and title.",
+                    granted: screenRecording.isGranted
                 ) {
-                    screenRecording = CGRequestScreenCaptureAccess()
-                    if !screenRecording,
-                       let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
-                        NSWorkspace.shared.open(url)
-                    }
+                    screenRecording.request()
+                }
+                if screenRecording.needsRelaunch {
+                    Button("Relaunch Now") { screenRecording.relaunch() }
                 }
             }
         }
         .formStyle(.grouped)
         .onAppear {
             permission.refresh()
-            screenRecording = CGPreflightScreenCaptureAccess()
+            screenRecording.refresh()
+            screenRecording.startPolling()
         }
     }
 

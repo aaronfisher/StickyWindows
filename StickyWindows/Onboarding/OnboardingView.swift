@@ -2,49 +2,70 @@ import SwiftUI
 
 struct OnboardingView: View {
     let permission: AccessibilityPermission
+    let screenRecording: ScreenRecordingPermission
     let tilingOverride: TilingOverride
     let onDone: () -> Void
 
     var body: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: 20) {
             Image(systemName: "sidebar.right")
-                .font(.system(size: 48, weight: .light))
+                .font(.system(size: 44, weight: .light))
                 .foregroundStyle(.tint)
 
-            Text("Welcome to Sticky Windows")
-                .font(.title.bold())
+            VStack(spacing: 6) {
+                Text("Welcome to Sticky Windows")
+                    .font(.title.bold())
+                Text("Two permissions, then you're set. The first is required; the second makes it nicer.")
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
 
-            Text("Sticky Windows parks windows as tabs on the edges of your screen. To move, hide, and restore windows that belong to other apps, macOS requires you to grant Sticky Windows **Accessibility** access.")
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            VStack(spacing: 10) {
+                PermissionStep(
+                    number: 1,
+                    title: "Accessibility",
+                    tag: ("Required", .orange),
+                    detail: "Lets Sticky Windows move, hide, and restore other apps' windows. Nothing works without it.",
+                    granted: permission.isTrusted,
+                    buttonTitle: "Open System Settings",
+                    footnote: "Turn on Sticky Windows under Privacy & Security → Accessibility. This updates automatically."
+                ) {
+                    permission.requestAccess()
+                    permission.openSystemSettings()
+                }
 
-            statusRow
+                PermissionStep(
+                    number: 2,
+                    title: "Screen Recording",
+                    tag: ("Recommended", .blue),
+                    detail: "Shows a live preview of a parked window when you hover its tab. Without it, previews show just the app icon and title. Nothing is recorded or sent anywhere.",
+                    granted: screenRecording.isGranted,
+                    buttonTitle: "Allow Screen Recording",
+                    footnote: screenRecording.needsRelaunch
+                        ? "Granted. macOS applies this on the next launch, so relaunch to turn previews on."
+                        : "If no prompt appears, turn on Sticky Windows under Privacy & Security → Screen Recording.",
+                    trailingAction: screenRecording.needsRelaunch ? ("Relaunch Now", { screenRecording.relaunch() }) : nil
+                ) {
+                    screenRecording.request()
+                }
+            }
 
             if permission.isTrusted {
                 tilingChoice
-                Button("Done", action: onDone)
-                    .keyboardShortcut(.defaultAction)
-                    .controlSize(.large)
-            } else {
-                VStack(spacing: 8) {
-                    Button("Open System Settings") {
-                        permission.requestAccess()
-                        permission.openSystemSettings()
-                    }
-                    .keyboardShortcut(.defaultAction)
-                    .controlSize(.large)
-
-                    Text("Turn on Sticky Windows under Privacy & Security → Accessibility. This window updates automatically.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                }
             }
+
+            Button("Done", action: onDone)
+                .keyboardShortcut(.defaultAction)
+                .controlSize(.large)
+                .disabled(!permission.isTrusted)
         }
-        .padding(32)
-        .frame(width: 460)
-        .onAppear { permission.startPolling() }
+        .padding(28)
+        .frame(width: 520)
+        .onAppear {
+            permission.startPolling()
+            screenRecording.refresh()
+            screenRecording.startPolling()
+        }
     }
 
     /// macOS edge tiling also grabs windows dragged to the left/right edges; offer to step it aside.
@@ -62,20 +83,67 @@ struct OnboardingView: View {
         .padding(12)
         .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 10))
     }
+}
 
-    private var statusRow: some View {
-        HStack(spacing: 8) {
-            if permission.isTrusted {
-                Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
-                Text("Accessibility access granted")
-            } else {
-                ProgressView().controlSize(.small)
-                Text("Waiting for Accessibility access…")
+/// One row of the checklist: number, title, status, explanation, and the button that grants it.
+private struct PermissionStep: View {
+    let number: Int
+    let title: String
+    let tag: (String, Color)
+    let detail: String
+    let granted: Bool
+    let buttonTitle: String
+    let footnote: String
+    var trailingAction: (String, () -> Void)? = nil
+    let action: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            ZStack {
+                Circle().fill(granted ? Color.green : Color.secondary.opacity(0.25))
+                    .frame(width: 26, height: 26)
+                if granted {
+                    Image(systemName: "checkmark").font(.system(size: 13, weight: .bold)).foregroundStyle(.white)
+                } else {
+                    Text("\(number)").font(.system(size: 13, weight: .semibold))
+                }
+            }
+            .padding(.top, 2)
+
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 8) {
+                    Text(title).font(.headline)
+                    Text(tag.0)
+                        .font(.caption2.weight(.semibold))
+                        .padding(.horizontal, 6).padding(.vertical, 2)
+                        .background(tag.1.opacity(0.15), in: Capsule())
+                        .foregroundStyle(tag.1)
+                    Spacer()
+                    if granted {
+                        Label("Granted", systemImage: "checkmark.circle.fill")
+                            .font(.callout.weight(.medium))
+                            .foregroundStyle(.green)
+                    }
+                }
+                Text(detail)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                if !granted {
+                    HStack(spacing: 10) {
+                        Button(buttonTitle, action: action)
+                        Text(footnote).font(.caption).foregroundStyle(.tertiary)
+                    }
+                } else if let trailingAction {
+                    HStack(spacing: 10) {
+                        Button(trailingAction.0, action: trailingAction.1)
+                        Text(footnote).font(.caption).foregroundStyle(.tertiary)
+                    }
+                }
             }
         }
-        .font(.callout.weight(.medium))
-        .padding(.vertical, 8)
-        .padding(.horizontal, 14)
-        .background(.quaternary, in: Capsule())
+        .padding(14)
+        .background(.quaternary.opacity(granted ? 0.25 : 0.5), in: RoundedRectangle(cornerRadius: 12))
+        .animation(.easeOut(duration: 0.2), value: granted)
     }
 }

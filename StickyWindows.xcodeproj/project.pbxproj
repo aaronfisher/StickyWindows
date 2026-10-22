@@ -22,6 +22,7 @@
 		49C90BD5D681493C815C9A51 /* LaunchAtLogin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F984E8A93A717C5F4530179 /* LaunchAtLogin.swift */; };
 		4B3DC30B3ABD349257196F86 /* DropIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7614F1F22DED91010C1EC359 /* DropIndicator.swift */; };
 		5C5E363F08C13A13694DE795 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = B96EFDB80F894E609663C239 /* AppIcon.icon */; };
+		5DFD69B32EAA5B5C0C4B6A86 /* ScreenRecordingPermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B042FAA951E5A94B82E1A46 /* ScreenRecordingPermission.swift */; };
 		641FE120428CC27E8E21DEA4 /* ParkedWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83BB00160004EA2D9F41D073 /* ParkedWindow.swift */; };
 		7481F661D0880880B26754F9 /* StickyWindowsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63EE79C34B6AB11448FF15D2 /* StickyWindowsApp.swift */; };
 		7D414BCB9E38869EFB1EF8BF /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 869992C7A6B973E3A88B77DE /* SettingsStore.swift */; };
@@ -80,6 +81,7 @@
 		8EE0DF7F1F70DF21749EEA9C /* AccessibilityPermission.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityPermission.swift; sourceTree = "<group>"; };
 		8FC8FA21231A97E207E419C5 /* ScreenGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenGeometry.swift; sourceTree = "<group>"; };
 		989532FB9AB9BB25E0888927 /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
+		9B042FAA951E5A94B82E1A46 /* ScreenRecordingPermission.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenRecordingPermission.swift; sourceTree = "<group>"; };
 		9BB3C193DE34BE0AF34576C0 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		AC9318C54ACE6F11AEE40106 /* TabFanPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabFanPanel.swift; sourceTree = "<group>"; };
 		B6284A60199C0D505044A8C3 /* PeekMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeekMonitor.swift; sourceTree = "<group>"; };
@@ -189,6 +191,7 @@
 				C4D124B77479CCD6716D568C /* AXWindowEvents.swift */,
 				770C5416364F953DEA6E701F /* AXWindowMover.swift */,
 				8FC8FA21231A97E207E419C5 /* ScreenGeometry.swift */,
+				9B042FAA951E5A94B82E1A46 /* ScreenRecordingPermission.swift */,
 				013C2C62D78A652916518ECD /* WindowController.swift */,
 				1A94F68C6A4FFF020D814B9B /* WindowInventory.swift */,
 			);
@@ -353,6 +356,7 @@
 				F11EE9F2DF37063B6EBD3A91 /* PreviewPanel.swift in Sources */,
 				0663FD0849C64DEEF771A712 /* RulesSettings.swift in Sources */,
 				EBF3163E8371DB9CF88D18E5 /* ScreenGeometry.swift in Sources */,
+				5DFD69B32EAA5B5C0C4B6A86 /* ScreenRecordingPermission.swift in Sources */,
 				7D414BCB9E38869EFB1EF8BF /* SettingsStore.swift in Sources */,
 				4717192FB69C29397318F72B /* SettingsView.swift in Sources */,
 				23105E4E9DF38378F5EB1510 /* SettingsWindowController.swift in Sources */,

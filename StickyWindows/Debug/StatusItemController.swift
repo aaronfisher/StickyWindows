@@ -10,17 +10,19 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     private let showOnboarding: () -> Void
     private let showSettings: () -> Void
     private let checkForUpdates: () -> Void
+    private let screenRecording: ScreenRecordingPermission
     private var windowsByTag: [Int: WindowInfo] = [:]
 
     init(permission: AccessibilityPermission, parking: ParkingManager, tilingOverride: TilingOverride,
          showOnboarding: @escaping () -> Void, showSettings: @escaping () -> Void,
-         checkForUpdates: @escaping () -> Void) {
+         screenRecording: ScreenRecordingPermission, checkForUpdates: @escaping () -> Void) {
         self.permission = permission
         self.parking = parking
         self.tilingOverride = tilingOverride
         self.showOnboarding = showOnboarding
         self.showSettings = showSettings
         self.checkForUpdates = checkForUpdates
+        self.screenRecording = screenRecording
         super.init()
 
         if let button = statusItem.button {
@@ -45,6 +47,13 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         } else {
             menu.addItem(disabled("Accessibility: Not granted", symbol: "exclamationmark.triangle.fill"))
             menu.addItem(item("Grant Accessibility Access…", action: #selector(openOnboarding)))
+        }
+        screenRecording.refresh()
+        if !screenRecording.isGranted {
+            let hint = item("Turn On Live Previews…", action: #selector(openOnboarding))
+            hint.image = NSImage(systemSymbolName: "eye.slash", accessibilityDescription: nil)
+            hint.toolTip = "Hover previews show only the app icon and title until Screen Recording is allowed."
+            menu.addItem(hint)
         }
 
         menu.addItem(.separator())

@@ -5,6 +5,7 @@ import Sparkle
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let permission = AccessibilityPermission()
+    let screenRecording = ScreenRecordingPermission()
     let settings = SettingsStore()
     lazy var parking = ParkingManager(settings: settings)
     let tilingOverride = TilingOverride()
@@ -31,6 +32,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             tilingOverride: tilingOverride,
             showOnboarding: { [weak self] in self?.showOnboarding() },
             showSettings: { [weak self] in self?.showSettings() },
+            screenRecording: screenRecording,
             checkForUpdates: { [weak self] in self?.updaterController.checkForUpdates(nil) }
         )
 
@@ -96,7 +98,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func showOnboarding() {
         if onboarding == nil {
-            onboarding = OnboardingWindowController(permission: permission, tilingOverride: tilingOverride)
+            onboarding = OnboardingWindowController(permission: permission, screenRecording: screenRecording, tilingOverride: tilingOverride)
         }
         onboarding?.show()
     }
@@ -108,7 +110,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if settingsWindow == nil {
             settingsWindow = SettingsWindowController(rootView: SettingsView(
                 settings: settings, tilingOverride: tilingOverride, permission: permission, launchAtLogin: launchAtLogin,
-                updater: updaterController.updater))
+                updater: updaterController.updater, screenRecording: screenRecording))
         }
         settingsWindow?.show()
     }
