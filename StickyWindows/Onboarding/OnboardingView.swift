@@ -44,7 +44,7 @@ struct OnboardingView: View {
                     footnote: screenRecording.awaitingRelaunch
                         ? "Turn on \(appName) under Privacy & Security → Screen Recording, then relaunch: macOS applies this permission on the next launch, and this window comes back to confirm."
                         : "macOS will ask, or send you to Privacy & Security → Screen Recording.",
-                    secondaryAction: screenRecording.awaitingRelaunch ? ("Open System Settings", { screenRecording.openSystemSettings() }) : nil
+                    secondaryAction: screenRecording.awaitingRelaunch ? ("Ask Again", { screenRecording.request() }) : nil
                 ) {
                     if screenRecording.awaitingRelaunch { screenRecording.relaunch() } else { screenRecording.request() }
                 }
@@ -64,7 +64,7 @@ struct OnboardingView: View {
         .onAppear {
             permission.startPolling()
             screenRecording.refresh()
-            screenRecording.acknowledgeCompletion()
+            screenRecording.acknowledgeReopen()
         }
     }
 

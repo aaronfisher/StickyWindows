@@ -1,5 +1,6 @@
 import AppKit
 import Observation
+import os
 
 /// Screen Recording access, which live hover previews need. Optional: without it previews show icon + title.
 ///
@@ -9,30 +10,31 @@ import Observation
 @Observable
 final class ScreenRecordingPermission {
     private(set) var isGranted: Bool
-    /// The user asked for it during this run; the answer only shows after a relaunch.
-    private(set) var awaitingRelaunch: Bool
+    /// The user asked for it during this run; the answer only shows after a relaunch. Never persisted: a fresh
+    /// launch without the grant must offer to ask macOS again.
+    private(set) var awaitingRelaunch = false
 
-    private static let pendingKey = "screenRecordingRequestPending"
+    /// Set when a request was made, so the checklist reopens after the relaunch to show the result.
+    private static let reopenKey = "screenRecordingReopenOnboarding"
+    private let log = Logger(subsystem: AppIdentity.id, category: "permissions")
 
     init() {
-        let granted = CGPreflightScreenCaptureAccess()
-        isGranted = granted
-        awaitingRelaunch = UserDefaults.standard.bool(forKey: Self.pendingKey) && !granted
-        if granted { UserDefaults.standard.removeObject(forKey: Self.pendingKey) }
+        isGranted = CGPreflightScreenCaptureAccess()
     }
 
-    /// True right after a relaunch that completed a request: the onboarding should reopen to show the result.
-    var justCompletedRequest: Bool {
-        isGranted && UserDefaults.standard.bool(forKey: Self.pendingKey + ".show")
+    /// True right after a relaunch that followed a request: the onboarding should reopen to show the result.
+    var shouldReopenOnboarding: Bool {
+        UserDefaults.standard.bool(forKey: Self.reopenKey)
     }
 
-    /// Shows the system prompt the first time; afterwards macOS only offers System Settings.
+    /// Asks macOS. The first time this shows the system prompt and registers the app in the Screen Recording
+    /// list; later calls return the stored answer without a prompt, so System Settings is opened as well.
     func request() {
         let granted = CGRequestScreenCaptureAccess()
+        log.notice("Screen Recording request returned \(granted, privacy: .public)")
         isGranted = granted
         guard !granted else { return }
-        UserDefaults.standard.set(true, forKey: Self.pendingKey)
-        UserDefaults.standard.set(true, forKey: Self.pendingKey + ".show")
+        UserDefaults.standard.set(true, forKey: Self.reopenKey)
         awaitingRelaunch = true
         openSystemSettings()
     }
@@ -43,16 +45,13 @@ final class ScreenRecordingPermission {
         }
     }
 
-    func acknowledgeCompletion() {
-        UserDefaults.standard.removeObject(forKey: Self.pendingKey + ".show")
+    func acknowledgeReopen() {
+        UserDefaults.standard.removeObject(forKey: Self.reopenKey)
     }
 
     func refresh() {
         isGranted = CGPreflightScreenCaptureAccess()
-        if isGranted {
-            awaitingRelaunch = false
-            UserDefaults.standard.removeObject(forKey: Self.pendingKey)
-        }
+        if isGranted { awaitingRelaunch = false }
     }
 
     /// Starts a new instance of this app and quits this one.
