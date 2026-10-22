@@ -4,7 +4,7 @@ Edge tabs for macOS — a modern take on Mac OS 9's pop-up windows. (Called Ledg
 
 Sticky Windows is a menu-bar app (no Dock icon) for macOS 15 Sequoia and later, written in Swift 6 with SwiftUI and AppKit, and it controls other apps' windows through the Accessibility API.
 
-**Status:** all seven milestones in [SPEC.md](SPEC.md) are built. Sticky Windows is free for personal use, and its source is available under the PolyForm Noncommercial License 1.0.0 (see [License](#license)).
+**Status:** all seven milestones in [SPEC.md](SPEC.md) are built. Sticky Windows is free and open source under the PolyForm Noncommercial License 1.0.0 (see [License](#license)).
 
 ## Using Sticky Windows
 
@@ -69,7 +69,7 @@ macOS never lets a window go fully off screen — it keeps at least a 1 pt colum
 
 ## Website
 
-The marketing site, the Sparkle appcast, and the downloadable releases live in the public repo [aaronfisher/sticky-windows](https://github.com/aaronfisher/sticky-windows), served by GitHub Pages at https://stickywindows.com/. This repo stays private. The site is a single static `index.html` with a working model of the parking gesture; preview a checkout of it locally:
+The marketing site and the Sparkle appcast live in [aaronfisher/sticky-windows](https://github.com/aaronfisher/sticky-windows), served by GitHub Pages at https://stickywindows.com/; downloads are this repo's [Releases](https://github.com/aaronfisher/StickyWindows/releases). The site is a single static `index.html` with a working model of the parking gesture; preview a checkout of it locally:
 
 ```bash
 python3 -m http.server 8765 --directory ../sticky-windows

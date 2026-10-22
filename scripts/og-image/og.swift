@@ -97,7 +97,7 @@ struct Card: View {
                         .fixedSize(horizontal: false, vertical: true)
                     HStack(spacing: 12) {
                         Pill(text: "macOS 15+")
-                        Pill(text: "Free")
+                        Pill(text: "Free and open source")
                         Pill(text: "stickywindows.com")
                     }
                 }
