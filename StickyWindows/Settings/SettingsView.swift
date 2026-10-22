@@ -262,15 +262,12 @@ private struct PermissionSettings: View {
                 }
                 row(
                     title: "Screen Recording",
-                    detail: screenRecording.needsRelaunch
-                        ? "Granted. Relaunch Sticky Windows to turn live previews on."
+                    detail: screenRecording.awaitingRelaunch
+                        ? "Turn it on under Privacy & Security → Screen Recording, then relaunch; macOS applies it on the next launch."
                         : "Optional. Live previews of parked windows when you hover a tab; without it, previews show the app icon and title.",
                     granted: screenRecording.isGranted
                 ) {
-                    screenRecording.request()
-                }
-                if screenRecording.needsRelaunch {
-                    Button("Relaunch Now") { screenRecording.relaunch() }
+                    if screenRecording.awaitingRelaunch { screenRecording.relaunch() } else { screenRecording.request() }
                 }
             }
         }
@@ -278,7 +275,6 @@ private struct PermissionSettings: View {
         .onAppear {
             permission.refresh()
             screenRecording.refresh()
-            screenRecording.startPolling()
         }
     }
 
@@ -294,7 +290,7 @@ private struct PermissionSettings: View {
             if granted {
                 Text("Granted").foregroundStyle(.secondary)
             } else {
-                Button("Grant…", action: action)
+                Button(title == "Screen Recording" && screenRecording.awaitingRelaunch ? "Relaunch Now" : "Grant…", action: action)
             }
         }
     }

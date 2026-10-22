@@ -66,7 +66,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             parking.applyAutoParkRulesToRunningApps()
         }
 
-        if !permission.isTrusted {
+        if !permission.isTrusted || screenRecording.justCompletedRequest || screenRecording.awaitingRelaunch {
+            // Back from a Screen Recording relaunch (or still mid-way): show the checklist so the result is visible.
             showOnboarding()
         }
     }

@@ -40,13 +40,13 @@ struct OnboardingView: View {
                     tag: ("Recommended", .blue),
                     detail: "Shows a live preview of a parked window when you hover its tab. Without it, previews show just the app icon and title. Nothing is recorded or sent anywhere.",
                     granted: screenRecording.isGranted,
-                    buttonTitle: "Allow Screen Recording",
-                    footnote: screenRecording.needsRelaunch
-                        ? "Granted. macOS applies this on the next launch, so relaunch to turn previews on."
-                        : "If no prompt appears, turn on Sticky Windows under Privacy & Security → Screen Recording.",
-                    trailingAction: screenRecording.needsRelaunch ? ("Relaunch Now", { screenRecording.relaunch() }) : nil
+                    buttonTitle: screenRecording.awaitingRelaunch ? "Relaunch Now" : "Allow Screen Recording",
+                    footnote: screenRecording.awaitingRelaunch
+                        ? "Turn on \(appName) under Privacy & Security → Screen Recording, then relaunch: macOS applies this permission on the next launch, and this window comes back to confirm."
+                        : "macOS will ask, or send you to Privacy & Security → Screen Recording.",
+                    secondaryAction: screenRecording.awaitingRelaunch ? ("Open System Settings", { screenRecording.openSystemSettings() }) : nil
                 ) {
-                    screenRecording.request()
+                    if screenRecording.awaitingRelaunch { screenRecording.relaunch() } else { screenRecording.request() }
                 }
             }
 
@@ -64,8 +64,12 @@ struct OnboardingView: View {
         .onAppear {
             permission.startPolling()
             screenRecording.refresh()
-            screenRecording.startPolling()
+            screenRecording.acknowledgeCompletion()
         }
+    }
+
+    private var appName: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? "Sticky Windows"
     }
 
     /// macOS edge tiling also grabs windows dragged to the left/right edges; offer to step it aside.
@@ -94,7 +98,7 @@ private struct PermissionStep: View {
     let granted: Bool
     let buttonTitle: String
     let footnote: String
-    var trailingAction: (String, () -> Void)? = nil
+    var secondaryAction: (String, () -> Void)? = nil
     let action: () -> Void
 
     var body: some View {
@@ -130,14 +134,14 @@ private struct PermissionStep: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                 if !granted {
-                    HStack(spacing: 10) {
-                        Button(buttonTitle, action: action)
-                        Text(footnote).font(.caption).foregroundStyle(.tertiary)
-                    }
-                } else if let trailingAction {
-                    HStack(spacing: 10) {
-                        Button(trailingAction.0, action: trailingAction.1)
-                        Text(footnote).font(.caption).foregroundStyle(.tertiary)
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 8) {
+                            Button(buttonTitle, action: action)
+                            if let secondaryAction {
+                                Button(secondaryAction.0, action: secondaryAction.1)
+                            }
+                        }
+                        Text(footnote).font(.caption).foregroundStyle(.tertiary).fixedSize(horizontal: false, vertical: true)
                     }
                 }
             }
