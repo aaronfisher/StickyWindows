@@ -17,8 +17,6 @@ final class WindowObserver {
     var onWindowMoved: (WindowController, CGRect) -> Void = { _, _ in }
     /// The existing tab under a zone's cursor position, if any (dropping there forms a group).
     var tabTarget: (EdgeZone) -> (lead: ParkedWindow, frame: CGRect)? = { _ in nil }
-    /// False while unlicensed: drags are ignored entirely, so no indicator appears.
-    var isEnabled: () -> Bool = { true }
     private let settings: SettingsStore
     private var detector: EdgeZoneDetector {
         EdgeZoneDetector(enabledEdges: settings.enabledEdges)
@@ -72,7 +70,7 @@ final class WindowObserver {
 
     private func mouseDown() {
         reset()
-        guard AXIsProcessTrusted(), isEnabled() else { return }
+        guard AXIsProcessTrusted() else { return }
         let point = ScreenGeometry.axPoint(fromAppKit: NSEvent.mouseLocation)
         guard let window = WindowController.window(at: point),
               window.pid != ProcessInfo.processInfo.processIdentifier,

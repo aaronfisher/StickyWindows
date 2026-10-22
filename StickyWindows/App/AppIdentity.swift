@@ -1,14 +1,14 @@
 import Foundation
 
 enum AppIdentity {
-    /// Bundle ID; also the logging subsystem, the Keychain service, and the Application Support folder name.
+    /// Bundle ID; also the logging subsystem and the Application Support folder name.
     static let id = "vc.theshirleycompany.StickyWindows"
     /// Earlier identities, newest first. The app was called Ledge until October 2026.
     static let legacyIDs = ["vc.theshirleycompany.Ledge", "vc.start.Ledge"]
 }
 
-/// One-time move of settings, license/trial, and saved parked windows from an earlier identity, so a rename
-/// doesn't reset rules, shortcuts, appearance, the trial clock, or the macOS-tiling value that must be restored.
+/// One-time move of settings and saved parked windows from an earlier identity, so a rename doesn't reset
+/// rules, shortcuts, appearance, or the macOS-tiling value that must be restored.
 enum LegacyMigration {
     private static let doneKey = "migratedToIdentity"
 
@@ -23,14 +23,6 @@ enum LegacyMigration {
             var copy = legacy
             copy[doneKey] = nil
             defaults.setPersistentDomain(copy, forName: AppIdentity.id)
-        }
-
-        // Keychain: license and trial start.
-        for account in ["license", "trialStart"] where Keychain.string(for: account) == nil {
-            if let legacyService = AppIdentity.legacyIDs.first(where: { Keychain.string(for: account, service: $0) != nil }),
-               let value = Keychain.string(for: account, service: legacyService) {
-                Keychain.set(value, for: account)
-            }
         }
 
         // Saved parked windows.

@@ -4,7 +4,7 @@ Edge tabs for macOS — a modern take on Mac OS 9's pop-up windows. (Called Ledg
 
 Sticky Windows is a menu-bar app (no Dock icon) for macOS 15 Sequoia and later, written in Swift 6 with SwiftUI and AppKit, and it controls other apps' windows through the Accessibility API.
 
-**Status:** all seven milestones in [SPEC.md](SPEC.md) are built. First public release pending a Developer ID certificate.
+**Status:** all seven milestones in [SPEC.md](SPEC.md) are built. Sticky Windows is free; the source will be published under an open-source license with the first release.
 
 ## Using Sticky Windows
 
@@ -66,34 +66,6 @@ macOS never lets a window go fully off screen — it keeps at least a 1 pt colum
 3. **Minimize** only if an app refuses both.
 
 [QUIRKS.md](QUIRKS.md) logs the measurements and app-specific behavior behind this.
-
-## Licensing
-
-Sticky Windows is sold through [Lemon Squeezy](https://www.lemonsqueezy.com) ($5, unlimited devices) and uses its public [License API](https://docs.lemonsqueezy.com/api/license-api), so the app holds no API key.
-
-- **Trial:** 14 days from first launch; the start date is kept in the Keychain so reinstalling doesn't reset it.
-- **Activation:** Settings → License. The key is activated with one instance per Mac (named after the Mac) and stored in the Keychain with the instance ID.
-- **Re-validation:** once a day. A key the server reports as disabled, expired, or deactivated stops working at once; being offline is fine for 30 days, after which Sticky Windows asks to verify.
-- **When unlicensed** (trial over, or a bad key): parking stops, drags and shortcuts open the License pane, and parked windows are released.
-
-`StickyWindows/Licensing/LicenseConfig.swift` holds the store ID, product ID, and checkout URL; the product's license activation limit is left blank (unlimited) and keys never expire.
-
-## Releasing
-
-Releases are built by `scripts/release.sh`, locally or by the GitHub Actions workflow in `.github/workflows/release.yml` (push a tag like `v1.0.0`). The script archives a universal Release build signed with Developer ID, notarizes and staples the app, builds `StickyWindows-<version>.dmg`, notarizes and staples that too, signs it for Sparkle, and writes the new item into `appcast.xml` in a checkout of the site repo (`SITE_DIR`, default `../sticky-windows`), which GitHub Pages serves as the Sparkle feed.
-
-Prerequisites:
-
-- A **Developer ID Application** certificate for The Shirley Company (team `F5N4RH3674`): locally in the keychain, in CI as the `DEVELOPER_ID_P12_BASE64` and `DEVELOPER_ID_P12_PASSWORD` secrets.
-- **Notarization credentials**: locally `xcrun notarytool store-credentials stickywindows-notary` (Apple ID + app-specific password, or an App Store Connect API key); in CI the `NOTARY_KEY_ID`, `NOTARY_ISSUER_ID`, and `NOTARY_PRIVATE_KEY` (the `.p8` contents) secrets.
-- The **Sparkle private key**: generated once with Sparkle's `generate_keys` and kept in the login keychain; export it with `generate_keys -x sparkle_private.key` for the CI `SPARKLE_PRIVATE_KEY` secret. The matching public key is in `project.yml` (`SUPublicEDKey`).
-- `xcodegen` (`brew install xcodegen`).
-
-The `.dmg` is attached to a GitHub Release on the public site repo, which is where the appcast and the website's download button point. The CI workflow needs a `SITE_REPO_TOKEN` secret (a fine-grained personal access token with Contents: read and write on `aaronfisher/sticky-windows`) to publish there.
-
-```bash
-scripts/release.sh 1.0.0
-```
 
 ## Website
 

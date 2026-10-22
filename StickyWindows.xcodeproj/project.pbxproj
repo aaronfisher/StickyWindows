@@ -11,7 +11,6 @@
 		0663FD0849C64DEEF771A712 /* RulesSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBA49422E09C93FB90E6B155 /* RulesSettings.swift */; };
 		0904751F3593A6B9D2EC02A8 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 4601261E50E0BB7AC9C8BC3A /* Sparkle */; };
 		13D28FA3EBAFC015CD640430 /* WindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 013C2C62D78A652916518ECD /* WindowController.swift */; };
-		1627AE204E9E803029E6B3C8 /* LemonSqueezyClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2695677FAA19626246B7623D /* LemonSqueezyClient.swift */; };
 		16E8B6BCDF31B73DE004C90B /* ParkingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00B3B8DA4C70A3A8B630E8C3 /* ParkingManager.swift */; };
 		23105E4E9DF38378F5EB1510 /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 989532FB9AB9BB25E0888927 /* SettingsWindowController.swift */; };
 		2D8AC464A16D20E16D690C43 /* TabPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5ED2C0D41030077F5EBF282 /* TabPresenter.swift */; };
@@ -24,7 +23,6 @@
 		5C5E363F08C13A13694DE795 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = B96EFDB80F894E609663C239 /* AppIcon.icon */; };
 		641FE120428CC27E8E21DEA4 /* ParkedWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83BB00160004EA2D9F41D073 /* ParkedWindow.swift */; };
 		7481F661D0880880B26754F9 /* StickyWindowsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63EE79C34B6AB11448FF15D2 /* StickyWindowsApp.swift */; };
-		7B0A2307612287BCF2DC2E94 /* LicenseSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA4FB6F66076166C1216CB2 /* LicenseSettings.swift */; };
 		7D414BCB9E38869EFB1EF8BF /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 869992C7A6B973E3A88B77DE /* SettingsStore.swift */; };
 		7FD883241CEAE8073A0A8203 /* OnboardingWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2F1A8C7E2E34AD0BAD06293 /* OnboardingWindowController.swift */; };
 		88BAEA3FD545AF63AFFA2EA6 /* AccessibilityPermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EE0DF7F1F70DF21749EEA9C /* AccessibilityPermission.swift */; };
@@ -32,7 +30,6 @@
 		93D181CF07F681F16F2E28A1 /* Shortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59C69B4246BE3DE57B515750 /* Shortcuts.swift */; };
 		99305330EA21951E3B74CD15 /* DockBadgeReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C839C1A213D76972A4317D7 /* DockBadgeReader.swift */; };
 		9CA4B2259D10DE51B27F09D0 /* AppRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34B244D5043C8AAD7CA0C582 /* AppRule.swift */; };
-		9DA2B51B13A5C1F943C0D7B2 /* LicenseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B9294D3C9F18BECDC3A73C2 /* LicenseManager.swift */; };
 		B25ED5F61F72B24A4BCC167D /* MacOSTiling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B7139CB4C2F981F66128C36 /* MacOSTiling.swift */; };
 		BAA78ADF29A1731630E31B9D /* EdgeTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2171B0C4CD642A904A6A0985 /* EdgeTabView.swift */; };
 		BBAB73D1F09B25AB2DC7AF9D /* GroupListPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 021A80EEF46B420149D757AD /* GroupListPanel.swift */; };
@@ -45,13 +42,11 @@
 		D0DF8B6615B6702167F6EDE2 /* HidingStrategyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 512F22888CBDEE252C0648B0 /* HidingStrategyStore.swift */; };
 		D3D0782BABC84CC032E109C9 /* TabPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BF66AFB26B91D8173BBCE3D /* TabPanel.swift */; };
 		D59E265FCD573FFC2045988C /* WindowInventory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A94F68C6A4FFF020D814B9B /* WindowInventory.swift */; };
-		DBB896D0DE1F2BAF313147E1 /* LicenseConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = B01D88B63B82BDEC641804CD /* LicenseConfig.swift */; };
 		DE821D8EB6D1A08A33557E17 /* ParkingPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CE6EBB9D535A22686EF233A /* ParkingPersistence.swift */; };
 		E3F658DD3E2A231E4515C40F /* AppMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59FD19D1F084F6543B2A9504 /* AppMenu.swift */; };
 		EBF3163E8371DB9CF88D18E5 /* ScreenGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FC8FA21231A97E207E419C5 /* ScreenGeometry.swift */; };
 		F11EE9F2DF37063B6EBD3A91 /* PreviewPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 285665EA800A5180D106E420 /* PreviewPanel.swift */; };
 		F8D40E1FCBE1B2C2209FE007 /* AXWindowEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D124B77479CCD6716D568C /* AXWindowEvents.swift */; };
-		F9C9F1C5770321BCC8E01104 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C718E4AEB54895A3324F079 /* Keychain.swift */; };
 		FFA4A4D6D509AE1EB95158A8 /* ThumbnailProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFDAFCC6DE2278DD6B35613 /* ThumbnailProvider.swift */; };
 /* End PBXBuildFile section */
 
@@ -60,15 +55,12 @@
 		013C2C62D78A652916518ECD /* WindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowController.swift; sourceTree = "<group>"; };
 		021A80EEF46B420149D757AD /* GroupListPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupListPanel.swift; sourceTree = "<group>"; };
 		05A141012A71DBA410A6412A /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
-		0AA4FB6F66076166C1216CB2 /* LicenseSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseSettings.swift; sourceTree = "<group>"; };
-		0B9294D3C9F18BECDC3A73C2 /* LicenseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseManager.swift; sourceTree = "<group>"; };
 		0DFDAFCC6DE2278DD6B35613 /* ThumbnailProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailProvider.swift; sourceTree = "<group>"; };
 		151B6F59D689A71DB3070208 /* GroupTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupTabView.swift; sourceTree = "<group>"; };
 		1A94F68C6A4FFF020D814B9B /* WindowInventory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowInventory.swift; sourceTree = "<group>"; };
 		1C839C1A213D76972A4317D7 /* DockBadgeReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockBadgeReader.swift; sourceTree = "<group>"; };
 		1CE6EBB9D535A22686EF233A /* ParkingPersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParkingPersistence.swift; sourceTree = "<group>"; };
 		2171B0C4CD642A904A6A0985 /* EdgeTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdgeTabView.swift; sourceTree = "<group>"; };
-		2695677FAA19626246B7623D /* LemonSqueezyClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LemonSqueezyClient.swift; sourceTree = "<group>"; };
 		285665EA800A5180D106E420 /* PreviewPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewPanel.swift; sourceTree = "<group>"; };
 		2B7139CB4C2F981F66128C36 /* MacOSTiling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacOSTiling.swift; sourceTree = "<group>"; };
 		2E4C48AA018EF2DEAFB1681A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -86,12 +78,10 @@
 		773AF0A2412B00D02A660D7B /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
 		83BB00160004EA2D9F41D073 /* ParkedWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParkedWindow.swift; sourceTree = "<group>"; };
 		869992C7A6B973E3A88B77DE /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
-		8C718E4AEB54895A3324F079 /* Keychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
 		8EE0DF7F1F70DF21749EEA9C /* AccessibilityPermission.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityPermission.swift; sourceTree = "<group>"; };
 		8FC8FA21231A97E207E419C5 /* ScreenGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenGeometry.swift; sourceTree = "<group>"; };
 		989532FB9AB9BB25E0888927 /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
 		9BB3C193DE34BE0AF34576C0 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		B01D88B63B82BDEC641804CD /* LicenseConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseConfig.swift; sourceTree = "<group>"; };
 		B6284A60199C0D505044A8C3 /* PeekMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeekMonitor.swift; sourceTree = "<group>"; };
 		B96EFDB80F894E609663C239 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		C2F1A8C7E2E34AD0BAD06293 /* OnboardingWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingWindowController.swift; sourceTree = "<group>"; };
@@ -125,7 +115,6 @@
 				AA50B01E15D98B4FF2061FA8 /* App */,
 				623BEE4096C8870217F90A94 /* Debug */,
 				EBA93119592F8347C6E0B33A /* Extras */,
-				C3B279C726833E20BE521463 /* Licensing */,
 				8627D09D29548009640FE039 /* Onboarding */,
 				E63142530182ECC7CD5320A6 /* Parking */,
 				D545917D8F182BEB5CE3ECFB /* Resources */,
@@ -173,18 +162,6 @@
 				63EE79C34B6AB11448FF15D2 /* StickyWindowsApp.swift */,
 			);
 			path = App;
-			sourceTree = "<group>";
-		};
-		C3B279C726833E20BE521463 /* Licensing */ = {
-			isa = PBXGroup;
-			children = (
-				8C718E4AEB54895A3324F079 /* Keychain.swift */,
-				2695677FAA19626246B7623D /* LemonSqueezyClient.swift */,
-				B01D88B63B82BDEC641804CD /* LicenseConfig.swift */,
-				0B9294D3C9F18BECDC3A73C2 /* LicenseManager.swift */,
-				0AA4FB6F66076166C1216CB2 /* LicenseSettings.swift */,
-			);
-			path = Licensing;
 			sourceTree = "<group>";
 		};
 		C9127D8B797A775FF852428F /* Products */ = {
@@ -366,12 +343,7 @@
 				BBAB73D1F09B25AB2DC7AF9D /* GroupListPanel.swift in Sources */,
 				C7208089D8B32CC81F4B43C3 /* GroupTabView.swift in Sources */,
 				D0DF8B6615B6702167F6EDE2 /* HidingStrategyStore.swift in Sources */,
-				F9C9F1C5770321BCC8E01104 /* Keychain.swift in Sources */,
 				49C90BD5D681493C815C9A51 /* LaunchAtLogin.swift in Sources */,
-				1627AE204E9E803029E6B3C8 /* LemonSqueezyClient.swift in Sources */,
-				DBB896D0DE1F2BAF313147E1 /* LicenseConfig.swift in Sources */,
-				9DA2B51B13A5C1F943C0D7B2 /* LicenseManager.swift in Sources */,
-				7B0A2307612287BCF2DC2E94 /* LicenseSettings.swift in Sources */,
 				B25ED5F61F72B24A4BCC167D /* MacOSTiling.swift in Sources */,
 				37DDDD68E5DEF0028AFC1783 /* OnboardingView.swift in Sources */,
 				7FD883241CEAE8073A0A8203 /* OnboardingWindowController.swift in Sources */,

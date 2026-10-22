@@ -9,7 +9,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     lazy var parking = ParkingManager(settings: settings)
     let tilingOverride = TilingOverride()
     let launchAtLogin = LaunchAtLogin()
-    let license = LicenseManager()
     /// Sparkle. Starts checking on launch per Info.plist (SUFeedURL, SUPublicEDKey, SUEnableAutomaticChecks).
     let updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
     private lazy var windowObserver = WindowObserver(settings: settings)
@@ -20,24 +19,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         tilingOverride.restoreOnLaunch()
         parking.onNeedsPermission = { [weak self] in self?.showOnboarding() }
-        parking.isLicensed = { [license] in license.isActive }
-        parking.onNeedsLicense = { [weak self] in self?.showSettings(pane: .license) }
-        windowObserver.isEnabled = { [license] in license.isActive }
-        license.addObserver { [weak self] state in
-            // Parking stops when the trial ends or a license goes bad; parked windows come back.
-            guard let self, !self.license.isActive else { return }
-            self.parking.releaseAll()
-            self.showSettings(pane: .license)
-        }
-        license.start()
+
         statusItemController = StatusItemController(
             permission: permission,
             parking: parking,
             tilingOverride: tilingOverride,
             showOnboarding: { [weak self] in self?.showOnboarding() },
             showSettings: { [weak self] in self?.showSettings() },
-            checkForUpdates: { [weak self] in self?.updaterController.checkForUpdates(nil) },
-            license: license
+            checkForUpdates: { [weak self] in self?.updaterController.checkForUpdates(nil) }
         )
 
         for (name, edge) in KeyboardShortcuts.Name.parkShortcuts {
@@ -72,8 +61,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         if !permission.isTrusted {
             showOnboarding()
-        } else if !license.isActive {
-            showSettings(pane: .license)
         }
     }
 
@@ -96,7 +83,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if settingsWindow == nil {
             settingsWindow = SettingsWindowController(rootView: SettingsView(
                 settings: settings, tilingOverride: tilingOverride, permission: permission, launchAtLogin: launchAtLogin,
-                license: license, updater: updaterController.updater))
+                updater: updaterController.updater))
         }
         settingsWindow?.show()
     }

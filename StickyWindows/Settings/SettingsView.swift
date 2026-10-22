@@ -4,7 +4,7 @@ import SwiftUI
 
 /// The settings panes, in sidebar order.
 enum SettingsPane: String, CaseIterable, Identifiable {
-    case general, appearance, shortcuts, rules, permissions, license
+    case general, appearance, shortcuts, rules, permissions
 
     var id: Self { self }
 
@@ -15,7 +15,6 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .shortcuts: "Shortcuts"
         case .rules: "App Rules"
         case .permissions: "Permissions"
-        case .license: "License"
         }
     }
 
@@ -26,7 +25,6 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .shortcuts: "keyboard.fill"
         case .rules: "app.badge.checkmark.fill"
         case .permissions: "lock.shield.fill"
-        case .license: "key.fill"
         }
     }
 
@@ -37,7 +35,6 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .shortcuts: .purple
         case .rules: .orange
         case .permissions: .green
-        case .license: .indigo
         }
     }
 }
@@ -48,7 +45,6 @@ struct SettingsView: View {
     let tilingOverride: TilingOverride
     let permission: AccessibilityPermission
     let launchAtLogin: LaunchAtLogin
-    let license: LicenseManager
     let updater: SPUUpdater
 
     @AppStorage("settingsPane") private var pane: SettingsPane = .general
@@ -80,7 +76,6 @@ struct SettingsView: View {
         case .shortcuts: ShortcutSettings()
         case .rules: RulesSettings(settings: settings)
         case .permissions: PermissionSettings(permission: permission)
-        case .license: LicenseSettings(license: license)
         }
     }
 }
