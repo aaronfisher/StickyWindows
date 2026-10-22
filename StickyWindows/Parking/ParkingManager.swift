@@ -382,6 +382,14 @@ final class ParkingManager {
         tabs.layout()
     }
 
+    /// Takes one window out of its group and gives it its own tab at `offset` along the edge.
+    func detach(_ parkedWindow: ParkedWindow, toOffset offset: CGFloat) {
+        parkedWindow.groupID = nil
+        parkedWindow.desiredOffset = offset
+        dissolveSingletonGroups()
+        tabs.sync()
+    }
+
     /// Splits a group back into one tab per window (the layout spreads them out).
     func ungroup(_ windows: [ParkedWindow]) {
         for (index, window) in windows.enumerated() {

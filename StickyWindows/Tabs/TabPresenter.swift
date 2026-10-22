@@ -37,6 +37,8 @@ final class TabPresenter {
     private var hoverOpenTask: Task<Void, Never>?
     private var fanHovered = false
     private var currentDropTarget: DropTarget?
+    /// A window being dragged out of a group's fan: its ghost tab and whether it's far enough out to release.
+    private var cardDrag: (window: ParkedWindow, ghost: TabPanel, pulledAway: Bool)?
 
     init(manager: ParkingManager) {
         self.manager = manager
@@ -51,6 +53,7 @@ final class TabPresenter {
             guard let self, let window = self.manager.parked.first(where: { $0.id == id }) else { return }
             Task { await self.manager.tabClicked(window) }
         }
+        fan.onCardDrag = { [weak self] id, phase, point in self?.cardDrag(id, phase, point) }
         fan.onHoverChange = { [weak self] inside in
             guard let self else { return }
             self.fanHovered = inside
@@ -164,6 +167,66 @@ final class TabPresenter {
     private func fanItems(_ item: TabItem) -> [TabFanModel.Item] {
         item.windows.map {
             TabFanModel.Item(id: $0.id, title: $0.title, appName: $0.appName, icon: $0.icon, thumbnail: $0.thumbnail, isRevealed: $0.isRevealed)
+        }
+    }
+
+    // MARK: Dragging a window out of a group
+
+    private func cardDrag(_ id: UUID, _ phase: TabFanModel.DragPhase, _ location: CGPoint) {
+        switch phase {
+        case .began:
+            guard let window = manager.parked.first(where: { $0.id == id }),
+                  let screen = ScreenGeometry.screen(withDisplayID: window.displayID) else { return }
+            closeFan()
+            manager.cancelHover(window)
+            window.isDragging = true
+            let ghost = TabPanel(rootView: EdgeTabView(parkedWindow: window, settings: manager.settings))
+            applySpacesBehavior(to: ghost)
+            ghost.alphaValue = 0.9
+            let size = tabRect(edge: window.edge, screen: screen, start: 0).size
+            let mouse = ScreenGeometry.axPoint(fromAppKit: location)
+            ghost.setFrame(ScreenGeometry.flip(CGRect(x: mouse.x - size.width / 2, y: mouse.y - size.height / 2, width: size.width, height: size.height)), display: true)
+            ghost.orderFrontRegardless()
+            cardDrag = (window, ghost, false)
+        case .changed:
+            guard let drag = cardDrag, drag.window.id == id,
+                  let screen = ScreenGeometry.screen(withDisplayID: drag.window.displayID) else { return }
+            let full = ScreenGeometry.axFrame(of: screen)
+            let visible = ScreenGeometry.axVisibleFrame(of: screen)
+            let mouse = ScreenGeometry.axPoint(fromAppKit: location)
+            let edge = drag.window.edge
+            let distanceFromEdge: CGFloat = switch edge {
+            case .right: full.maxX - mouse.x
+            case .left: mouse.x - full.minX
+            case .bottom: full.maxY - mouse.y
+            }
+            let pulledAway = distanceFromEdge > pullAwayDistance
+            drag.window.isPulledAway = pulledAway
+            cardDrag?.pulledAway = pulledAway
+            let size = tabRect(edge: edge, screen: screen, start: 0).size
+            let rect: CGRect
+            if pulledAway {
+                rect = CGRect(x: mouse.x - size.width / 2, y: mouse.y - size.height / 2, width: size.width, height: size.height)
+            } else {
+                // Snapped to the edge at the cursor's position, where it will become a tab.
+                let length = manager.settings.tabMetrics.length
+                let (lower, upper) = edge.isVertical ? (visible.minY, visible.maxY) : (visible.minX, visible.maxX)
+                let start = min(max(along(mouse, edge) - length / 2, lower), upper - length)
+                rect = tabRect(edge: edge, screen: screen, start: start)
+            }
+            drag.ghost.setFrame(ScreenGeometry.flip(rect), display: true)
+        case .ended:
+            guard let drag = cardDrag, drag.window.id == id else { return }
+            cardDrag = nil
+            drag.ghost.orderOut(nil)
+            drag.window.isDragging = false
+            drag.window.isPulledAway = false
+            if drag.pulledAway {
+                manager.release(drag.window)
+            } else {
+                let mouse = ScreenGeometry.axPoint(fromAppKit: location)
+                manager.detach(drag.window, toOffset: along(mouse, drag.window.edge))
+            }
         }
     }
 

@@ -15,6 +15,8 @@ final class TabFanModel {
         let isRevealed: Bool
     }
 
+    enum DragPhase { case began, changed, ended }
+
     var edge: Edge = .right
     var items: [Item] = []
     /// Dropping onto the fan adds the dragged window: show the big "+" and highlight the whole fan.
@@ -29,12 +31,17 @@ final class TabFanModel {
 final class TabFanPanel {
     let model = TabFanModel()
     var onSelect: (UUID) -> Void = { _ in }
+    /// A card being dragged out of the fan; the point is the cursor in AppKit screen coordinates.
+    var onCardDrag: (UUID, TabFanModel.DragPhase, CGPoint) -> Void = { _, _, _ in }
     /// Reports when the cursor enters/leaves the fan, so hover fans can close once it's left.
     var onHoverChange: (Bool) -> Void = { _ in }
 
     private let settings: SettingsStore
     private lazy var panel: TabPanel = {
-        let panel = TabPanel(rootView: TabFanView(model: model, settings: settings, onSelect: { [weak self] in self?.onSelect($0) }))
+        let panel = TabPanel(rootView: TabFanView(
+            model: model, settings: settings,
+            onSelect: { [weak self] in self?.onSelect($0) },
+            onCardDrag: { [weak self] id, phase, point in self?.onCardDrag(id, phase, point) }))
         panel.hostingView.onHover = { [weak self] in self?.onHoverChange($0) }
         panel.level = .popUpMenu
         panel.hasShadow = true
@@ -106,6 +113,8 @@ private struct TabFanView: View {
     let model: TabFanModel
     let settings: SettingsStore
     let onSelect: (UUID) -> Void
+    let onCardDrag: (UUID, TabFanModel.DragPhase, CGPoint) -> Void
+    @State private var draggingID: UUID?
 
     var body: some View {
         let metrics = settings.tabMetrics
@@ -136,8 +145,25 @@ private struct TabFanView: View {
     private func cards(_ card: CGSize, _ accent: Color) -> some View {
         ForEach(model.items) { item in
             FanCard(item: item, size: card, accent: accent, hovered: model.hoveredID == item.id)
+                .opacity(draggingID == item.id ? 0.35 : 1)
                 .onHover { model.hoveredID = $0 ? item.id : (model.hoveredID == item.id ? nil : model.hoveredID) }
                 .onTapGesture { onSelect(item.id) }
+                .gesture(
+                    DragGesture(minimumDistance: 6)
+                        .onChanged { _ in
+                            // Screen coordinates come from AppKit; the gesture only tells us that movement happened.
+                            if draggingID != item.id {
+                                draggingID = item.id
+                                onCardDrag(item.id, .began, NSEvent.mouseLocation)
+                            }
+                            onCardDrag(item.id, .changed, NSEvent.mouseLocation)
+                        }
+                        .onEnded { _ in
+                            if draggingID == item.id {
+                                draggingID = nil
+                                onCardDrag(item.id, .ended, NSEvent.mouseLocation)
+                            }
+                        })
         }
         if model.isDropTarget {
             VStack(spacing: 6) {
