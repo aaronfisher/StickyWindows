@@ -114,3 +114,8 @@ final class ClosureMenuItem: NSMenuItem {
         handler()
     }
 }
+
+/// Lets SwiftUI content in a non-activating panel be clicked on the first try.
+final class FirstMouseHostingView<Content: View>: NSHostingView<Content> {
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+}

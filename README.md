@@ -30,7 +30,7 @@ Tabs show the app's **Dock badge** (unread counts and the like) when it has one.
 
 ### Tab groups
 
-Drag a window onto an existing tab — it highlights with a **+** — to stack them into one group tab showing the apps' icons and a count. Click the group tab for a mini list: click a row to show or hide that window, or its ↩︎ button to release it. Right-click the group for Move to Edge, Ungroup, and Release All. Dragging the group tab reorders or releases the whole group.
+Drag a window toward an existing tab and the tab fans open, showing previews of the windows already in it and a large **+** slot; drop anywhere on the fan to add the window to that group. A group tab shows the apps' icons and a count; hover it (or click it) and it fans open the same previews, each one a click away. Right-click the group for Move to Edge, Ungroup, and Release All. Dragging the group tab reorders or releases the whole group.
 
 ### Reveal modes
 

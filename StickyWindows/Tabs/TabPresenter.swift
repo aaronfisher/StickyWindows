@@ -13,17 +13,30 @@ final class TabPresenter {
         var isGroup: Bool { windows.count > 1 }
     }
 
+    /// A tab the user is dragging a window toward.
+    struct DropTarget {
+        let item: TabItem
+        let frame: CGRect
+        let screen: NSScreen
+    }
+
     private unowned let manager: ParkingManager
     private var panels: [UUID: TabPanel] = [:]
-    /// Window IDs each panel was built for, so a group's panel is rebuilt when its members change.
-    private var panelMembers: [UUID: [UUID]] = [:]
+    private var groupModels: [UUID: GroupTabModel] = [:]
     private var grabOffset: CGFloat = 0
     /// Tabs are hidden while a full-screen app is in front.
     private var isSuppressed = false
     private let gap: CGFloat = 6
     /// How far a tab must be pulled from its edge before letting go releases it.
     private let pullAwayDistance: CGFloat = 80
-    private lazy var groupList = GroupListPanel(manager: manager)
+
+    private lazy var fan = TabFanPanel(settings: manager.settings)
+    private var fanItemID: UUID?
+    private var fanIsDropTarget = false
+    private var hoverCloseTask: Task<Void, Never>?
+    private var hoverOpenTask: Task<Void, Never>?
+    private var fanHovered = false
+    private var currentDropTarget: DropTarget?
 
     init(manager: ParkingManager) {
         self.manager = manager
@@ -34,6 +47,15 @@ final class TabPresenter {
                 self.layout()
             }
         }
+        fan.onSelect = { [weak self] id in
+            guard let self, let window = self.manager.parked.first(where: { $0.id == id }) else { return }
+            Task { await self.manager.tabClicked(window) }
+        }
+        fan.onHoverChange = { [weak self] inside in
+            guard let self else { return }
+            self.fanHovered = inside
+            if inside { self.hoverCloseTask?.cancel() } else { self.scheduleFanClose() }
+        }
     }
 
     func setSuppressed(_ suppressed: Bool) {
@@ -41,7 +63,7 @@ final class TabPresenter {
         isSuppressed = suppressed
         if suppressed {
             panels.values.forEach { $0.orderOut(nil) }
-            groupList.close()
+            closeFan()
         } else {
             layout()
         }
@@ -66,17 +88,25 @@ final class TabPresenter {
 
     func sync() {
         let current = items()
-        let live = Dictionary(uniqueKeysWithValues: current.map { ($0.id, $0.windows.map(\.id)) })
-        for (id, panel) in panels where live[id] != panelMembers[id] {
-            panel.orderOut(nil)
-            panels[id] = nil
-            panelMembers[id] = nil
+        let live = Dictionary(uniqueKeysWithValues: current.map { ($0.id, $0) })
+        // Drop panels whose tab is gone, or whose kind changed (single <-> group).
+        for (id, panel) in panels {
+            let item = live[id]
+            if item == nil || (item!.isGroup != (groupModels[id] != nil)) {
+                panel.orderOut(nil)
+                panels[id] = nil
+                groupModels[id] = nil
+            }
         }
-        for item in current where panels[item.id] == nil {
-            panels[item.id] = makePanel(for: item)
-            panelMembers[item.id] = item.windows.map(\.id)
+        for item in current {
+            if panels[item.id] == nil {
+                panels[item.id] = makePanel(for: item)
+            } else if let model = groupModels[item.id], model.windows.map(\.id) != item.windows.map(\.id) {
+                // Membership changed: update in place, so the tab doesn't flash or jump.
+                model.windows = item.windows
+            }
         }
-        groupList.refresh(items: current)
+        if let fanItemID, live[fanItemID] == nil { closeFan() } else if let fanItemID, !fanIsDropTarget, let item = live[fanItemID] { refreshFan(for: item) }
         layout()
     }
 
@@ -85,15 +115,104 @@ final class TabPresenter {
         panels[parkedWindow.groupID ?? parkedWindow.id].map { ScreenGeometry.flip($0.frame) }
     }
 
-    /// The tab under a drop zone's cursor position, for dropping a window onto it to form a group.
-    func tabTarget(at zone: EdgeZone) -> (lead: ParkedWindow, frame: CGRect)? {
-        let displayID = ScreenGeometry.displayID(of: zone.screen)
-        for item in items() where item.lead.edge == zone.edge && item.lead.displayID == displayID {
-            guard let frame = frame(of: item.lead) else { continue }
-            let span = zone.edge.isVertical ? (frame.minY...frame.maxY) : (frame.minX...frame.maxX)
-            if span.contains(zone.offset) { return (item.lead, frame) }
+    // MARK: Drop targeting
+
+    /// The tab a window dragged to `point` (AX coordinates) would be dropped onto. Generous: the cursor can be
+    /// a couple of tab-thicknesses in from the edge, and once a target is acquired it sticks until the cursor
+    /// leaves the tab-plus-fan area, so the fan doesn't flicker while the drag wobbles.
+    func dropTarget(at point: CGPoint, excluding dragged: WindowController) -> DropTarget? {
+        let metrics = manager.settings.tabMetrics
+        if let current = currentDropTarget {
+            var keep = current.frame.insetBy(dx: -metrics.thickness, dy: -metrics.thickness)
+            if let fanFrame = fan.frame { keep = keep.union(fanFrame.insetBy(dx: -12, dy: -12)) }
+            if keep.contains(point), !current.item.windows.contains(where: { $0.window.isSameWindow(as: dragged) }) {
+                return current
+            }
+        }
+        for item in items() {
+            guard let frame = frame(of: item.lead),
+                  let screen = ScreenGeometry.screen(withDisplayID: item.lead.displayID),
+                  !item.windows.contains(where: { $0.window.isSameWindow(as: dragged) }) else { continue }
+            // Reach: 2.5 tab thicknesses in from the edge, and a bit past each end of the tab.
+            let reach = metrics.thickness * 2.5
+            let hit: CGRect = switch item.lead.edge {
+            case .right: CGRect(x: frame.minX - reach, y: frame.minY - 12, width: frame.width + reach, height: frame.height + 24)
+            case .left: CGRect(x: frame.minX, y: frame.minY - 12, width: frame.width + reach, height: frame.height + 24)
+            case .bottom: CGRect(x: frame.minX - 12, y: frame.minY - reach, width: frame.width + 24, height: frame.height + reach)
+            }
+            if hit.contains(point) { return DropTarget(item: item, frame: frame, screen: screen) }
         }
         return nil
+    }
+
+    /// Shows the fan for a drop target (previews of its windows plus the "+" slot), or hides it.
+    func setDropTarget(_ target: DropTarget?) {
+        let unchanged = target?.item.id == currentDropTarget?.item.id
+        currentDropTarget = target
+        guard let target else {
+            if fanIsDropTarget { closeFan() }
+            return
+        }
+        // Same tab as last move and the fan is already up: nothing to redraw.
+        if unchanged, fanIsDropTarget, fan.isVisible { return }
+        hoverOpenTask?.cancel(); hoverCloseTask?.cancel()
+        fanIsDropTarget = true
+        fanItemID = target.item.id
+        fan.show(items: fanItems(target.item), edge: target.item.lead.edge, tabFrame: target.frame, screen: target.screen, dropTarget: true)
+    }
+
+    private func fanItems(_ item: TabItem) -> [TabFanModel.Item] {
+        item.windows.map {
+            TabFanModel.Item(id: $0.id, title: $0.title, appName: $0.appName, icon: $0.icon, thumbnail: $0.thumbnail, isRevealed: $0.isRevealed)
+        }
+    }
+
+    // MARK: Hover fan (group tabs)
+
+    private func openFan(for item: TabItem) {
+        guard let frame = frame(of: item.lead), let screen = ScreenGeometry.screen(withDisplayID: item.lead.displayID) else { return }
+        fanIsDropTarget = false
+        fanItemID = item.id
+        fan.show(items: fanItems(item), edge: item.lead.edge, tabFrame: frame, screen: screen, dropTarget: false)
+    }
+
+    private func refreshFan(for item: TabItem) {
+        guard fan.isVisible, let frame = frame(of: item.lead), let screen = ScreenGeometry.screen(withDisplayID: item.lead.displayID) else { return }
+        fan.show(items: fanItems(item), edge: item.lead.edge, tabFrame: frame, screen: screen, dropTarget: false)
+    }
+
+    private func closeFan() {
+        hoverOpenTask?.cancel(); hoverCloseTask?.cancel()
+        fanItemID = nil
+        fanIsDropTarget = false
+        fan.hide()
+    }
+
+    private func scheduleFanClose() {
+        guard !fanIsDropTarget else { return }
+        hoverCloseTask?.cancel()
+        hoverCloseTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(300))
+            guard let self, !Task.isCancelled, !self.fanHovered else { return }
+            self.closeFan()
+        }
+    }
+
+    private func groupTabHover(_ item: TabItem, _ hovering: Bool) {
+        item.windows.forEach { $0.isHovered = hovering }
+        if hovering {
+            hoverCloseTask?.cancel()
+            guard !fanIsDropTarget, fanItemID != item.id else { return }
+            hoverOpenTask?.cancel()
+            hoverOpenTask = Task { [weak self] in
+                try? await Task.sleep(for: .milliseconds(150))
+                guard let self, !Task.isCancelled, item.windows.contains(where: \.isHovered) else { return }
+                self.openFan(for: self.items().first { $0.id == item.id } ?? item)
+            }
+        } else {
+            hoverOpenTask?.cancel()
+            scheduleFanClose()
+        }
     }
 
     // MARK: Layout
@@ -169,17 +288,30 @@ final class TabPresenter {
         let lead = item.lead
         let panel: TabPanel
         if item.isGroup {
-            panel = TabPanel(rootView: GroupTabView(windows: windows, settings: manager.settings))
+            let model = GroupTabModel(windows: windows)
+            groupModels[item.id] = model
+            panel = TabPanel(rootView: GroupTabView(model: model, settings: manager.settings))
         } else {
             panel = TabPanel(rootView: EdgeTabView(parkedWindow: lead, settings: manager.settings))
         }
         applySpacesBehavior(to: panel)
 
         let view = panel.hostingView
+        let itemID = item.id
         if item.isGroup {
-            view.onClick = { [weak self] in self?.toggleGroupList(for: item.id) }
-            view.onHover = { hovering in windows.forEach { $0.isHovered = hovering } }
-            view.menuProvider = { [weak self] in self?.groupMenu(for: windows) }
+            // Click opens the fan (for people who don't hover); the fan's cards reveal windows.
+            view.onClick = { [weak self] in
+                guard let self, let current = self.items().first(where: { $0.id == itemID }) else { return }
+                if self.fanItemID == itemID, !self.fanIsDropTarget { self.closeFan() } else { self.openFan(for: current) }
+            }
+            view.onHover = { [weak self] hovering in
+                guard let self, let current = self.items().first(where: { $0.id == itemID }) else { return }
+                self.groupTabHover(current, hovering)
+            }
+            view.menuProvider = { [weak self] in
+                guard let self, let current = self.items().first(where: { $0.id == itemID }) else { return nil }
+                return self.groupMenu(for: current.windows)
+            }
         } else {
             view.onClick = { [weak manager] in
                 guard let manager else { return }
@@ -188,23 +320,23 @@ final class TabPresenter {
             view.onHover = { [weak manager] in manager?.tabHoverChanged(lead, isHovering: $0) }
             view.menuProvider = { [weak self] in self?.contextMenu(for: lead) }
         }
-        view.onDragBegan = { [weak self] in self?.dragBegan(windows, at: $0) }
-        view.onDragChanged = { [weak self] in self?.dragChanged(windows, panelID: item.id, to: $0) }
-        view.onDragEnded = { [weak self] _ in self?.dragEnded(windows) }
+        view.onDragBegan = { [weak self] in self?.dragBegan(itemID, at: $0) }
+        view.onDragChanged = { [weak self] in self?.dragChanged(itemID, to: $0) }
+        view.onDragEnded = { [weak self] _ in self?.dragEnded(itemID) }
         return panel
     }
 
-    private func toggleGroupList(for itemID: UUID) {
-        guard let item = items().first(where: { $0.id == itemID }), let frame = frame(of: item.lead) else { return }
-        groupList.toggle(item: item, beside: frame)
+    private func windows(of itemID: UUID) -> [ParkedWindow] {
+        items().first { $0.id == itemID }?.windows ?? []
     }
 
     private func along(_ point: CGPoint, _ edge: Edge) -> CGFloat {
         edge.isVertical ? point.y : point.x
     }
 
-    private func dragBegan(_ windows: [ParkedWindow], at location: CGPoint) {
-        groupList.close()
+    private func dragBegan(_ itemID: UUID, at location: CGPoint) {
+        let windows = windows(of: itemID)
+        closeFan()
         windows.forEach {
             manager.cancelHover($0)
             $0.isDragging = true
@@ -214,8 +346,9 @@ final class TabPresenter {
         grabOffset = along(ScreenGeometry.axPoint(fromAppKit: location), lead.edge) - center
     }
 
-    private func dragChanged(_ windows: [ParkedWindow], panelID: UUID, to location: CGPoint) {
-        guard let lead = windows.first, let panel = panels[panelID],
+    private func dragChanged(_ itemID: UUID, to location: CGPoint) {
+        let windows = windows(of: itemID)
+        guard let lead = windows.first, let panel = panels[itemID],
               let screen = ScreenGeometry.screen(withDisplayID: lead.displayID) else { return }
         let full = ScreenGeometry.axFrame(of: screen)
         let visible = ScreenGeometry.axVisibleFrame(of: screen)
@@ -248,7 +381,8 @@ final class TabPresenter {
         panel.setFrame(ScreenGeometry.flip(rect), display: true)
     }
 
-    private func dragEnded(_ windows: [ParkedWindow]) {
+    private func dragEnded(_ itemID: UUID) {
+        let windows = windows(of: itemID)
         windows.forEach { $0.isDragging = false }
         if windows.first?.isPulledAway == true {
             windows.forEach {

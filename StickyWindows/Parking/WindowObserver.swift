@@ -15,8 +15,9 @@ final class WindowObserver {
     var onDrop: (Drop) -> Void = { _ in }
     /// A window drag that ended outside any edge zone: (window, frame when the drag began).
     var onWindowMoved: (WindowController, CGRect) -> Void = { _, _ in }
-    /// The existing tab under a zone's cursor position, if any (dropping there forms a group).
-    var tabTarget: (EdgeZone) -> (lead: ParkedWindow, frame: CGRect)? = { _ in nil }
+    /// Tells the tabs where the dragged window is (AX coordinates; nil when the drag ends or leaves) and returns
+    /// the tab it would join, if the cursor is over one. The tabs show their own drop fan.
+    var updateDropTarget: (CGPoint?, WindowController) -> ParkedWindow? = { _, _ in nil }
     private let settings: SettingsStore
     private var detector: EdgeZoneDetector {
         EdgeZoneDetector(enabledEdges: settings.enabledEdges)
@@ -39,6 +40,8 @@ final class WindowObserver {
         var lastFrameCheck = Date.distantPast
         var zone: EdgeZone?
         var isArmed = false
+        /// Tab the window is currently over; set as soon as the cursor is near one (no dwell needed).
+        var target: ParkedWindow?
     }
 
     func start() {
@@ -102,9 +105,14 @@ final class WindowObserver {
     private func mouseUp() {
         defer { reset() }
         guard let state = drag, state.isMovingWindow else { return }
-        if state.isArmed, let zone = detector.zone(at: NSEvent.mouseLocation), zone.isSameZone(as: state.zone) {
-            let target = tabTarget(zone).map(\.lead).flatMap { $0.window.isSameWindow(as: state.window) ? nil : $0 }
+        let mouse = NSEvent.mouseLocation
+        if let target = state.target, let screen = NSScreen.screens.first(where: { NSMouseInRect(mouse, $0.frame, false) }) {
+            // Over a tab: join it, wherever along the edge the cursor is.
+            let axPoint = ScreenGeometry.axPoint(fromAppKit: mouse)
+            let zone = EdgeZone(edge: target.edge, screen: screen, offset: target.edge.isVertical ? axPoint.y : axPoint.x)
             onDrop(Drop(window: state.window, zone: zone, startFrame: state.startFrame, joining: target))
+        } else if state.isArmed, let zone = detector.zone(at: mouse), zone.isSameZone(as: state.zone) {
+            onDrop(Drop(window: state.window, zone: zone, startFrame: state.startFrame, joining: nil))
         } else {
             onWindowMoved(state.window, state.startFrame)
         }
@@ -114,17 +122,30 @@ final class WindowObserver {
 
     private func updateZone() {
         guard var state = drag else { return }
-        let zone = detector.zone(at: NSEvent.mouseLocation)
+        let mouse = NSEvent.mouseLocation
+        // Tabs first: being over one shows the drop fan immediately and overrides the edge strip.
+        let target = updateDropTarget(ScreenGeometry.axPoint(fromAppKit: mouse), state.window)
+        state.target = target
+        drag = state
+        if target != nil {
+            clearTimeout()
+            indicator.hide()
+            state.zone = nil
+            state.isArmed = false
+            drag = state
+            return
+        }
+        let zone = detector.zone(at: mouse)
 
         if let zone, zone.isSameZone(as: state.zone) {
             state.zone = zone
             drag = state
-            if state.isArmed { showIndicator(for: zone, window: state.window) }
+            if state.isArmed { indicator.show(for: zone) }
             return
         }
 
         // Entered a new zone or left one: start over.
-        dwellTimer?.invalidate()
+        clearTimeout()
         indicator.hide()
         state.zone = zone
         state.isArmed = false
@@ -143,18 +164,18 @@ final class WindowObserver {
         state.isArmed = true
         state.zone = zone
         drag = state
-        showIndicator(for: zone, window: state.window)
-    }
-
-    private func showIndicator(for zone: EdgeZone, window: WindowController) {
-        let target = tabTarget(zone).flatMap { $0.lead.window.isSameWindow(as: window) ? nil : $0 }
-        indicator.show(for: zone, joining: target?.frame)
+        indicator.show(for: zone)
     }
 
     private func reset() {
-        dwellTimer?.invalidate()
-        dwellTimer = nil
+        clearTimeout()
+        if let state = drag { _ = updateDropTarget(nil, state.window) }
         drag = nil
         indicator.hide()
+    }
+
+    private func clearTimeout() {
+        dwellTimer?.invalidate()
+        dwellTimer = nil
     }
 }

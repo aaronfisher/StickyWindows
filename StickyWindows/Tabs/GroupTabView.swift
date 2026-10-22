@@ -1,10 +1,20 @@
+import Observation
 import SwiftUI
+
+/// Members of a group tab. Kept as a model so the panel updates in place when membership changes.
+@MainActor
+@Observable
+final class GroupTabModel {
+    var windows: [ParkedWindow]
+    init(windows: [ParkedWindow]) { self.windows = windows }
+}
 
 /// A tab holding several parked windows: overlapping app icons and a count.
 struct GroupTabView: View {
-    let windows: [ParkedWindow]
+    let model: GroupTabModel
     let settings: SettingsStore
 
+    private var windows: [ParkedWindow] { model.windows }
     private var edge: Edge { windows.first?.edge ?? .right }
     private var metrics: TabMetrics { settings.tabMetrics }
 
@@ -27,6 +37,7 @@ struct GroupTabView: View {
             .scaleEffect(pulledAway ? 0.92 : 1)
             .animation(.easeOut(duration: 0.12), value: anyHovered)
             .animation(.easeOut(duration: 0.12), value: anyRevealed)
+            .animation(.easeOut(duration: 0.15), value: windows.count)
     }
 
     private var size: CGSize {

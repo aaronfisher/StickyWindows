@@ -433,9 +433,15 @@ final class ParkingManager {
         tabs.frame(of: parkedWindow)
     }
 
-    /// The tab a window dragged into `zone` would be dropped onto, if any.
-    func tabTarget(at zone: EdgeZone) -> (lead: ParkedWindow, frame: CGRect)? {
-        tabs.tabTarget(at: zone)
+    /// The tab a window dragged to `point` (AX coordinates) would join, if any; shows/hides the drop fan.
+    func updateDropTarget(at point: CGPoint?, dragging window: WindowController) -> ParkedWindow? {
+        guard let point else {
+            tabs.setDropTarget(nil)
+            return nil
+        }
+        let target = tabs.dropTarget(at: point, excluding: window)
+        tabs.setDropTarget(target)
+        return target?.item.lead
     }
 
     // MARK: Lifecycle

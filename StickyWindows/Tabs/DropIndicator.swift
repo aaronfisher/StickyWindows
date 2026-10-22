@@ -30,8 +30,7 @@ final class DropIndicator {
         self.settings = settings
     }
 
-    /// `joining` is the AX frame of an existing tab the drop would join, if the cursor is over one.
-    func show(for zone: EdgeZone, joining targetFrame: CGRect? = nil) {
+    func show(for zone: EdgeZone) {
         let full = ScreenGeometry.axFrame(of: zone.screen)
         let visible = ScreenGeometry.axVisibleFrame(of: zone.screen)
         let thickness = settings.tabMetrics.thickness
@@ -43,11 +42,8 @@ final class DropIndicator {
         case .bottom: CGRect(x: visible.minX, y: visible.maxY - thickness, width: visible.width, height: thickness)
         }
         let (stripStart, stripLength) = zone.edge.isVertical ? (strip.minY, strip.height) : (strip.minX, strip.width)
-        var start = min(max(zone.offset - length / 2 - stripStart, 0), max(stripLength - length, 0))
-        if let targetFrame {
-            start = (zone.edge.isVertical ? targetFrame.minY : targetFrame.minX) - stripStart
-        }
-        model.isJoining = targetFrame != nil
+        let start = min(max(zone.offset - length / 2 - stripStart, 0), max(stripLength - length, 0))
+        model.isJoining = false
 
         let edgeChanged = model.edge != zone.edge || !isVisible
         model.edge = zone.edge

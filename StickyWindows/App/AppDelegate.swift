@@ -45,7 +45,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     settleDelay: MacOSTiling.isEdgeDragTilingEnabled ? .milliseconds(350) : .milliseconds(50))
             }
         }
-        windowObserver.tabTarget = { [weak self] zone in self?.parking.tabTarget(at: zone) }
+        windowObserver.updateDropTarget = { [weak self] point, window in self?.parking.updateDropTarget(at: point, dragging: window) }
         windowObserver.onWindowMoved = { [weak self] window, start in
             self?.parking.windowWasDragged(window, from: start)
         }
