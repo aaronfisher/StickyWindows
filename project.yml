@@ -68,6 +68,9 @@ targets:
       configs:
         Debug:
           PRODUCT_BUNDLE_IDENTIFIER: vc.theshirleycompany.StickyWindows.debug
+          # Also the product name, so System Settings' privacy lists (which show CFBundleName) tell the
+          # two builds apart.
+          PRODUCT_NAME: "Sticky Windows Dev"
           STICKY_DISPLAY_NAME: Sticky Windows Dev
         Release:
           # Distribution outside the App Store: Developer ID, both architectures. Needs the team's

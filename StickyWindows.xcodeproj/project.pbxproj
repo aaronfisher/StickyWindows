@@ -453,7 +453,7 @@
 				);
 				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = vc.theshirleycompany.StickyWindows.debug;
-				PRODUCT_NAME = "Sticky Windows";
+				PRODUCT_NAME = "Sticky Windows Dev";
 				SDKROOT = macosx;
 				STICKY_DISPLAY_NAME = "Sticky Windows Dev";
 			};
