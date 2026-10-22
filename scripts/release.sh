@@ -91,9 +91,22 @@ cp "$DMG" "$OUT/appcast/"
   --download-url-prefix "$DOWNLOAD_PREFIX" \
   --link "https://stickywindows.com/" \
   -o "$OUT/appcast/appcast.xml" "$OUT/appcast"
-if [[ -d "$SITE_DIR" ]]; then cp "$OUT/appcast/appcast.xml" "$SITE_DIR/appcast.xml"; fi
+if [[ -d "$SITE_DIR" ]]; then
+  cp "$OUT/appcast/appcast.xml" "$SITE_DIR/appcast.xml"
+  # The website shows this under its download button.
+  cat > "$SITE_DIR/version.json" <<JSON
+{
+  "version": "$VERSION",
+  "build": "$BUILD",
+  "date": "$(date -u +%Y-%m-%d)",
+  "download": "${DOWNLOAD_PREFIX}StickyWindows-$VERSION.dmg",
+  "notes": "https://github.com/aaronfisher/StickyWindows/releases/tag/v$VERSION",
+  "minimumSystemVersion": "15.0"
+}
+JSON
+fi
 
 echo "== Done"
 echo "  $APP"
 echo "  $DMG"
-echo "  appcast: $OUT/appcast/appcast.xml (copied to $SITE_DIR if present; commit and push it there)"
+echo "  appcast + version.json: copied to $SITE_DIR if present; commit and push them there"
