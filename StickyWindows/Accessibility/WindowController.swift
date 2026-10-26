@@ -40,14 +40,17 @@ struct WindowController {
     }
 
     /// Brings the window to the front and activates its app.
-    /// Frame of the zoom (green) button in AX coordinates, used to place the tuck button beside the lights.
-    var zoomButtonFrame: CGRect? {
+    /// Frame of the zoom (green) button in AX coordinates.
+    var zoomButtonFrame: CGRect? { buttonFrame(kAXZoomButtonAttribute) }
+    /// Frame of the close (red) button in AX coordinates.
+    var closeButtonFrame: CGRect? { buttonFrame(kAXCloseButtonAttribute) }
+
+    private func buttonFrame(_ attribute: String) -> CGRect? {
         var value: CFTypeRef?
-        guard AXUIElementCopyAttributeValue(element, kAXZoomButtonAttribute as CFString, &value) == .success,
+        guard AXUIElementCopyAttributeValue(element, attribute as CFString, &value) == .success,
               let value, CFGetTypeID(value) == AXUIElementGetTypeID() else { return nil }
         // swiftlint:disable:next force_cast
-        let button = WindowController(element: value as! AXUIElement, pid: pid)
-        return button.frame
+        return WindowController(element: value as! AXUIElement, pid: pid).frame
     }
 
     /// Brings the window to the front. Without `activating`, its app isn't made active, which avoids the

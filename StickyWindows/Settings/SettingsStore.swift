@@ -64,7 +64,7 @@ final class SettingsStore {
     var hoverDelay: TimeInterval {
         didSet { defaults.set(hoverDelay, forKey: Key.hoverDelay) }
     }
-    /// A small amber button beside the traffic lights of revealed windows that tucks them back.
+    /// A small amber handle above the traffic lights of revealed windows that tucks them back.
     var showTuckButton: Bool {
         didSet { save(showTuckButton, Key.showTuckButton, relayout: true) }
     }

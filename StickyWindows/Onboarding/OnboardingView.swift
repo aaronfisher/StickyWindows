@@ -78,12 +78,12 @@ struct OnboardingView: View {
     private var tuckButtonTip: some View {
         VStack(alignment: .leading, spacing: 8) {
             Toggle(isOn: Binding(get: { settings.showTuckButton }, set: { settings.showTuckButton = $0 })) {
-                Text("Show a tuck button beside the traffic lights").font(.callout.weight(.medium))
+                Text("Show a tuck handle above the traffic lights").font(.callout.weight(.medium))
             }
             .toggleStyle(.switch)
             HStack(alignment: .center, spacing: 12) {
                 TuckButtonIllustration()
-                Text("Windows you've parked get an amber fourth light while they're out. Click it to tuck the window back into its tab; Option-click to release it. Ordinary windows are untouched.")
+                Text("Windows you've parked get a small amber handle on their top edge while they're out. Click it to tuck the window back into its tab; Option-click to release it. Ordinary windows are untouched.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
