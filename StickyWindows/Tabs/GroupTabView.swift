@@ -48,7 +48,8 @@ struct GroupTabView: View {
 
     @ViewBuilder
     private var content: some View {
-        let iconSize = (metrics.thickness * 0.6).rounded()
+        let name = windows.first?.groupName
+        let iconSize = (metrics.thickness * (name == nil ? 0.6 : 0.5)).rounded()
         let stack = windows.prefix(3)
         let icons = ForEach(Array(stack.enumerated()), id: \.offset) { _, window in
             Group {
@@ -67,7 +68,30 @@ struct GroupTabView: View {
             .padding(.vertical, 1)
             .background(.primary.opacity(0.12), in: Capsule())
 
-        if edge.isVertical {
+        if let name, settings.showTitles {
+            // Named group: icon stack, then the name along the tab, then the count.
+            let label = Text(name)
+                .font(.system(size: metrics.thickness >= 34 ? 12 : 11, weight: .medium))
+                .lineLimit(1)
+                .truncationMode(.tail)
+            let textLength = metrics.length - iconSize * 1.6 - 34
+            if edge.isVertical {
+                VStack(spacing: 4) {
+                    VStack(spacing: -iconSize * 0.45) { icons }
+                    label
+                        .frame(width: textLength, height: metrics.thickness)
+                        .rotationEffect(.degrees(edge == .right ? 90 : -90))
+                        .frame(width: metrics.thickness, height: textLength)
+                    count
+                }
+            } else {
+                HStack(spacing: 4) {
+                    HStack(spacing: -iconSize * 0.45) { icons }
+                    label.frame(width: textLength, alignment: .leading)
+                    count
+                }
+            }
+        } else if edge.isVertical {
             VStack(spacing: 4) {
                 VStack(spacing: -iconSize * 0.45) { icons }
                 count

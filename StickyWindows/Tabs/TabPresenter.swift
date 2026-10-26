@@ -166,7 +166,7 @@ final class TabPresenter {
 
     private func fanItems(_ item: TabItem) -> [TabFanModel.Item] {
         item.windows.map {
-            TabFanModel.Item(id: $0.id, title: $0.title, appName: $0.appName, icon: $0.icon, thumbnail: $0.thumbnail, isRevealed: $0.isRevealed)
+            TabFanModel.Item(id: $0.id, title: $0.displayTitle, appName: $0.appName, icon: $0.icon, thumbnail: $0.thumbnail, isRevealed: $0.isRevealed)
         }
     }
 
@@ -325,8 +325,8 @@ final class TabPresenter {
                 panel.setFrame(frame, display: true)
             }
             panel.hostingView.toolTip = item.isGroup
-                ? "\(item.windows.count) windows: " + item.windows.map(\.title).joined(separator: ", ")
-                : "\(item.lead.appName) — \(item.lead.title)"
+                ? (item.lead.groupName.map { $0 + ": " } ?? "\(item.windows.count) windows: ") + item.windows.map(\.displayTitle).joined(separator: ", ")
+                : "\(item.lead.appName) — \(item.lead.displayTitle)"
             panel.orderFrontRegardless()
         }
     }
@@ -463,11 +463,17 @@ final class TabPresenter {
         let manager = manager
         let menu = NSMenu()
 
-        let header = NSMenuItem(title: "\(parkedWindow.appName) — \(parkedWindow.title)", action: nil, keyEquivalent: "")
+        let header = NSMenuItem(title: "\(parkedWindow.appName) — \(parkedWindow.displayTitle)", action: nil, keyEquivalent: "")
         header.isEnabled = false
         menu.addItem(header)
         menu.addItem(.separator())
 
+        menu.addItem(ClosureMenuItem("Rename Tab…") { [weak self] in
+            guard let self, let name = self.promptForName(
+                title: "Rename Tab", message: "Shown on the tab instead of the window's title. Leave empty to use the title.",
+                current: parkedWindow.customTitle ?? parkedWindow.title) else { return }
+            manager.rename(parkedWindow, to: name)
+        })
         if parkedWindow.isRevealed {
             menu.addItem(ClosureMenuItem("Hide") { Task { await manager.tuck(parkedWindow) } })
         } else {
@@ -502,13 +508,22 @@ final class TabPresenter {
     private func groupMenu(for windows: [ParkedWindow]) -> NSMenu {
         let manager = manager
         let menu = NSMenu()
-        let header = NSMenuItem(title: "Group of \(windows.count) windows", action: nil, keyEquivalent: "")
+        let groupName = windows.first?.groupName
+        let header = NSMenuItem(title: groupName.map { "\($0) (\(windows.count) windows)" } ?? "Group of \(windows.count) windows", action: nil, keyEquivalent: "")
         header.isEnabled = false
         menu.addItem(header)
         menu.addItem(.separator())
 
+        menu.addItem(ClosureMenuItem("Rename Group…") { [weak self] in
+            guard let self, let name = self.promptForName(
+                title: "Rename Group", message: "Shown on the group's tab. Leave empty to show just the icons and count.",
+                current: groupName ?? "") else { return }
+            manager.renameGroup(windows, to: name)
+        })
+        menu.addItem(.separator())
+
         for window in windows {
-            let item = ClosureMenuItem("\(window.appName) — \(window.title)", state: window.isRevealed ? .on : .off) {
+            let item = ClosureMenuItem("\(window.appName) — \(window.displayTitle)", state: window.isRevealed ? .on : .off) {
                 Task { await manager.tabClicked(window) }
             }
             item.image = window.icon.map { icon in
@@ -527,6 +542,24 @@ final class TabPresenter {
         menu.addItem(ClosureMenuItem("Ungroup") { manager.ungroup(windows) })
         menu.addItem(ClosureMenuItem("Release All") { windows.forEach(manager.release) })
         return menu
+    }
+
+    /// A small native prompt for a name. Returns nil when cancelled; an empty string clears the name.
+    private func promptForName(title: String, message: String, current: String) -> String? {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = message
+        alert.addButton(withTitle: "Rename")
+        alert.addButton(withTitle: "Cancel")
+        let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 260, height: 24))
+        field.stringValue = current
+        field.placeholderString = "Name"
+        alert.accessoryView = field
+        alert.window.initialFirstResponder = field
+        NSApp.activate()
+        field.selectText(nil)
+        guard alert.runModal() == .alertFirstButtonReturn else { return nil }
+        return field.stringValue
     }
 
     private func edgeMenuItem(current: Edge, action: @escaping @MainActor (Edge) -> Void) -> NSMenuItem {

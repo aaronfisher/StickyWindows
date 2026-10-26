@@ -11,6 +11,8 @@ struct ParkedRecord: Codable, Equatable {
     var mode: RevealMode?
     var storedFrame: CGRect
     var groupID: UUID?
+    var customTitle: String?
+    var groupName: String?
 
     @MainActor
     init?(_ parkedWindow: ParkedWindow) {
@@ -23,6 +25,8 @@ struct ParkedRecord: Codable, Equatable {
         mode = parkedWindow.mode
         storedFrame = parkedWindow.storedFrame
         groupID = parkedWindow.groupID
+        customTitle = parkedWindow.customTitle
+        groupName = parkedWindow.groupName
     }
 }
 

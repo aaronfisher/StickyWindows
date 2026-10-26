@@ -121,7 +121,8 @@ final class ParkingManager {
     func park(
         _ window: WindowController, edge: Edge, screen: NSScreen?,
         offset: CGFloat? = nil, restoreFrame: CGRect? = nil, mode: RevealMode? = nil,
-        joining target: ParkedWindow? = nil, groupID: UUID? = nil, settleDelay: Duration = .zero
+        joining target: ParkedWindow? = nil, groupID: UUID? = nil, customTitle: String? = nil, groupName: String? = nil,
+        settleDelay: Duration = .zero
     ) async {
         guard let current = window.frame else { return NSSound.beep() }
         let app = NSRunningApplication(processIdentifier: window.pid)
@@ -142,14 +143,17 @@ final class ParkingManager {
             window: window, app: app, frame: restoreFrame ?? current, edge: target?.edge ?? edge, screen: screen,
             offset: target?.desiredOffset ?? offset)
         parkedWindow.mode = mode ?? previous?.mode
+        parkedWindow.customTitle = customTitle ?? previous?.customTitle
         if let target, parked.contains(where: { $0 === target }) {
             // Dropped onto an existing tab: share it.
             let id = target.groupID ?? UUID()
             target.groupID = id
             parkedWindow.groupID = id
+            parkedWindow.groupName = target.groupName
             parkedWindow.displayID = target.displayID
         } else {
             parkedWindow.groupID = groupID
+            parkedWindow.groupName = groupName
         }
         parkedWindow.windowID = previous?.windowID ?? WindowInventory.windowID(for: window)
         captureThumbnail(of: parkedWindow)
@@ -368,6 +372,21 @@ final class ParkingManager {
         parkedWindow.desiredOffset = offset
     }
 
+    // MARK: Names
+
+    /// Empty or whitespace clears the custom name.
+    func rename(_ parkedWindow: ParkedWindow, to name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        parkedWindow.customTitle = trimmed.isEmpty ? nil : trimmed
+        tabs.layout()
+    }
+
+    func renameGroup(_ windows: [ParkedWindow], to name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        windows.forEach { $0.groupName = trimmed.isEmpty ? nil : trimmed }
+        tabs.sync()
+    }
+
     // MARK: Groups
 
     func moveGroup(_ windows: [ParkedWindow], to edge: Edge) async {
@@ -385,6 +404,7 @@ final class ParkingManager {
     /// Takes one window out of its group and gives it its own tab at `offset` along the edge.
     func detach(_ parkedWindow: ParkedWindow, toOffset offset: CGFloat) {
         parkedWindow.groupID = nil
+        parkedWindow.groupName = nil
         parkedWindow.desiredOffset = offset
         dissolveSingletonGroups()
         tabs.sync()
@@ -394,6 +414,7 @@ final class ParkingManager {
     func ungroup(_ windows: [ParkedWindow]) {
         for (index, window) in windows.enumerated() {
             window.groupID = nil
+            window.groupName = nil
             window.desiredOffset += CGFloat(index)  // Keeps their order stable when stacked.
         }
         tabs.sync()
@@ -404,6 +425,7 @@ final class ParkingManager {
         let counts = Dictionary(grouping: parked.compactMap(\.groupID)) { $0 }.mapValues(\.count)
         for window in parked where window.groupID.map({ counts[$0] == 1 }) == true {
             window.groupID = nil
+            window.groupName = nil
         }
     }
 
@@ -828,7 +850,7 @@ final class ParkingManager {
                     await park(
                         match, edge: record.edge, screen: ScreenGeometry.screen(withDisplayID: record.displayID),
                         offset: record.desiredOffset, restoreFrame: record.storedFrame, mode: record.mode,
-                        groupID: record.groupID)
+                        groupID: record.groupID, customTitle: record.customTitle, groupName: record.groupName)
                 }
             } else if stillWaiting {
                 remaining.append(record)

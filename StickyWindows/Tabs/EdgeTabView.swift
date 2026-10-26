@@ -61,7 +61,7 @@ struct EdgeTabView: View {
         let iconSize = (metrics.thickness * 0.66).rounded()
         if settings.showTitles {
             let textLength = metrics.length - iconSize - 22
-            let title = Text(parkedWindow.title)
+            let title = Text(parkedWindow.displayTitle)
                 .font(.system(size: metrics.thickness >= 34 ? 12 : 11, weight: .medium))
                 .lineLimit(1)
                 .truncationMode(.tail)

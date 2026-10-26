@@ -63,6 +63,11 @@ final class ParkedWindow: Identifiable {
     let appName: String
     let icon: NSImage?
     var title: String
+    /// A name the user gave this tab; nil shows the window title.
+    var customTitle: String?
+    /// A name the user gave the group this window is in (shared by all members).
+    var groupName: String?
+    var displayTitle: String { customTitle ?? title }
     var edge: Edge
     var displayID: CGDirectDisplayID?
 

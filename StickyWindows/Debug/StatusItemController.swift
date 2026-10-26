@@ -95,7 +95,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         if !parking.parked.isEmpty {
             menu.addItem(disabled("Parked (\(parking.parked.count))"))
             for parkedWindow in parking.parked {
-                let entry = item("\(parkedWindow.appName) — \(truncate(parkedWindow.title, limit: 40))",
+                let entry = item("\(parkedWindow.appName) — \(truncate(parkedWindow.displayTitle, limit: 40))",
                                  action: #selector(releaseParked(_:)))
                 entry.representedObject = parkedWindow.id
                 entry.image = parkedWindow.icon.map(Self.menuIcon)
