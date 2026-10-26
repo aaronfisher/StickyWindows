@@ -8,9 +8,16 @@ extension Notification.Name {
 }
 
 enum TabSize: String, CaseIterable, Identifiable {
-    case small, medium, large
+    case small, medium, large, extraLarge
     var id: Self { self }
-    var displayName: String { rawValue.capitalized }
+    var displayName: String {
+        switch self {
+        case .small: "Small"
+        case .medium: "Medium"
+        case .large: "Large"
+        case .extraLarge: "Extra Large"
+        }
+    }
 }
 
 enum TabMaterial: String, CaseIterable, Identifiable {
@@ -136,6 +143,7 @@ final class SettingsStore {
         case .small: (26, 104)
         case .medium: (30, 124)
         case .large: (36, 150)
+        case .extraLarge: (44, 184)
         }
         // Icon-only tabs shrink to just fit the icon.
         return TabMetrics(thickness: thickness, length: showTitles ? length : thickness + 18)

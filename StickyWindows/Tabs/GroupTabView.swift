@@ -71,7 +71,7 @@ struct GroupTabView: View {
         if let name, settings.showTitles {
             // Named group: icon stack, then the name along the tab, then the count.
             let label = Text(name)
-                .font(.system(size: metrics.thickness >= 34 ? 12 : 11, weight: .medium))
+                .font(.system(size: metrics.thickness >= 42 ? 13 : (metrics.thickness >= 34 ? 12 : 11), weight: .medium))
                 .lineLimit(1)
                 .truncationMode(.tail)
             let textLength = metrics.length - iconSize * 1.6 - 34
