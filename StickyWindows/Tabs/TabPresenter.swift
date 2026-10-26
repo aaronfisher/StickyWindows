@@ -373,6 +373,8 @@ final class TabPresenter {
             }
             view.menuProvider = { [weak self] in
                 guard let self, let current = self.items().first(where: { $0.id == itemID }) else { return nil }
+                // The fan would sit under the menu.
+                self.closeFan()
                 return self.groupMenu(for: current.windows)
             }
         } else {
@@ -381,7 +383,11 @@ final class TabPresenter {
                 Task { await manager.tabClicked(lead) }
             }
             view.onHover = { [weak manager] in manager?.tabHoverChanged(lead, isHovering: $0) }
-            view.menuProvider = { [weak self] in self?.contextMenu(for: lead) }
+            view.menuProvider = { [weak self] in
+                // The hover preview would sit under the menu.
+                self?.manager.cancelHover(lead)
+                return self?.contextMenu(for: lead)
+            }
         }
         view.onDragBegan = { [weak self] in self?.dragBegan(itemID, at: $0) }
         view.onDragChanged = { [weak self] in self?.dragChanged(itemID, to: $0) }
