@@ -13,8 +13,6 @@ final class WindowObserver {
     }
 
     var onDrop: (Drop) -> Void = { _ in }
-    /// A window drag that ended outside any edge zone: (window, frame when the drag began).
-    var onWindowMoved: (WindowController, CGRect) -> Void = { _, _ in }
     /// Tells the tabs where the dragged window is (AX coordinates; nil when the drag ends or leaves) and returns
     /// the tab it would join, if the cursor is over one. The tabs show their own drop fan.
     var updateDropTarget: (CGPoint?, WindowController) -> ParkedWindow? = { _, _ in nil }
@@ -113,8 +111,6 @@ final class WindowObserver {
             onDrop(Drop(window: state.window, zone: zone, startFrame: state.startFrame, joining: target))
         } else if state.isArmed, let zone = detector.zone(at: mouse), zone.isSameZone(as: state.zone) {
             onDrop(Drop(window: state.window, zone: zone, startFrame: state.startFrame, joining: nil))
-        } else {
-            onWindowMoved(state.window, state.startFrame)
         }
     }
 

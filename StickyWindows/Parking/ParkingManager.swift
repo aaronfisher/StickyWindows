@@ -496,15 +496,6 @@ final class ParkingManager {
 
     // MARK: Lifecycle
 
-    /// A revealed parked window dragged well away from where it was revealed is unparked where it lands.
-    func windowWasDragged(_ window: WindowController, from start: CGRect) {
-        guard let parkedWindow = parked.first(where: { $0.window.isSameWindow(as: window) }),
-              parkedWindow.isRevealed, !parkedWindow.isTransitioning,
-              let end = window.frame, hypot(end.minX - start.minX, end.minY - start.minY) > 60 else { return }
-        log.info("Unparked \(parkedWindow.appName, privacy: .public) by dragging the window off")
-        remove(parkedWindow)
-    }
-
     /// Safety net for windows that vanished without a destroyed notification. Conservative: a window has to be
     /// reported invalid twice in a row, and nothing is dropped during the hold after wake.
     func removeInvalidWindows() {

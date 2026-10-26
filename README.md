@@ -21,10 +21,8 @@ Sticky Windows is a menu-bar app (no Dock icon) for macOS 15 Sequoia and later, 
 | Click | Reveal the window (it slides out), or tuck it away again |
 | Hover | A preview of the window (live with Screen Recording access); or, with Hover to Peek on, the window itself |
 | Drag along the edge | Reorder tabs |
-| Drag ~80 pt away from the edge | Release: the window returns to where it was and the tab goes away |
+| Drag ~80 pt away from the edge | Release: the window returns to where it was and the tab goes away (Option-clicking the tuck handle does the same) |
 | Right-click / Control-click | Rename, Show/Hide, Mode, Move to Edge, Release, Close Window |
-
-Dragging a revealed window more than ~60 pt away also releases it, where you drop it.
 
 While a parked window is out, an amber **tuck handle** sits on the window's top edge, right above its traffic lights (only on windows you parked, only while that window is focused). It lives outside the window, so it never collides with an app's toolbar or tabs. Click it to tuck the window back into its tab; Option-click to release it. It can be turned off in Settings → General.
 

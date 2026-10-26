@@ -27,7 +27,7 @@ Log of app-specific window behavior discovered while building Sticky Windows.
 ## Reveal modes & lifecycle (M4)
 - Peek tucks on: another app activating, focus moving to another window of the same app (AX `kAXFocusedWindowChangedNotification`), or the cursor staying outside window+tab (10 pt slack) for 0.5 s — but only after the cursor has been over the window once (or immediately for hover peeks). Focus-based tucks ignore the first 0.4 s after a reveal, since activating an app can briefly report focus on one of its other windows.
 - Hover peeks activate the window's app (needed to bring it above other apps' windows) and hand focus back to the previous app on tuck.
-- Dragging a revealed parked window more than 60 pt unparks it where it lands.
+- Dragging a revealed parked window used to unpark it after 60 pt; removed in 0.4.0 because it read as "my tab disappeared". Moving a revealed window now just moves it; the tab stays and tucking returns it to the new spot.
 - "Close Window" reveals the window first so a save sheet isn't stranded offscreen; the tab stays until the window is actually destroyed.
 - Tab removal: AX destroyed notification, app termination, plus a 3 s validity sweep as a safety net.
 

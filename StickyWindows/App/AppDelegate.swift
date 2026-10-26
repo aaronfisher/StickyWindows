@@ -53,9 +53,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
         windowObserver.updateDropTarget = { [weak self] point, window in self?.parking.updateDropTarget(at: point, dragging: window) }
-        windowObserver.onWindowMoved = { [weak self] window, start in
-            self?.parking.windowWasDragged(window, from: start)
-        }
         windowObserver.start()
 
         // Re-parks windows from the last run once Accessibility is available (housekeeping retries until then).
