@@ -99,7 +99,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func showOnboarding() {
         if onboarding == nil {
-            onboarding = OnboardingWindowController(permission: permission, screenRecording: screenRecording, tilingOverride: tilingOverride)
+            onboarding = OnboardingWindowController(permission: permission, screenRecording: screenRecording, tilingOverride: tilingOverride, settings: settings)
         }
         onboarding?.show()
     }

@@ -48,6 +48,7 @@
 		EBF3163E8371DB9CF88D18E5 /* ScreenGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FC8FA21231A97E207E419C5 /* ScreenGeometry.swift */; };
 		F11EE9F2DF37063B6EBD3A91 /* PreviewPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 285665EA800A5180D106E420 /* PreviewPanel.swift */; };
 		F8D40E1FCBE1B2C2209FE007 /* AXWindowEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D124B77479CCD6716D568C /* AXWindowEvents.swift */; };
+		FCC7CD6106D8B65FFEB2D601 /* TuckButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDF162A1B9A4232C9E02D66A /* TuckButton.swift */; };
 		FFA4A4D6D509AE1EB95158A8 /* ThumbnailProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFDAFCC6DE2278DD6B35613 /* ThumbnailProvider.swift */; };
 /* End PBXBuildFile section */
 
@@ -95,6 +96,7 @@
 		F5ED2C0D41030077F5EBF282 /* TabPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabPresenter.swift; sourceTree = "<group>"; };
 		FA98F0225DA31A712CB07D50 /* AppIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIdentity.swift; sourceTree = "<group>"; };
 		FBA49422E09C93FB90E6B155 /* RulesSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesSettings.swift; sourceTree = "<group>"; };
+		FDF162A1B9A4232C9E02D66A /* TuckButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TuckButton.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -215,6 +217,7 @@
 				AC9318C54ACE6F11AEE40106 /* TabFanPanel.swift */,
 				6BF66AFB26B91D8173BBCE3D /* TabPanel.swift */,
 				F5ED2C0D41030077F5EBF282 /* TabPresenter.swift */,
+				FDF162A1B9A4232C9E02D66A /* TuckButton.swift */,
 			);
 			path = Tabs;
 			sourceTree = "<group>";
@@ -367,6 +370,7 @@
 				D3D0782BABC84CC032E109C9 /* TabPanel.swift in Sources */,
 				2D8AC464A16D20E16D690C43 /* TabPresenter.swift in Sources */,
 				FFA4A4D6D509AE1EB95158A8 /* ThumbnailProvider.swift in Sources */,
+				FCC7CD6106D8B65FFEB2D601 /* TuckButton.swift in Sources */,
 				13D28FA3EBAFC015CD640430 /* WindowController.swift in Sources */,
 				D59E265FCD573FFC2045988C /* WindowInventory.swift in Sources */,
 				C85114AD89CCBC55F45C4A2F /* WindowObserver.swift in Sources */,

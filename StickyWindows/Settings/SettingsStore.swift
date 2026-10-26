@@ -64,6 +64,10 @@ final class SettingsStore {
     var hoverDelay: TimeInterval {
         didSet { defaults.set(hoverDelay, forKey: Key.hoverDelay) }
     }
+    /// A small amber button beside the traffic lights of revealed windows that tucks them back.
+    var showTuckButton: Bool {
+        didSet { save(showTuckButton, Key.showTuckButton, relayout: true) }
+    }
     /// Slide windows in and out. Reduce Motion always wins.
     var animateWindows: Bool {
         didSet { defaults.set(animateWindows, forKey: Key.animateWindows) }
@@ -149,6 +153,7 @@ final class SettingsStore {
         static let hoverToPeek = "hoverToPeek"
         static let hoverDelay = "hoverDelay"
         static let animateWindows = "animateWindows"
+        static let showTuckButton = "showTuckButton"
         static let tabsOnAllSpaces = "tabsOnAllSpaces"
         static let hideTabsInFullScreen = "hideTabsInFullScreen"
         static let tabSize = "tabSize"
@@ -172,6 +177,7 @@ final class SettingsStore {
         hoverToPeek = value(Key.hoverToPeek, default: false)
         hoverDelay = value(Key.hoverDelay, default: 0.35)
         animateWindows = value(Key.animateWindows, default: true)
+        showTuckButton = value(Key.showTuckButton, default: true)
         tabsOnAllSpaces = value(Key.tabsOnAllSpaces, default: true)
         hideTabsInFullScreen = value(Key.hideTabsInFullScreen, default: true)
         tabSize = defaults.string(forKey: Key.tabSize).flatMap(TabSize.init) ?? .medium

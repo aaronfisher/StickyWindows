@@ -13,6 +13,7 @@ final class ParkingManager {
     @ObservationIgnored var onNeedsPermission: () -> Void = {}
     @ObservationIgnored private lazy var tabs = TabPresenter(manager: self)
     @ObservationIgnored private lazy var peek = PeekMonitor(manager: self)
+    @ObservationIgnored private lazy var tuckButtons = TuckButtonController(manager: self)
     @ObservationIgnored private let axEvents = AXWindowEvents()
     @ObservationIgnored private var hoverTasks: [UUID: Task<Void, Never>] = [:]
     @ObservationIgnored private let persistence = ParkingPersistence()
@@ -42,7 +43,10 @@ final class ParkingManager {
             MainActor.assumeIsolated { self?.screensChanged() }
         }
         NotificationCenter.default.addObserver(forName: .stickyTabLayoutChanged, object: nil, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { self?.updateFullScreenSuppression() }
+            MainActor.assumeIsolated {
+                self?.updateFullScreenSuppression()
+                self?.tuckButtons.refresh()
+            }
         }
         let workspace = NSWorkspace.shared.notificationCenter
         workspace.addObserver(
@@ -68,6 +72,7 @@ final class ParkingManager {
                         self?.showMainWindowIfNeeded(pid: pid)
                     }
                     self?.updateFullScreenSuppression()
+                    self?.tuckButtons.refresh()
                 }
             }
         }
@@ -246,6 +251,11 @@ final class ParkingManager {
         parkedWindow.session = RevealSession(
             trigger: trigger,
             previousApp: frontmost?.processIdentifier == parkedWindow.window.pid ? nil : frontmost)
+        // After the slide lands and the app is active; the activation notification refreshes too.
+        Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(320))
+            self?.tuckButtons.refresh()
+        }
     }
 
     func tuck(_ parkedWindow: ParkedWindow) async {
@@ -270,6 +280,7 @@ final class ParkingManager {
                 parkedWindow.window, from: frame.origin, to: end, duration: 0.18, easing: .accelerate,
                 on: ScreenGeometry.screen(withDisplayID: parkedWindow.displayID))
         }
+        tuckButtons.refresh()
         let hideStart = Date()
         await hide(parkedWindow)
         log.debug("""
@@ -503,8 +514,15 @@ final class ParkingManager {
                let title = parkedWindow.window.title, !title.isEmpty {
                 parkedWindow.title = title
             }
+        case .moved:
+            if let parkedWindow = parked.first(where: { CFEqual($0.window.element, element) }) {
+                tuckButtons.windowMoved(parkedWindow)
+            }
         case .focusedWindowChanged:
-            whenNotAnimating { [weak self] in self?.peek.focusedWindowChanged(pid: pid) }
+            whenNotAnimating { [weak self] in
+                self?.peek.focusedWindowChanged(pid: pid)
+                self?.tuckButtons.refresh()
+            }
         }
     }
 
@@ -522,6 +540,7 @@ final class ParkingManager {
         forget(parkedWindow)
         dissolveSingletonGroups()
         tabs.sync()
+        tuckButtons.refresh()
     }
 
     /// Drops the record without touching the window or tabs.
@@ -798,6 +817,7 @@ final class ParkingManager {
         guard !isAnimating else { return }
         housekeepingTicks += 1
         updateFullScreenSuppression()
+        tuckButtons.refresh()
         if housekeepingTicks % 3 == 0 { removeInvalidWindows() }
         if housekeepingTicks % 2 == 0 { refreshBadges() }
         restoreSavedIfNeeded()

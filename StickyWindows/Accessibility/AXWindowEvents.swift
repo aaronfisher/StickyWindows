@@ -7,6 +7,7 @@ final class AXWindowEvents {
     enum Event {
         case destroyed
         case titleChanged
+        case moved
         case focusedWindowChanged
     }
 
@@ -20,6 +21,8 @@ final class AXWindowEvents {
         guard let observer = observers[pid] ?? makeObserver(for: pid) else { return }
         add(kAXUIElementDestroyedNotification, on: window.element, to: observer)
         add(kAXTitleChangedNotification, on: window.element, to: observer)
+        add(kAXMovedNotification, on: window.element, to: observer)
+        add(kAXResizedNotification, on: window.element, to: observer)
         watchCounts[pid, default: 0] += 1
     }
 
@@ -28,6 +31,8 @@ final class AXWindowEvents {
         guard let observer = observers[pid] else { return }
         AXObserverRemoveNotification(observer, window.element, kAXUIElementDestroyedNotification as CFString)
         AXObserverRemoveNotification(observer, window.element, kAXTitleChangedNotification as CFString)
+        AXObserverRemoveNotification(observer, window.element, kAXMovedNotification as CFString)
+        AXObserverRemoveNotification(observer, window.element, kAXResizedNotification as CFString)
         watchCounts[pid, default: 1] -= 1
         if watchCounts[pid] == 0 {
             CFRunLoopRemoveSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(observer), .defaultMode)
@@ -73,6 +78,7 @@ final class AXWindowEvents {
         let event: Event? = switch name {
         case kAXUIElementDestroyedNotification: .destroyed
         case kAXTitleChangedNotification: .titleChanged
+        case kAXMovedNotification, kAXResizedNotification: .moved
         case kAXFocusedWindowChangedNotification: .focusedWindowChanged
         default: nil
         }

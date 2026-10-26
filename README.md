@@ -26,6 +26,8 @@ Sticky Windows is a menu-bar app (no Dock icon) for macOS 15 Sequoia and later, 
 
 Dragging a revealed window more than ~60 pt away also releases it, where you drop it.
 
+While a parked window is out, an amber **tuck button** sits just right of its traffic lights (only on windows you parked, only while that window is focused). Click it to tuck the window back into its tab; Option-click to release it. It can be turned off in Settings → General.
+
 Tabs show the app's **Dock badge** (unread counts and the like) when it has one.
 
 ### Tab groups

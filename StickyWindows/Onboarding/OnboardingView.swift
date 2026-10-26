@@ -4,6 +4,7 @@ struct OnboardingView: View {
     let permission: AccessibilityPermission
     let screenRecording: ScreenRecordingPermission
     let tilingOverride: TilingOverride
+    let settings: SettingsStore
     let onDone: () -> Void
 
     var body: some View {
@@ -51,6 +52,7 @@ struct OnboardingView: View {
             }
 
             if permission.isTrusted {
+                tuckButtonTip
                 tilingChoice
             }
 
@@ -70,6 +72,25 @@ struct OnboardingView: View {
 
     private var appName: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? "Sticky Windows"
+    }
+
+    /// The one new control the app adds to other apps' windows; shown so it isn't a surprise.
+    private var tuckButtonTip: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Toggle(isOn: Binding(get: { settings.showTuckButton }, set: { settings.showTuckButton = $0 })) {
+                Text("Show a tuck button beside the traffic lights").font(.callout.weight(.medium))
+            }
+            .toggleStyle(.switch)
+            HStack(alignment: .center, spacing: 12) {
+                TuckButtonIllustration()
+                Text("Windows you've parked get an amber fourth light while they're out. Click it to tuck the window back into its tab; Option-click to release it. Ordinary windows are untouched.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(12)
+        .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 10))
     }
 
     /// macOS edge tiling also grabs windows dragged to the left/right edges; offer to step it aside.

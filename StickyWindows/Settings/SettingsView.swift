@@ -153,6 +153,11 @@ private struct GeneralSettings: View {
                     }
                 }
                 .disabled(!settings.hoverToPeek)
+                Toggle(isOn: $settings.showTuckButton) {
+                    Text("Show a tuck button beside the traffic lights")
+                    Text("An amber fourth light on windows you've parked, while they're out. Click it to tuck the window back; Option-click to release it.")
+                }
+                TuckButtonIllustration().padding(.leading, 2)
                 Toggle(isOn: $settings.animateWindows) {
                     Text("Slide windows in and out")
                     if settings.reduceMotion {
