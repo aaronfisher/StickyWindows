@@ -13,10 +13,19 @@ struct WindowController {
     var isFullScreen: Bool { attribute("AXFullScreen") as Bool? ?? false }
 
     /// False once the window has been closed or its app has quit.
+    ///
+    /// Only a definitive "invalid element" counts. A timed-out or failed request (`.cannotComplete`) means the
+    /// app is busy or still waking up, not that the window is gone; treating it as gone dropped tabs after sleep.
     var isValid: Bool {
         var value: CFTypeRef?
         let error = AXUIElementCopyAttributeValue(element, kAXRoleAttribute as CFString, &value)
-        return error != .invalidUIElement && error != .cannotComplete
+        return error != .invalidUIElement
+    }
+
+    /// True when the app answered the last request; false while it's unresponsive (e.g. right after wake).
+    var isResponding: Bool {
+        var value: CFTypeRef?
+        return AXUIElementCopyAttributeValue(element, kAXRoleAttribute as CFString, &value) != .cannotComplete
     }
 
     func isSameWindow(as other: WindowController) -> Bool {

@@ -26,6 +26,10 @@ final class ParkingManager {
     @ObservationIgnored private var didRestore = false
     @ObservationIgnored private var activeSlides = 0
     @ObservationIgnored private var deferredWork: [() -> Void] = []
+    /// Consecutive validity-check failures per window; a tab goes only after two in a row.
+    @ObservationIgnored private var invalidStrikes: [UUID: Int] = [:]
+    /// No tabs are dropped until this time: apps answer slowly or not at all for a while after wake.
+    @ObservationIgnored private var removalHoldUntil = Date.distantPast
     @ObservationIgnored private let badgeReader = DockBadgeReader()
     @ObservationIgnored private let thumbnails = ThumbnailProvider()
     @ObservationIgnored private lazy var preview = PreviewPanel()
@@ -49,6 +53,11 @@ final class ParkingManager {
             }
         }
         let workspace = NSWorkspace.shared.notificationCenter
+        for name in [NSWorkspace.didWakeNotification, NSWorkspace.screensDidWakeNotification] {
+            workspace.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.didWake() }
+            }
+        }
         workspace.addObserver(
             forName: NSWorkspace.didTerminateApplicationNotification, object: nil, queue: .main
         ) { [weak self] note in
@@ -496,10 +505,39 @@ final class ParkingManager {
         remove(parkedWindow)
     }
 
-    /// Safety net for windows that vanished without a destroyed notification.
+    /// Safety net for windows that vanished without a destroyed notification. Conservative: a window has to be
+    /// reported invalid twice in a row, and nothing is dropped during the hold after wake.
     func removeInvalidWindows() {
-        for parkedWindow in parked where !parkedWindow.isTransitioning && !parkedWindow.window.isValid {
+        guard Date() >= removalHoldUntil else { return }
+        for parkedWindow in parked where !parkedWindow.isTransitioning {
+            if parkedWindow.window.isValid {
+                invalidStrikes[parkedWindow.id] = nil
+                continue
+            }
+            let strikes = (invalidStrikes[parkedWindow.id] ?? 0) + 1
+            invalidStrikes[parkedWindow.id] = strikes
+            guard strikes >= 2 else { continue }
+            log.notice("Dropping tab for \(parkedWindow.appName, privacy: .public) '\(parkedWindow.displayTitle, privacy: .public)': window gone")
+            // Never leave an app hidden with no tab to unhide it.
+            if parkedWindow.hiddenBy == .appHidden {
+                NSRunningApplication(processIdentifier: parkedWindow.window.pid)?.unhide()
+            }
+            invalidStrikes[parkedWindow.id] = nil
             remove(parkedWindow)
+        }
+    }
+
+    /// After sleep: hold off dropping tabs while apps wake up, then put everything back where it belongs.
+    private func didWake() {
+        removalHoldUntil = Date() + 20
+        invalidStrikes.removeAll()
+        log.info("Woke from sleep; tab removal held for 20 s")
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(3))
+            guard let self else { return }
+            self.tabs.layout()
+            self.retuckCorners(pid: nil, except: nil)
+            self.tuckButtons.refresh()
         }
     }
 
