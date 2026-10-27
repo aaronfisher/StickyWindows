@@ -38,6 +38,7 @@ enum WindowTabReader {
         let clock = Date()
         guard let group = findTabGroup(in: window.element, depth: 0, visited: &visited) else {
             log.debug("[window tabs] pid \(window.pid) no tab strip after \(visited) elements, \(Int(Date().timeIntervalSince(clock) * 1000))ms")
+            log.debug("[window tabs] tree:\n\(dump(window.element), privacy: .public)")
             return []
         }
         let children = elements(of: group, kAXChildrenAttribute)
@@ -58,6 +59,24 @@ enum WindowTabReader {
     @discardableResult
     static func select(_ tab: WindowTab) -> Bool {
         AXUIElementPerformAction(tab.element, kAXPressAction as CFString) == .success
+    }
+
+    /// The top of the window's tree, for diagnosing apps whose tab strip isn't found.
+    private static func dump(_ element: AXUIElement, depth: Int = 0, lines: inout [String]) {
+        guard depth < 6, lines.count < 80 else { return }
+        let role = role(of: element) ?? "?"
+        let subrole = string(of: element, kAXSubroleAttribute).map { "(\($0))" } ?? ""
+        let title = string(of: element, kAXTitleAttribute) ?? string(of: element, kAXDescriptionAttribute) ?? ""
+        let children = elements(of: element, kAXChildrenAttribute)
+        lines.append(String(repeating: "  ", count: depth) + "\(role)\(subrole) '\(title.prefix(40))' ×\(children.count)")
+        if role == "AXWebArea" { return }
+        for child in children { dump(child, depth: depth + 1, lines: &lines) }
+    }
+
+    private static func dump(_ element: AXUIElement) -> String {
+        var lines: [String] = []
+        dump(element, lines: &lines)
+        return lines.joined(separator: "\n")
     }
 
     // MARK: Tree walk
