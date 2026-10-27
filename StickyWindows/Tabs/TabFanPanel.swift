@@ -79,8 +79,10 @@ final class TabFanPanel {
     var isVisible: Bool { panel.isVisible }
     var showsWindowTabs: Bool { panel.isVisible && model.showsWindowTabs }
 
-    static let listWidth: CGFloat = 260
-    static let listRowHeight: CGFloat = 26
+    static let listWidth: CGFloat = 340
+    static let listRowHeight: CGFloat = 34
+    static let listHeaderHeight: CGFloat = 24
+    static let listMoreHeight: CGFloat = 24
     static let maxListedTabs = 12
 
     /// Shows the fan growing inward from `tabFrame` (AX coordinates) on `screen`.
@@ -117,19 +119,19 @@ final class TabFanPanel {
     /// Shows the window's own tabs as a list beside its edge tab: a header card (preview, if there is one,
     /// and the window's title), then one row per tab with the selected one marked.
     func showWindowTabs(_ tabs: [WindowTab], of parkedWindow: ParkedWindow, tabFrame: CGRect, screen: NSScreen) {
-        let padding: CGFloat = 10
+        let padding: CGFloat = 12
         let inner = Self.listWidth - padding * 2
         let thumbnail = parkedWindow.isRevealed ? nil : parkedWindow.thumbnail
         var imageHeight: CGFloat = 0
         if let thumbnail, thumbnail.size.width > 0 {
-            imageHeight = min(140, (inner * thumbnail.size.height / thumbnail.size.width).rounded())
+            imageHeight = min(190, (inner * thumbnail.size.height / thumbnail.size.width).rounded())
         }
         let listed = Array(tabs.prefix(Self.maxListedTabs))
         let hidden = tabs.count - listed.count
         // Keep in step with WindowTabListView's layout.
-        var across = padding * 2 + 20 + 6 + CGFloat(listed.count) * Self.listRowHeight
-        if imageHeight > 0 { across += imageHeight + 6 }
-        if hidden > 0 { across += 6 + 22 }
+        var across = padding * 2 + Self.listHeaderHeight + 8 + CGFloat(listed.count) * Self.listRowHeight
+        if imageHeight > 0 { across += imageHeight + 8 }
+        if hidden > 0 { across += 8 + Self.listMoreHeight }
         let along = Self.listWidth
 
         let visible = ScreenGeometry.axVisibleFrame(of: screen)
@@ -206,7 +208,7 @@ private struct TabFanView: View {
                 HStack(spacing: 8) { cards(card, accent) }
             }
         }
-        .padding(10)
+        .padding(model.showsWindowTabs ? 12 : 10)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(settings.tabMaterial.material, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay {
@@ -322,48 +324,56 @@ private struct WindowTabListView: View {
     let onSelect: (Int) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        let inner = TabFanPanel.listWidth - 24
+        VStack(alignment: .leading, spacing: 8) {
             if let header = model.header {
                 if let thumbnail = header.thumbnail, model.headerImageHeight > 0 {
                     Image(nsImage: thumbnail)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(width: TabFanPanel.listWidth - 20, height: model.headerImageHeight)
-                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .frame(width: inner, height: model.headerImageHeight)
+                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 }
-                HStack(spacing: 6) {
+                HStack(spacing: 8) {
                     if let icon = header.icon {
-                        Image(nsImage: icon).resizable().interpolation(.high).frame(width: 16, height: 16)
+                        Image(nsImage: icon).resizable().interpolation(.high).frame(width: 20, height: 20)
                     }
                     Text(header.title)
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(.system(size: 13, weight: .semibold))
                         .lineLimit(1)
                         .truncationMode(.tail)
                     Spacer(minLength: 4)
                     Text("\(model.windowTabs.count + model.hiddenTabCount) tabs")
-                        .font(.system(size: 10))
+                        .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                 }
-                .frame(height: 20)
+                .frame(height: TabFanPanel.listHeaderHeight)
             }
             VStack(spacing: 0) {
                 ForEach(model.windowTabs) { tab in
                     let hovered = model.hoveredTabID == tab.id
-                    HStack(spacing: 8) {
-                        Circle()
+                    HStack(spacing: 10) {
+                        // The current tab gets an accent bar; the rest keep the space so titles line up.
+                        RoundedRectangle(cornerRadius: 2)
                             .fill(tab.isSelected ? accent : Color.clear)
-                            .frame(width: 6, height: 6)
+                            .frame(width: 4, height: 18)
                         Text(tab.title)
-                            .font(.system(size: 11, weight: tab.isSelected ? .semibold : .regular))
+                            .font(.system(size: 13, weight: tab.isSelected ? .semibold : .regular))
+                            .foregroundStyle(tab.isSelected || hovered ? .primary : .secondary)
                             .lineLimit(1)
                             .truncationMode(.tail)
                         Spacer(minLength: 0)
+                        if tab.isSelected {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundStyle(accent)
+                        }
                     }
-                    .padding(.horizontal, 8)
+                    .padding(.horizontal, 10)
                     .frame(height: TabFanPanel.listRowHeight)
                     .background(
-                        RoundedRectangle(cornerRadius: 7, style: .continuous)
-                            .fill(hovered ? Color.primary.opacity(0.12) : (tab.isSelected ? accent.opacity(0.12) : Color.clear)))
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(hovered ? Color.primary.opacity(0.12) : (tab.isSelected ? accent.opacity(0.14) : Color.clear)))
                     .contentShape(Rectangle())
                     .onHover { model.hoveredTabID = $0 ? tab.id : (model.hoveredTabID == tab.id ? nil : model.hoveredTabID) }
                     .onTapGesture { onSelect(tab.id) }
@@ -371,12 +381,12 @@ private struct WindowTabListView: View {
             }
             if model.hiddenTabCount > 0 {
                 Text("and \(model.hiddenTabCount) more")
-                    .font(.system(size: 10))
+                    .font(.system(size: 11))
                     .foregroundStyle(.secondary)
-                    .padding(.horizontal, 8)
-                    .frame(height: 22)
+                    .padding(.horizontal, 10)
+                    .frame(height: TabFanPanel.listMoreHeight)
             }
         }
-        .frame(width: TabFanPanel.listWidth - 20, alignment: .leading)
+        .frame(width: inner, alignment: .leading)
     }
 }
