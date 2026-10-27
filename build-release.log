@@ -1,0 +1,57 @@
+== Generating project
+== Archiving 0.5.0 (7)
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, name:Any Mac }
+{ platform:macOS, arch:arm64, id:00008132-001E79063E0B801C, name:My Mac }
+{ platform:macOS, arch:x86_64, id:00008132-001E79063E0B801C, name:My Mac }
+Validate /Users/aaronfisher/Developer/Ledge/.claude/worktrees/xcode-setup-milestone-1-e2c764/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/StickyWindows/InstallationBuildProductsLocation/Applications/Sticky\ Windows.app (in target 'StickyWindows' from project 'StickyWindows')
+    cd /Users/aaronfisher/Developer/Ledge/.claude/worktrees/xcode-setup-milestone-1-e2c764
+    builtin-validationUtility /Users/aaronfisher/Developer/Ledge/.claude/worktrees/xcode-setup-milestone-1-e2c764/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/StickyWindows/InstallationBuildProductsLocation/Applications/Sticky\ Windows.app -no-validate-extension -infoplist-subpath Contents/Info.plist
+
+Touch /Users/aaronfisher/Developer/Ledge/.claude/worktrees/xcode-setup-milestone-1-e2c764/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/StickyWindows/InstallationBuildProductsLocation/Applications/Sticky\ Windows.app (in target 'StickyWindows' from project 'StickyWindows')
+    cd /Users/aaronfisher/Developer/Ledge/.claude/worktrees/xcode-setup-milestone-1-e2c764
+    /usr/bin/touch -c /Users/aaronfisher/Developer/Ledge/.claude/worktrees/xcode-setup-milestone-1-e2c764/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/StickyWindows/InstallationBuildProductsLocation/Applications/Sticky\ Windows.app
+
+RegisterWithLaunchServices /Users/aaronfisher/Developer/Ledge/.claude/worktrees/xcode-setup-milestone-1-e2c764/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/StickyWindows/InstallationBuildProductsLocation/Applications/Sticky\ Windows.app (in target 'StickyWindows' from project 'StickyWindows')
+    cd /Users/aaronfisher/Developer/Ledge/.claude/worktrees/xcode-setup-milestone-1-e2c764
+    builtin-lsregisterurl --record-path /Users/aaronfisher/Developer/Ledge/.claude/worktrees/xcode-setup-milestone-1-e2c764/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/StickyWindows/IntermediateBuildFilesPath/XCBuildData/registered-launchservices.txt -- /System/Library/Frameworks/CoreServices.framework/Versions/Current/Frameworks/LaunchServices.framework/Versions/Current/Support/lsregister -f -R -trusted /Users/aaronfisher/Developer/Ledge/.claude/worktrees/xcode-setup-milestone-1-e2c764/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/StickyWindows/InstallationBuildProductsLocation/Applications/Sticky\ Windows.app
+
+PruneExplicitPrecompiledModules /Users/aaronfisher/Developer/Ledge/.claude/worktrees/xcode-setup-milestone-1-e2c764/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/StickyWindows/IntermediateBuildFilesPath/SwiftExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /Users/aaronfisher/Developer/Ledge/.claude/worktrees/xcode-setup-milestone-1-e2c764/build/DerivedData/Build/Intermediates.noindex/ArchiveIntermediates/StickyWindows/IntermediateBuildFilesPath/ExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /Users/aaronfisher/Developer/Ledge/.claude/worktrees/xcode-setup-milestone-1-e2c764/build/DerivedData/SDKExplicitPrecompiledModules
+
+** ARCHIVE SUCCEEDED **
+
+== Exporting with Developer ID
+2026-10-27 00:04:31.156 xcodebuild[22561:13259192] [MT] IDEDistribution: -[IDEDistributionLogging _createLoggingBundleAtPath:]: Created bundle at path "/var/folders/_0/c_nbxy493pb6g1lmm59g2k2h0000gn/T/StickyWindows_2026-10-27_00-04-31.155.xcdistributionlogs".
+Exported StickyWindows to: /Users/aaronfisher/Developer/Ledge/.claude/worktrees/xcode-setup-milestone-1-e2c764/build/release/export
+** EXPORT SUCCEEDED **
+
+== Notarizing app
+Conducting pre-submission checks for app.zip and initiating connection to the Apple notary service...
+Submission ID received
+  id: 97d2cdb8-3a77-42bc-917a-911b515cdfa0
+Successfully uploaded file
+  id: 97d2cdb8-3a77-42bc-917a-911b515cdfa0
+  path: /Users/aaronfisher/Developer/Ledge/.claude/worktrees/xcode-setup-milestone-1-e2c764/build/release/app.zip
+Waiting for processing to complete.
+Current status: In Progress...Current status: In Progress....Current status: In Progress.....Current status: In Progress......Current status: Accepted.......Processing complete
+  id: 97d2cdb8-3a77-42bc-917a-911b515cdfa0
+  status: Accepted
+
+Processing: /Users/aaronfisher/Developer/Ledge/.claude/worktrees/xcode-setup-milestone-1-e2c764/build/release/export/Sticky Windows.app
+Processing: /Users/aaronfisher/Developer/Ledge/.claude/worktrees/xcode-setup-milestone-1-e2c764/build/release/export/Sticky Windows.app
+The staple and validate action worked!
+/Users/aaronfisher/Developer/Ledge/.claude/worktrees/xcode-setup-milestone-1-e2c764/build/release/export/Sticky Windows.app: accepted
+source=Notarized Developer ID
+origin=Developer ID Application: The Shirley Company LLC (F5N4RH3674)
+== Building disk image
+hdiutil: WARNING: 'hdiutil create -volname -format ...' is deprecated. Please use 'diskutil image create from/blank --volumeName --format ...' instead.
+/Users/aaronfisher/Developer/Ledge/.claude/worktrees/xcode-setup-milestone-1-e2c764/build/release/StickyWindows-0.5.0.dmg
+== Notarizing disk image
+Conducting pre-submission checks for StickyWindows-0.5.0.dmg and initiating connection to the Apple notary service...
+Error: StickyWindows-0.5.0.dmg must be a zip archive (.zip), flat installer package (.pkg), or UDIF disk image (.dmg), use 'notarytool submit --force' to skip this validation and submit anyway.
+Usage: notarytool <subcommand>
+  See 'notarytool --help' for more information.

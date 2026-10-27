@@ -16,6 +16,8 @@
 #   - xcodegen (brew install xcodegen)
 set -euo pipefail
 
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
 VERSION="${1:?usage: release.sh <version> [build]}"
 BUILD="${2:-$(date +%Y%m%d%H%M)}"
 DOWNLOAD_PREFIX="${DOWNLOAD_PREFIX:-https://github.com/aaronfisher/StickyWindows/releases/download/v$VERSION/}"
@@ -26,8 +28,6 @@ NOTARY_PROFILE="${NOTARY_PROFILE:-stickywindows-notary}"
 # short form ambiguous.
 SIGN_IDENTITY="${SIGN_IDENTITY:-Developer ID Application: The Shirley Company LLC (F5N4RH3674)}"
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-cd "$ROOT"
 OUT="$ROOT/build/release"
 ARCHIVE="$OUT/StickyWindows.xcarchive"
 EXPORT="$OUT/export"
@@ -69,7 +69,15 @@ spctl --assess --type execute -vv "$APP"
 
 echo "== Building disk image"
 scripts/make-dmg.sh "$APP" "$DMG"
-codesign --sign "$SIGN_IDENTITY" --timestamp "$DMG"
+# Signing the image is optional (Gatekeeper judges the app inside, which is signed and stapled). On macOS 27.2
+# codesign corrupts a UDZO image, so keep the unsigned image if the signed one no longer reads as a disk image.
+cp "$DMG" "$DMG.unsigned"
+if codesign --sign "$SIGN_IDENTITY" --timestamp "$DMG" && hdiutil imageinfo "$DMG" >/dev/null 2>&1; then
+  rm -f "$DMG.unsigned"
+else
+  echo "   codesign broke the disk image; shipping it unsigned"
+  mv -f "$DMG.unsigned" "$DMG"
+fi
 
 echo "== Notarizing disk image"
 # shellcheck disable=SC2046
