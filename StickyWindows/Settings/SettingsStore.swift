@@ -118,6 +118,10 @@ final class SettingsStore {
     var showThumbnails: Bool {
         didSet { defaults.set(showThumbnails, forKey: Key.showThumbnails) }
     }
+    /// List the window's own tabs (browser tabs, Finder tabs, …) when hovering its tab; clicking one switches to it.
+    var showWindowTabs: Bool {
+        didSet { defaults.set(showWindowTabs, forKey: Key.showWindowTabs) }
+    }
     var appRules: [AppRule] {
         didSet { defaults.set(try? JSONEncoder().encode(appRules), forKey: Key.appRules) }
     }
@@ -171,6 +175,7 @@ final class SettingsStore {
         static let showTitles = "showTitles"
         static let showBadges = "showBadges"
         static let showThumbnails = "showThumbnails"
+        static let showWindowTabs = "showWindowTabs"
         static let appRules = "appRules"
         static let seededRulesVersion = "seededRulesVersion"
     }
@@ -195,6 +200,7 @@ final class SettingsStore {
         showTitles = value(Key.showTitles, default: true)
         showBadges = value(Key.showBadges, default: true)
         showThumbnails = value(Key.showThumbnails, default: true)
+        showWindowTabs = value(Key.showWindowTabs, default: true)
         appRules = defaults.data(forKey: Key.appRules).flatMap { try? JSONDecoder().decode([AppRule].self, from: $0) } ?? []
         seedDefaultRules()
     }

@@ -37,6 +37,8 @@ final class TabPresenter {
     private var hoverOpenTask: Task<Void, Never>?
     private var fanHovered = false
     private var currentDropTarget: DropTarget?
+    /// The tabs listed in the fan for a single tabbed window (browser tabs and the like).
+    private var windowTabs: [WindowTab] = []
     /// A window being dragged out of a group's fan: its ghost tab and whether it's far enough out to release.
     private var cardDrag: (window: ParkedWindow, ghost: TabPanel, pulledAway: Bool)?
 
@@ -54,6 +56,7 @@ final class TabPresenter {
             Task { await self.manager.tabClicked(window) }
         }
         fan.onCardDrag = { [weak self] id, phase, point in self?.cardDrag(id, phase, point) }
+        fan.onSelectWindowTab = { [weak self] id in self?.windowTabSelected(id) }
         fan.onHoverChange = { [weak self] inside in
             guard let self else { return }
             self.fanHovered = inside
@@ -240,7 +243,7 @@ final class TabPresenter {
     }
 
     private func refreshFan(for item: TabItem) {
-        guard fan.isVisible, let frame = frame(of: item.lead), let screen = ScreenGeometry.screen(withDisplayID: item.lead.displayID) else { return }
+        guard fan.isVisible, !fan.showsWindowTabs, let frame = frame(of: item.lead), let screen = ScreenGeometry.screen(withDisplayID: item.lead.displayID) else { return }
         fan.show(items: fanItems(item), edge: item.lead.edge, tabFrame: frame, screen: screen, dropTarget: false)
     }
 
@@ -275,6 +278,65 @@ final class TabPresenter {
         } else {
             hoverOpenTask?.cancel()
             scheduleFanClose()
+        }
+    }
+
+    // MARK: Window-tab list (browser tabs and the like)
+
+    /// Whether hovering this tab should list the window's own tabs instead of showing the preview.
+    private func wantsWindowTabs(for parkedWindow: ParkedWindow) -> Bool {
+        manager.settings.showWindowTabs && !manager.settings.hoverToPeek && !parkedWindow.isDragging
+    }
+
+    private func windowTabHover(_ parkedWindow: ParkedWindow, _ hovering: Bool) {
+        guard hovering else {
+            hoverOpenTask?.cancel()
+            scheduleFanClose()
+            return
+        }
+        hoverCloseTask?.cancel()
+        guard fanItemID != parkedWindow.id || !fan.isVisible else { return }
+        hoverOpenTask?.cancel()
+        hoverOpenTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(350))
+            guard let self, !Task.isCancelled, parkedWindow.isHovered, !parkedWindow.isDragging,
+                  self.manager.parked.contains(where: { $0 === parkedWindow }) else { return }
+            let tabs = WindowTabReader.tabs(of: parkedWindow.window)
+            if tabs.count >= 2 {
+                self.openWindowTabs(tabs, for: parkedWindow)
+            } else {
+                // No tab strip: the ordinary preview instead.
+                self.manager.tabHoverChanged(parkedWindow, isHovering: true)
+            }
+        }
+    }
+
+    private func openWindowTabs(_ tabs: [WindowTab], for parkedWindow: ParkedWindow) {
+        guard let frame = frame(of: parkedWindow), let screen = ScreenGeometry.screen(withDisplayID: parkedWindow.displayID) else { return }
+        fanIsDropTarget = false
+        fanItemID = parkedWindow.id
+        windowTabs = tabs
+        fan.showWindowTabs(tabs, of: parkedWindow, tabFrame: frame, screen: screen)
+    }
+
+    /// Switches the window to the clicked tab and brings it out (or forward, if it's already out).
+    private func windowTabSelected(_ id: Int) {
+        guard let parkedWindow = manager.parked.first(where: { $0.id == fanItemID }),
+              let tab = windowTabs.first(where: { $0.id == id }) else { return }
+        closeFan()
+        // Switch while the window is still hidden, so it comes out already showing the chosen tab.
+        let pressed = WindowTabReader.select(tab)
+        if parkedWindow.isRevealed {
+            parkedWindow.window.raise()
+        } else {
+            manager.reveal(parkedWindow)
+        }
+        if !pressed {
+            // Some apps only take the press once their window is on screen.
+            Task {
+                try? await Task.sleep(for: .milliseconds(400))
+                WindowTabReader.select(tab)
+            }
         }
     }
 
@@ -378,11 +440,17 @@ final class TabPresenter {
                 return self.groupMenu(for: current.windows)
             }
         } else {
-            view.onClick = { [weak manager] in
-                guard let manager else { return }
-                Task { await manager.tabClicked(lead) }
+            view.onClick = { [weak self] in
+                guard let self else { return }
+                self.closeFan()
+                Task { await self.manager.tabClicked(lead) }
             }
-            view.onHover = { [weak manager] in manager?.tabHoverChanged(lead, isHovering: $0) }
+            view.onHover = { [weak self] hovering in
+                guard let self else { return }
+                let listsTabs = self.wantsWindowTabs(for: lead)
+                self.manager.tabHoverChanged(lead, isHovering: hovering, wantsPreview: !listsTabs)
+                if listsTabs { self.windowTabHover(lead, hovering) }
+            }
             view.menuProvider = { [weak self] in
                 // The hover preview would sit under the menu.
                 self?.manager.cancelHover(lead)

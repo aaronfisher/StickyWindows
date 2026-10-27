@@ -15,10 +15,25 @@ final class TabFanModel {
         let isRevealed: Bool
     }
 
+    /// One of the window's own tabs (browser tabs, Finder tabs, …), for the tab-list fan.
+    struct WindowTabItem: Identifiable {
+        let id: Int
+        let title: String
+        let isSelected: Bool
+    }
+
     enum DragPhase { case began, changed, ended }
 
     var edge: Edge = .right
     var items: [Item] = []
+    /// When set, the fan lists a single window's tabs under a header card instead of showing window cards.
+    var windowTabs: [WindowTabItem] = []
+    var showsWindowTabs = false
+    var header: Item?
+    var headerImageHeight: CGFloat = 0
+    /// Tabs past the list's cap, shown as "and N more".
+    var hiddenTabCount = 0
+    var hoveredTabID: Int?
     /// Dropping onto the fan adds the dragged window: show the big "+" and highlight the whole fan.
     var isDropTarget = false
     var isOpen = false
@@ -31,6 +46,8 @@ final class TabFanModel {
 final class TabFanPanel {
     let model = TabFanModel()
     var onSelect: (UUID) -> Void = { _ in }
+    /// A tab in the window-tab list was clicked.
+    var onSelectWindowTab: (Int) -> Void = { _ in }
     /// A card being dragged out of the fan; the point is the cursor in AppKit screen coordinates.
     var onCardDrag: (UUID, TabFanModel.DragPhase, CGPoint) -> Void = { _, _, _ in }
     /// Reports when the cursor enters/leaves the fan, so hover fans can close once it's left.
@@ -41,6 +58,7 @@ final class TabFanPanel {
         let panel = TabPanel(rootView: TabFanView(
             model: model, settings: settings,
             onSelect: { [weak self] in self?.onSelect($0) },
+            onSelectWindowTab: { [weak self] in self?.onSelectWindowTab($0) },
             onCardDrag: { [weak self] id, phase, point in self?.onCardDrag(id, phase, point) }))
         panel.hostingView.onHover = { [weak self] in self?.onHoverChange($0) }
         panel.level = .popUpMenu
@@ -59,6 +77,11 @@ final class TabFanPanel {
 
     var frame: CGRect? { panel.isVisible ? ScreenGeometry.flip(panel.frame) : nil }
     var isVisible: Bool { panel.isVisible }
+    var showsWindowTabs: Bool { panel.isVisible && model.showsWindowTabs }
+
+    static let listWidth: CGFloat = 260
+    static let listRowHeight: CGFloat = 26
+    static let maxListedTabs = 12
 
     /// Shows the fan growing inward from `tabFrame` (AX coordinates) on `screen`.
     func show(items: [TabFanModel.Item], edge: Edge, tabFrame: CGRect, screen: NSScreen, dropTarget: Bool) {
@@ -84,10 +107,61 @@ final class TabFanPanel {
             rect.origin.x = min(max(rect.minX, visible.minX + 4), visible.maxX - along - 4)
         }
 
-        let wasOpen = model.isOpen && panel.isVisible
         model.edge = edge
         model.items = items
         model.isDropTarget = dropTarget
+        model.showsWindowTabs = false
+        present(rect)
+    }
+
+    /// Shows the window's own tabs as a list beside its edge tab: a header card (preview, if there is one,
+    /// and the window's title), then one row per tab with the selected one marked.
+    func showWindowTabs(_ tabs: [WindowTab], of parkedWindow: ParkedWindow, tabFrame: CGRect, screen: NSScreen) {
+        let padding: CGFloat = 10
+        let inner = Self.listWidth - padding * 2
+        let thumbnail = parkedWindow.isRevealed ? nil : parkedWindow.thumbnail
+        var imageHeight: CGFloat = 0
+        if let thumbnail, thumbnail.size.width > 0 {
+            imageHeight = min(140, (inner * thumbnail.size.height / thumbnail.size.width).rounded())
+        }
+        let listed = Array(tabs.prefix(Self.maxListedTabs))
+        let hidden = tabs.count - listed.count
+        // Keep in step with WindowTabListView's layout.
+        var across = padding * 2 + 20 + 6 + CGFloat(listed.count) * Self.listRowHeight
+        if imageHeight > 0 { across += imageHeight + 6 }
+        if hidden > 0 { across += 6 + 22 }
+        let along = Self.listWidth
+
+        let visible = ScreenGeometry.axVisibleFrame(of: screen)
+        var rect: CGRect
+        switch parkedWindow.edge {
+        case .right:
+            rect = CGRect(x: tabFrame.minX - along, y: tabFrame.midY - across / 2, width: along, height: across)
+            rect.origin.y = min(max(rect.minY, visible.minY + 4), visible.maxY - across - 4)
+        case .left:
+            rect = CGRect(x: tabFrame.maxX, y: tabFrame.midY - across / 2, width: along, height: across)
+            rect.origin.y = min(max(rect.minY, visible.minY + 4), visible.maxY - across - 4)
+        case .bottom:
+            rect = CGRect(x: tabFrame.midX - along / 2, y: tabFrame.minY - across, width: along, height: across)
+            rect.origin.x = min(max(rect.minX, visible.minX + 4), visible.maxX - along - 4)
+        }
+
+        model.edge = parkedWindow.edge
+        model.items = []
+        model.isDropTarget = false
+        model.header = TabFanModel.Item(
+            id: parkedWindow.id, title: parkedWindow.displayTitle, appName: parkedWindow.appName,
+            icon: parkedWindow.icon, thumbnail: thumbnail, isRevealed: parkedWindow.isRevealed)
+        model.headerImageHeight = imageHeight
+        model.windowTabs = listed.map { TabFanModel.WindowTabItem(id: $0.id, title: $0.title, isSelected: $0.isSelected) }
+        model.hiddenTabCount = hidden
+        model.hoveredTabID = nil
+        model.showsWindowTabs = true
+        present(rect)
+    }
+
+    private func present(_ rect: CGRect) {
+        let wasOpen = model.isOpen && panel.isVisible
         panel.setFrame(ScreenGeometry.flip(rect), display: true)
         panel.orderFrontRegardless()
         if !wasOpen {
@@ -113,6 +187,7 @@ private struct TabFanView: View {
     let model: TabFanModel
     let settings: SettingsStore
     let onSelect: (UUID) -> Void
+    let onSelectWindowTab: (Int) -> Void
     let onCardDrag: (UUID, TabFanModel.DragPhase, CGPoint) -> Void
     @State private var draggingID: UUID?
 
@@ -123,7 +198,9 @@ private struct TabFanView: View {
         let vertical = model.edge.isVertical
 
         Group {
-            if vertical {
+            if model.showsWindowTabs {
+                WindowTabListView(model: model, accent: accent, onSelect: onSelectWindowTab)
+            } else if vertical {
                 VStack(spacing: 8) { cards(card, accent) }
             } else {
                 HStack(spacing: 8) { cards(card, accent) }
@@ -235,5 +312,71 @@ private struct FanCard: View {
                 .frame(width: size.width)
         }
         .animation(.easeOut(duration: 0.12), value: hovered)
+    }
+}
+
+/// The window-tab list: header card, then a row per tab. Heights match `TabFanPanel.showWindowTabs`.
+private struct WindowTabListView: View {
+    let model: TabFanModel
+    let accent: Color
+    let onSelect: (Int) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if let header = model.header {
+                if let thumbnail = header.thumbnail, model.headerImageHeight > 0 {
+                    Image(nsImage: thumbnail)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: TabFanPanel.listWidth - 20, height: model.headerImageHeight)
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                }
+                HStack(spacing: 6) {
+                    if let icon = header.icon {
+                        Image(nsImage: icon).resizable().interpolation(.high).frame(width: 16, height: 16)
+                    }
+                    Text(header.title)
+                        .font(.system(size: 11, weight: .semibold))
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                    Spacer(minLength: 4)
+                    Text("\(model.windowTabs.count + model.hiddenTabCount) tabs")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
+                }
+                .frame(height: 20)
+            }
+            VStack(spacing: 0) {
+                ForEach(model.windowTabs) { tab in
+                    let hovered = model.hoveredTabID == tab.id
+                    HStack(spacing: 8) {
+                        Circle()
+                            .fill(tab.isSelected ? accent : Color.clear)
+                            .frame(width: 6, height: 6)
+                        Text(tab.title)
+                            .font(.system(size: 11, weight: tab.isSelected ? .semibold : .regular))
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, 8)
+                    .frame(height: TabFanPanel.listRowHeight)
+                    .background(
+                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            .fill(hovered ? Color.primary.opacity(0.12) : (tab.isSelected ? accent.opacity(0.12) : Color.clear)))
+                    .contentShape(Rectangle())
+                    .onHover { model.hoveredTabID = $0 ? tab.id : (model.hoveredTabID == tab.id ? nil : model.hoveredTabID) }
+                    .onTapGesture { onSelect(tab.id) }
+                }
+            }
+            if model.hiddenTabCount > 0 {
+                Text("and \(model.hiddenTabCount) more")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 8)
+                    .frame(height: 22)
+            }
+        }
+        .frame(width: TabFanPanel.listWidth - 20, alignment: .leading)
     }
 }

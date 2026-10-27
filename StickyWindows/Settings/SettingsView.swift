@@ -204,6 +204,10 @@ private struct AppearanceSettings: View {
                         ? "Not shown while Hover to Peek is on."
                         : "Live previews need Screen Recording access (Permissions tab). Without it, the preview shows the icon and full title.")
                 }
+                Toggle(isOn: $settings.showWindowTabs) {
+                    Text("List the window's tabs when hovering")
+                    Text("For Safari, Chrome, Finder, Terminal and other tabbed windows: click a tab in the list to bring the window out on that tab. Not shown while Hover to Peek is on.")
+                }
                 Picker("Material", selection: $settings.tabMaterial) {
                     ForEach(TabMaterial.allCases) { Text($0.displayName).tag($0) }
                 }

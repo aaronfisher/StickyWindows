@@ -46,6 +46,7 @@
 		DE821D8EB6D1A08A33557E17 /* ParkingPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CE6EBB9D535A22686EF233A /* ParkingPersistence.swift */; };
 		E3F658DD3E2A231E4515C40F /* AppMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59FD19D1F084F6543B2A9504 /* AppMenu.swift */; };
 		EBF3163E8371DB9CF88D18E5 /* ScreenGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FC8FA21231A97E207E419C5 /* ScreenGeometry.swift */; };
+		F013358F40642FB9074ACBEC /* WindowTabReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 627A70757702FF52F7193197 /* WindowTabReader.swift */; };
 		F11EE9F2DF37063B6EBD3A91 /* PreviewPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 285665EA800A5180D106E420 /* PreviewPanel.swift */; };
 		F8D40E1FCBE1B2C2209FE007 /* AXWindowEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D124B77479CCD6716D568C /* AXWindowEvents.swift */; };
 		FCC7CD6106D8B65FFEB2D601 /* TuckButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDF162A1B9A4232C9E02D66A /* TuckButton.swift */; };
@@ -71,6 +72,7 @@
 		512F22888CBDEE252C0648B0 /* HidingStrategyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HidingStrategyStore.swift; sourceTree = "<group>"; };
 		59C69B4246BE3DE57B515750 /* Shortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shortcuts.swift; sourceTree = "<group>"; };
 		59FD19D1F084F6543B2A9504 /* AppMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMenu.swift; sourceTree = "<group>"; };
+		627A70757702FF52F7193197 /* WindowTabReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowTabReader.swift; sourceTree = "<group>"; };
 		63EE79C34B6AB11448FF15D2 /* StickyWindowsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickyWindowsApp.swift; sourceTree = "<group>"; };
 		6A0B19021D35509A916AD8EC /* StickyWindows.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StickyWindows.entitlements; sourceTree = "<group>"; };
 		6BF66AFB26B91D8173BBCE3D /* TabPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabPanel.swift; sourceTree = "<group>"; };
@@ -196,6 +198,7 @@
 				9B042FAA951E5A94B82E1A46 /* ScreenRecordingPermission.swift */,
 				013C2C62D78A652916518ECD /* WindowController.swift */,
 				1A94F68C6A4FFF020D814B9B /* WindowInventory.swift */,
+				627A70757702FF52F7193197 /* WindowTabReader.swift */,
 			);
 			path = Accessibility;
 			sourceTree = "<group>";
@@ -375,6 +378,7 @@
 				D59E265FCD573FFC2045988C /* WindowInventory.swift in Sources */,
 				C85114AD89CCBC55F45C4A2F /* WindowObserver.swift in Sources */,
 				48B9B2A13426D36349363260 /* WindowSlideAnimator.swift in Sources */,
+				F013358F40642FB9074ACBEC /* WindowTabReader.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

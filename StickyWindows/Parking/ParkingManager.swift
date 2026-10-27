@@ -305,10 +305,11 @@ final class ParkingManager {
         }
     }
 
-    func tabHoverChanged(_ parkedWindow: ParkedWindow, isHovering: Bool) {
+    /// `wantsPreview` is false when the tab presenter shows the window's tab list instead of the preview.
+    func tabHoverChanged(_ parkedWindow: ParkedWindow, isHovering: Bool, wantsPreview: Bool = true) {
         parkedWindow.isHovered = isHovering
         guard isHovering else { return cancelHover(parkedWindow) }
-        if !settings.hoverToPeek {
+        if !settings.hoverToPeek, wantsPreview {
             schedulePreview(for: parkedWindow)
         }
         guard settings.hoverToPeek, !parkedWindow.isRevealed, !parkedWindow.isDragging else { return }
