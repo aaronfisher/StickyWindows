@@ -20,6 +20,7 @@ Sticky Windows is a menu-bar app (no Dock icon) for macOS 15 Sequoia and later, 
 |---|---|
 | Click | Reveal the window (it slides out), or tuck it away again |
 | Hover | A preview of the window (live with Screen Recording access); or, with Hover to Peek on, the window itself |
+| Hover a tabbed window | For Safari, Chrome, Firefox, Finder, Terminal and other apps with a tab bar: a list of the window's own tabs, with the current one marked. Click one to bring the window out on that tab |
 | Drag along the edge | Reorder tabs |
 | Drag ~80 pt away from the edge | Release: the window returns to where it was and the tab goes away (Option-clicking the tuck handle does the same) |
 | Right-click / Control-click | Rename, Show/Hide, Mode, Move to Edge, Release, Close Window |
@@ -44,7 +45,7 @@ Set the default in Settings or the menu; override per tab from its context menu.
 Open with *Settings…* (⌘,) in the menu-bar menu. Panes are listed in a sidebar, like System Settings:
 
 - **General:** launch at login, which edges accept drops, dwell time, default reveal mode, hover-to-peek and its delay, slide animations (off automatically with Reduce Motion), letting Sticky Windows handle left/right edge drags, tabs on all Spaces vs. the current one, hiding tabs when a full-screen app is in front.
-- **Appearance:** tab size, window titles on/off, material, opacity, accent color, Dock badges, hover previews.
+- **Appearance:** tab size, window titles on/off, material, opacity, accent color, Dock badges, hover previews, the window-tab list on hover.
 - **Shortcuts:** park shortcuts for each edge.
 - **App Rules:** one section per app. *Parking:* park normally, never park (drags and shortcuts ignore it), or park on the left/right/bottom edge at launch. *Dock click shows main window:* for apps like Mail that stay open without windows — when you bring the app forward and only parked windows are open, Sticky Windows opens its main window through the app's own menu command (automatic, or picked from the app's menus). Mail gets this rule by default.
 - **Permissions:** Accessibility (required) and Screen Recording (optional, for live previews).
